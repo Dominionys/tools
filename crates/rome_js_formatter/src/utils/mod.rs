@@ -698,18 +698,14 @@ impl MemberContext {
         if text_to_check.is_empty() {
             return false;
         }
-        // we split by the characters that can be considered valid identifiers
-        match self {
-            // TODO: #2405 implement number literals on JS and TS
-            // patterns.all(|sub_text| sub_text.chars().all(char::is_alphabetic))
-            MemberContext::Type => false,
-            MemberContext::Member => {
-                // patterns.all(|sub_text| sub_text.chars().all(char::is_alphanumeric))
-                text_to_check
-                    .chars()
-                    .all(|c| matches!(c, '_' | '$') || c.is_alphanumeric())
+        text_to_check.chars().enumerate().all(|(index, c)| {
+            // Members that starts with numbers in their name are not valid syntax,
+            // hence we can't elide the quotes
+            if index == 0 && c.is_numeric() {
+                return false;
             }
-        }
+            matches!(c, '_' | '$') || c.is_alphanumeric()
+        })
     }
 }
 

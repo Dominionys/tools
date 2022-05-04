@@ -5,8 +5,17 @@ expression: parameter_quotes.ts
 ---
 # Input
 type X = {
-    "a": string;
-    b: number;
+    "member": string;
+    // you stay like this
+    "member-member": number,
+    "4": number,
+    "with_underscore": number
+    "0197": number,
+    "3n": number,
+    "3p": number,
+    "p9": number
+    "_$_ff$_morning_not_quotes": number,
+    "_$_ff$_morning_yes_quotes_@": number
 };
 
 
@@ -16,6 +25,12 @@ interface Y {
     "member-member": number,
     "4": number,
     "with_underscore": number
+    "0197": number,
+    "3n": number,
+    "3p": number,
+    "p9": number
+    "_$_ff$_morning_not_quotes": number,
+    "_$_ff$_morning_yes_quotes_@": number
 }
 =============================
 # Outputs
@@ -25,14 +40,32 @@ Indent style: Tab
 Line width: 80
 Quote style: Double Quotes
 -----
-type X = { "a": string; b: number };
-
-interface Y {
-	"member": string;
+type X = {
+	member: string;
 	// you stay like this
 	"member-member": number;
 	"4": number;
-	"with_underscore": number;
+	with_underscore: number;
+	"0197": number;
+	"3n": number;
+	"3p": number;
+	p9: number;
+	_$_ff$_morning_not_quotes: number;
+	"_$_ff$_morning_yes_quotes_@": number;
+};
+
+interface Y {
+	member: string;
+	// you stay like this
+	"member-member": number;
+	"4": number;
+	with_underscore: number;
+	"0197": number;
+	"3n": number;
+	"3p": number;
+	p9: number;
+	_$_ff$_morning_not_quotes: number;
+	"_$_ff$_morning_yes_quotes_@": number;
 }
 ## Output 2
 -----
@@ -40,13 +73,31 @@ Indent style: Tab
 Line width: 80
 Quote style: Single Quotes
 -----
-type X = { 'a': string; b: number };
-
-interface Y {
-	'member': string;
+type X = {
+	member: string;
 	// you stay like this
 	'member-member': number;
 	'4': number;
-	'with_underscore': number;
+	with_underscore: number;
+	'0197': number;
+	'3n': number;
+	'3p': number;
+	p9: number;
+	_$_ff$_morning_not_quotes: number;
+	'_$_ff$_morning_yes_quotes_@': number;
+};
+
+interface Y {
+	member: string;
+	// you stay like this
+	'member-member': number;
+	'4': number;
+	with_underscore: number;
+	'0197': number;
+	'3n': number;
+	'3p': number;
+	p9: number;
+	_$_ff$_morning_not_quotes: number;
+	'_$_ff$_morning_yes_quotes_@': number;
 }
 
