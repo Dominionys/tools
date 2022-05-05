@@ -704,7 +704,7 @@ impl MemberContext {
             if index == 0 && c.is_numeric() {
                 return false;
             }
-            matches!(c, '_' | '$') || c.is_alphanumeric()
+            c.is_alphanumeric() || matches!(c, '_' | '$')
         })
     }
 }
