@@ -685,6 +685,7 @@ impl From<JsLiteralMemberName> for MemberName {
 
 const QUOTES_TO_OMIT: [char; 2] = ['\"', '\''];
 
+#[derive(Eq, PartialEq)]
 pub(crate) enum MemberContext {
     Type,
     Member,
@@ -698,13 +699,26 @@ impl MemberContext {
         if text_to_check.is_empty() {
             return false;
         }
+
+        let mut has_seen_number = false;
         text_to_check.chars().enumerate().all(|(index, c)| {
-            // Members that starts with numbers in their name are not valid syntax,
-            // hence we can't elide the quotes
             if index == 0 && c.is_numeric() {
-                return false;
+                // In TypeScript, numbers like members have different meaning from numbers.
+                // Hence, if we see a number, we bail straightaway
+                if self == &MemberContext::Type {
+                    return false;
+                } else {
+                    has_seen_number = true;
+                }
             }
-            c.is_alphanumeric() || matches!(c, '_' | '$')
+
+            let is_eligible_character = if has_seen_number {
+                // as we've seen a number, now eligible characters can only contain numbers
+                c.is_numeric()
+            } else {
+                c.is_alphanumeric()
+            };
+            is_eligible_character || matches!(c, '_' | '$')
         })
     }
 }

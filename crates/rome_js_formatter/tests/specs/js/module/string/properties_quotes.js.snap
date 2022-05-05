@@ -88,7 +88,7 @@ let { _$_ff$_morning_not_quotes: test, "_$_ff$_morning_yes_quotes_@": test } = v
 
 let { "_$_$_%": test } = value;
 
-let { "0197": test, "3n": test, "3p": test, p9: test } = value;
+let { 0197: test, "3n": test, "3p": test, p9: test } = value;
 
 
 ## Lines exceeding width of 80 characters
@@ -137,7 +137,7 @@ let { _$_ff$_morning_not_quotes: test, '_$_ff$_morning_yes_quotes_@': test } = v
 
 let { '_$_$_%': test } = value;
 
-let { '0197': test, '3n': test, '3p': test, p9: test } = value;
+let { 0197: test, '3n': test, '3p': test, p9: test } = value;
 
 
 ## Lines exceeding width of 80 characters
