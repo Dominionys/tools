@@ -10,9 +10,7 @@ impl FormatRule<JsAnyFunctionBody> for FormatJsAnyFunctionBody {
         formatter: &Formatter<Self::Options>,
     ) -> FormatResult<FormatElement> {
         match node {
-            JsAnyFunctionBody::JsAnyExpression(node) => {
-                formatted![formatter, [node.format()]]
-            }
+            JsAnyFunctionBody::JsAnyExpression(node) => formatted![formatter, [node.format()]],
             JsAnyFunctionBody::JsFunctionBody(node) => formatted![formatter, [node.format()]],
         }
     }
