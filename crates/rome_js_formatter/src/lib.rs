@@ -482,12 +482,9 @@ mod test {
     #[ignore]
     // use this test check if your snippet prints as you wish, without using a snapshot
     fn quick_test() {
-        let src = r#"(function(){
-	return aLongIdentifierName, aLongIdentifierName, aLongIdentifierName, aLongIdentifierName;
-});
-
+        let src = r#"0; "'";
 "#;
-        let syntax = SourceType::jsx();
+        let syntax = SourceType::tsx();
         let tree = parse(src, 0, syntax.clone());
         let result = format_node(JsFormatOptions::default(), &tree.syntax())
             .unwrap()
@@ -501,7 +498,8 @@ mod test {
         });
         assert_eq!(
             result.as_code(),
-            r#"(a + (b * c)) > (65 + 5);
+            r#"0;
+("'");
 "#
         );
     }

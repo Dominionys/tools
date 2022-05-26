@@ -82,3 +82,40 @@ impl fmt::Display for QuoteStyle {
         }
     }
 }
+
+impl QuoteStyle {
+    pub fn as_char(&self) -> char {
+        match self {
+            QuoteStyle::Double => '"',
+            QuoteStyle::Single => '\'',
+        }
+    }
+
+    pub fn as_string(&self) -> &str {
+        match self {
+            QuoteStyle::Double => "\"",
+            QuoteStyle::Single => "'",
+        }
+    }
+
+    pub fn as_escaped(&self) -> &str {
+        match self {
+            QuoteStyle::Double => "\\\"",
+            QuoteStyle::Single => "\\'",
+        }
+    }
+
+    pub fn as_bytes(&self) -> u8 {
+        match self {
+            QuoteStyle::Double => b'"',
+            QuoteStyle::Single => b'\'',
+        }
+    }
+
+    pub fn as_escaped_code(&self) -> &str {
+        match self {
+            QuoteStyle::Double => "&quot;",
+            QuoteStyle::Single => "&apos;",
+        }
+    }
+}

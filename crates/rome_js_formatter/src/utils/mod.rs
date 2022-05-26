@@ -386,23 +386,248 @@ pub(crate) fn format_with_semicolon(
     ]
 }
 
+/// This function determines which quotes should be used inside to enclose the string.
+/// The function take as a input the string **without quotes**.
+///
+/// ## How it works
+///
+/// The function determines the preferred quote and alternate quote.
+/// The preferred quote is the one that comes from the formatter options. The alternate quote is the other one.
+///
+/// We check how many preferred quotes we have inside the content. If this number is greater then the
+/// number alternate quotes that we have inside the content,
+/// then we swap them, so we can reduce the number of escaped quotes.
+///
+/// For example, let's suppose that the preferred quote is double, and we have a string like this:
+/// ```js
+/// (" content \"\"\" don't ")
+/// ```
+/// Excluding the quotes at the start and beginning, we have three double quote and one single quote.
+/// If we decided to keep them like this, we would have three escaped quotes.
+///
+/// But then, we choose the single quote as preferred quote and we would have only one quote that is escaped,
+/// resulting into a string like this:
+/// ```js
+/// (' content """ dont\'t ')
+/// ```
+/// Like this, we reduced the number of escaped quotes.
+fn computed_preferred_quote_style(
+    quoteless_content: &str,
+    formatter: &Formatter<JsFormatOptions>,
+) -> (QuoteStyle, QuoteStyle) {
+    let quote_style = formatter.options().quote_style;
+
+    let preferred = quote_style;
+    let alternate = match quote_style {
+        QuoteStyle::Double => QuoteStyle::Single,
+        QuoteStyle::Single => QuoteStyle::Double,
+    };
+
+    if quoteless_content.contains(preferred.as_char())
+        || quoteless_content.contains(alternate.as_char())
+    {
+        let preferred_quotes_count = quoteless_content.matches(preferred.as_char()).count();
+        let alternate_quotes_count = quoteless_content.matches(alternate.as_char()).count();
+
+        if preferred_quotes_count > alternate_quotes_count {
+            return (alternate, preferred);
+        }
+    }
+
+    (preferred, alternate)
+}
+
+/// This signal is used to tell to the next character what it should do
+enum CharSignal {
+    /// There hasn't been any signal
+    Idle,
+    /// The function decided to keep the previous character
+    Keep,
+    /// The function has decided to print the character
+    AlreadyPrinted,
+}
+
+const CHARACTERS_THAT_COULD_KEEP_THE_ESCAPE: [char; 3] = ['\\', '\'', '"'];
+
+/// This function is responsible to reduce the number of escaped characters inside a string
+///
+/// The way it works is the following: we split the content by analyzing all the
+/// characters that are contained inside [CHARACTERS_THAT_COULD_KEEP_THE_ESCAPE].
+///
+/// Each time we retrieve one of this character, we push inside a new string all the content
+/// found **before** the current character.
+///
+/// After that the function checks if the current character should be also be printed or not.
+/// These characters (like quotes) can have an escape that might be removed. If that happens,
+/// we use [CharSignal] to tell to the next iteration what it should do with that character.
+///
+/// For example, let's take this example:
+/// ```js
+/// ("hello! \'")
+/// ```
+///
+/// Here, we want to remove the backslash (\) from the content. So when we encounter `\`,
+/// the algorithm checks if after `\` there's a `'`, and if so, then we push inside the final string
+/// only `'` and we ignore the backlash. Then we signal the next iteration with [CharSignal::AlreadyPrinted],
+/// so when we process the next `'`, we decide to ignore it and reset the signal.
+///
+/// Another example is the following:
+///
+/// ```js
+/// (" \\' ")
+/// ```
+///
+/// Here, we need to keep all the backslash. We check the first one and we look ahead. We find another
+/// `\`, so we keep it the first and we signal the next iteration with [CharSignal::Keep].
+/// Then the next iteration comes along. We have the second `\`, we look ahead we find a `'`. Although,
+/// as opposed to the previous example, we have a signal that says that we should keep the current
+/// character. Then we do so. The third iteration comes along and we find `'`. We still have the
+/// [CharSignal::Keep]. We do so and then we set the signal to [CharSignal::Idle]
+///
+fn reduce_escapes_from_string(
+    raw_content: &str,
+    preferred_quote: QuoteStyle,
+    alternate_quote: QuoteStyle,
+) -> String {
+    let mut reduced_string = String::new();
+    let mut last_end = 0;
+    let mut signal = CharSignal::Idle;
+
+    for (start, part) in raw_content.match_indices(CHARACTERS_THAT_COULD_KEEP_THE_ESCAPE) {
+        if start - last_end >= 1 {
+            // document that here there's a big gap
+            signal = CharSignal::Idle;
+        }
+        reduced_string.push_str(&raw_content[last_end..start]);
+        last_end = start + part.len();
+
+        // If we encounter a preferred quote and it's not escaped, we have to replace it with
+        // an escaped version.
+        // This is done because of how the enclosed strings can change.
+        // Check `computed_preferred_quote_style` for more details.
+        if part == preferred_quote.as_string() {
+            let last_char = &reduced_string.chars().last();
+            if let Some('\\') = last_char {
+                reduced_string.push(preferred_quote.as_char());
+            } else {
+                reduced_string.push_str(preferred_quote.as_escaped());
+            }
+        } else if part == alternate_quote.as_string() {
+            match signal {
+                CharSignal::Idle => {
+                    reduced_string.push(alternate_quote.as_char());
+                }
+                CharSignal::Keep => {
+                    reduced_string.push(alternate_quote.as_char());
+                    signal = CharSignal::Idle;
+                }
+                CharSignal::AlreadyPrinted => {
+                    signal = CharSignal::Idle;
+                    continue;
+                }
+            }
+        } else if part == "\\" {
+            let bytes = raw_content.as_bytes();
+
+            match bytes[start] {
+                // TODO: #2444 add checks to additional characters to reduce the number of escapes
+                // "\a" VS "\n" => "a" VS "\n"
+                b'\\' => {
+                    if start + 1 < bytes.len() {
+                        // If we encounter an alternate quote that is escaped, we have to
+                        // remove the escape from it.
+                        // This is done because of how the enclosed strings can change.
+                        // Check `computed_preferred_quote_style` for more details.
+                        if bytes[start + 1] == alternate_quote.as_bytes()
+                            // This check is a safety net for cases where the backslash is at the end
+                            // of the raw content:
+                            // ("\\")
+                            // The second backslash is at the end.
+                            && start + 2 <= bytes.len()
+                        {
+                            match signal {
+                                CharSignal::Keep => {
+                                    reduced_string.push('\\');
+                                }
+                                _ => {
+                                    reduced_string.push(alternate_quote.as_char());
+                                    signal = CharSignal::AlreadyPrinted;
+                                }
+                            }
+                        } else {
+                            // The next character is another backslash, let's signal
+                            // the next iteration that it should keep it in the final string
+                            if bytes[start + 1] == b'\\' {
+                                signal = CharSignal::Keep;
+                            }
+                            // fallback, keep the backslash
+                            reduced_string.push('\\');
+                        }
+                    } else {
+                        // fallback, keep the backslash
+                        reduced_string.push('\\');
+                    }
+                }
+                _ => unreachable!("We checked already the presence of a backslash"),
+            }
+        }
+    }
+
+    reduced_string.push_str(&raw_content[last_end..raw_content.len()]);
+    reduced_string
+}
+
+const POSSIBLE_QUOTES: [char; 2] = ['\'', '"'];
+
+#[derive(Eq, PartialEq)]
+pub(crate) enum LiteralType {
+    Directive,
+    String,
+}
+
 pub(crate) fn format_string_literal_token(
     token: JsSyntaxToken,
     formatter: &Formatter<JsFormatOptions>,
+    literal_type: LiteralType,
 ) -> FormatElement {
-    let quoted = token.text_trimmed();
-    let (primary_quote_char, secondary_quote_char) = match formatter.options().quote_style {
-        QuoteStyle::Double => ('"', '\''),
-        QuoteStyle::Single => ('\'', '"'),
+    let literal = token.text_trimmed();
+
+    let content = match literal_type {
+        LiteralType::String | LiteralType::Directive => {
+            // literal, in our syntax, might not have quotes so we need to check if they start with a possible quote
+            // is so, they are eligible for possible string manipulation
+            if literal.starts_with(POSSIBLE_QUOTES) {
+                // raw_content is the content of a string without the quotes
+                let raw_content = &literal[1..literal.len() - 1];
+
+                let (preferred_quote, alternate_quote) =
+                    computed_preferred_quote_style(raw_content, formatter);
+
+                let final_content = if literal_type == LiteralType::String {
+                    let polished_raw_content =
+                        reduce_escapes_from_string(raw_content, preferred_quote, alternate_quote);
+
+                    format!(
+                        "{}{}{}",
+                        preferred_quote.as_char(),
+                        polished_raw_content,
+                        preferred_quote.as_char()
+                    )
+                } else {
+                    format!(
+                        "{}{}{}",
+                        preferred_quote.as_char(),
+                        raw_content,
+                        preferred_quote.as_char()
+                    )
+                };
+
+                Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
+            } else {
+                normalize_newlines(literal, ['\r'])
+            }
+        }
     };
-    let content =
-        if quoted.starts_with(secondary_quote_char) && !quoted.contains(primary_quote_char) {
-            let s = &quoted[1..quoted.len() - 1];
-            let s = format!("{}{}{}", primary_quote_char, s, primary_quote_char);
-            Cow::Owned(normalize_newlines(&s, ['\r']).into_owned())
-        } else {
-            normalize_newlines(quoted, ['\r'])
-        };
 
     formatter.format_replaced(
         &token,
