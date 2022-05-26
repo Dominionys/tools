@@ -426,8 +426,18 @@ fn computed_preferred_quote_style(
     if quoteless_content.contains(preferred.as_char())
         || quoteless_content.contains(alternate.as_char())
     {
-        let preferred_quotes_count = quoteless_content.matches(preferred.as_char()).count();
-        let alternate_quotes_count = quoteless_content.matches(alternate.as_char()).count();
+        let (preferred_quotes_count, alternate_quotes_count) = quoteless_content.chars().fold(
+            (0, 0),
+            |(preferred_quotes_counter, alternate_quotes_counter), current_character| {
+                if current_character == preferred.as_char() {
+                    (preferred_quotes_counter + 1, alternate_quotes_counter)
+                } else if current_character == alternate.as_char() {
+                    (preferred_quotes_counter, alternate_quotes_counter + 1)
+                } else {
+                    (preferred_quotes_counter, alternate_quotes_counter)
+                }
+            },
+        );
 
         if preferred_quotes_count > alternate_quotes_count {
             return (alternate, preferred);
@@ -495,7 +505,10 @@ fn reduce_escapes_from_string(
 
     for (start, part) in raw_content.match_indices(CHARACTERS_THAT_COULD_KEEP_THE_ESCAPE) {
         if start - last_end >= 1 {
-            // document that here there's a big gap
+            // This is the case where we don't have consecutive characters and if so, we have to reset the signal.
+            // An example is the following: " \\u2028 ' "
+            // After the two backslash, we have a character that is not a quote. So we reset the signal and we
+            // iterate over the single quote, we don't deal with any edge case.
             signal = CharSignal::Idle;
         }
         reduced_string.push_str(&raw_content[last_end..start]);
