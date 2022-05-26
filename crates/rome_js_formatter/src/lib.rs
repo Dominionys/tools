@@ -511,7 +511,5 @@ mod test {
             file_name: "quick_test",
             format_options: JsFormatOptions::default(),
         });
-
-        println!("{}", result.as_code());
     }
 }
