@@ -593,7 +593,25 @@ pub(crate) fn format_string_literal_token(
     let literal = token.text_trimmed();
 
     let content = match literal_type {
-        LiteralType::String | LiteralType::Directive => {
+        LiteralType::Directive => {
+            let raw_content = &literal[1..literal.len() - 1];
+
+            if raw_content.contains(['"', '\'']) {
+                normalize_newlines(literal, ['\r'])
+            } else {
+                let quote_style = formatter.options().quote_style;
+                let final_content = format!(
+                    "{}{}{}",
+                    quote_style.as_char(),
+                    raw_content,
+                    quote_style.as_char()
+                );
+
+                Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
+            }
+        }
+
+        LiteralType::String => {
             // literal, in our syntax, might not have quotes so we need to check if they start with a possible quote
             // is so, they are eligible for possible string manipulation
             if literal.starts_with(POSSIBLE_QUOTES) {
@@ -603,24 +621,15 @@ pub(crate) fn format_string_literal_token(
                 let (preferred_quote, alternate_quote) =
                     computed_preferred_quote_style(raw_content, formatter);
 
-                let final_content = if literal_type == LiteralType::String {
-                    let polished_raw_content =
-                        reduce_escapes_from_string(raw_content, preferred_quote, alternate_quote);
+                let polished_raw_content =
+                    reduce_escapes_from_string(raw_content, preferred_quote, alternate_quote);
 
-                    format!(
-                        "{}{}{}",
-                        preferred_quote.as_char(),
-                        polished_raw_content,
-                        preferred_quote.as_char()
-                    )
-                } else {
-                    format!(
-                        "{}{}{}",
-                        preferred_quote.as_char(),
-                        raw_content,
-                        preferred_quote.as_char()
-                    )
-                };
+                let final_content = format!(
+                    "{}{}{}",
+                    preferred_quote.as_char(),
+                    polished_raw_content,
+                    preferred_quote.as_char()
+                );
 
                 Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
             } else {

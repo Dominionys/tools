@@ -482,7 +482,7 @@ mod test {
     #[ignore]
     // use this test check if your snippet prints as you wish, without using a snapshot
     fn quick_test() {
-        let src = r#"0; "'";
+        let src = r#" "\"";
 "#;
         let syntax = SourceType::tsx();
         let tree = parse(src, 0, syntax.clone());
@@ -498,8 +498,7 @@ mod test {
         });
         assert_eq!(
             result.as_code(),
-            r#"0;
-("'");
+            r#""\""
 "#
         );
     }
