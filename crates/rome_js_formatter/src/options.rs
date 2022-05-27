@@ -117,4 +117,12 @@ impl QuoteStyle {
             QuoteStyle::Single => "&apos;",
         }
     }
+
+    /// Given the current quote, it returns the other one
+    pub fn other(&self) -> Self {
+        match self {
+            QuoteStyle::Double => QuoteStyle::Single,
+            QuoteStyle::Single => QuoteStyle::Double,
+        }
+    }
 }

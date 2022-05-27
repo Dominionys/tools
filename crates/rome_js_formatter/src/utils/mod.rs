@@ -419,12 +419,9 @@ pub(crate) fn format_with_semicolon(
 fn computed_preferred_quote_style(
     quoteless_content: &str,
     chosen_quote_style: QuoteStyle,
-) -> (QuoteStyle, QuoteStyle) {
+) -> QuoteStyle {
     let preferred = chosen_quote_style;
-    let alternate = match chosen_quote_style {
-        QuoteStyle::Double => QuoteStyle::Single,
-        QuoteStyle::Single => QuoteStyle::Double,
-    };
+    let alternate = chosen_quote_style.other();
 
     let (preferred_quotes_count, alternate_quotes_count) = quoteless_content.chars().fold(
         (0, 0),
@@ -440,10 +437,10 @@ fn computed_preferred_quote_style(
     );
 
     if preferred_quotes_count > alternate_quotes_count {
-        return (alternate, preferred);
+        return alternate;
     }
 
-    (preferred, alternate)
+    preferred
 }
 
 /// This signal is used to tell to the next character what it should do
@@ -497,7 +494,7 @@ fn reduce_escapes_from_string(
     raw_content: &str,
     preferred_quote: QuoteStyle,
     alternate_quote: QuoteStyle,
-) -> String {
+) -> Cow<str> {
     let mut reduced_string = String::new();
     let mut last_end = 0;
     let mut signal = CharSignal::Idle;
@@ -585,8 +582,13 @@ fn reduce_escapes_from_string(
         }
     }
 
-    reduced_string.push_str(&raw_content[last_end..raw_content.len()]);
-    reduced_string
+    // Don't allocate a new string of this is empty
+    if reduced_string.is_empty() {
+        Cow::Borrowed(raw_content)
+    } else {
+        reduced_string.push_str(&raw_content[last_end..raw_content.len()]);
+        Cow::Owned(reduced_string)
+    }
 }
 
 pub(crate) enum FormatLiteralStringToken<'token> {
@@ -611,6 +613,23 @@ impl<'token> FormatLiteralStringToken<'token> {
 
 const POSSIBLE_QUOTES: [char; 2] = ['\'', '"'];
 
+fn swap_quotes<'a, S: Into<&'a str>>(
+    chosen_quote_style: QuoteStyle,
+    original_content: &str,
+    new_raw_content: S,
+) -> Cow<str> {
+    if original_content.starts_with(chosen_quote_style.other().as_char()) {
+        Cow::Owned(format!(
+            "{}{}{}",
+            chosen_quote_style.as_char(),
+            new_raw_content.into(),
+            chosen_quote_style.as_char()
+        ))
+    } else {
+        Cow::Borrowed(original_content)
+    }
+}
+
 impl Format for FormatLiteralStringToken<'_> {
     type Options = JsFormatOptions;
 
@@ -626,13 +645,13 @@ impl Format for FormatLiteralStringToken<'_> {
                 if raw_content.contains(['"', '\'']) {
                     normalize_newlines(literal, ['\r'])
                 } else {
-                    let content = format!(
-                        "{}{}{}",
-                        chosen_quote_style.as_char(),
-                        raw_content,
-                        chosen_quote_style.as_char()
-                    );
-                    Cow::Owned(normalize_newlines(&content, ['\r']).into_owned())
+                    let content = swap_quotes(chosen_quote_style, literal, raw_content);
+                    match content {
+                        Cow::Borrowed(content) => normalize_newlines(content, ['\r']),
+                        Cow::Owned(content) => {
+                            Cow::Owned(normalize_newlines(&content, ['\r']).into_owned())
+                        }
+                    }
                 }
             }
             FormatLiteralStringToken::String(_) => {
@@ -642,20 +661,40 @@ impl Format for FormatLiteralStringToken<'_> {
                     // raw_content is the content of a string without the quotes
                     let raw_content = &literal[1..literal.len() - 1];
 
-                    let (preferred_quote, alternate_quote) =
+                    let preferred_quote =
                         computed_preferred_quote_style(raw_content, chosen_quote_style);
 
-                    let polished_raw_content =
-                        reduce_escapes_from_string(raw_content, preferred_quote, alternate_quote);
-
-                    let final_content = format!(
-                        "{}{}{}",
-                        preferred_quote.as_char(),
-                        polished_raw_content,
-                        preferred_quote.as_char()
+                    let polished_raw_content = reduce_escapes_from_string(
+                        raw_content,
+                        preferred_quote,
+                        preferred_quote.other(),
                     );
 
-                    Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
+                    match polished_raw_content {
+                        Cow::Borrowed(raw_content) => {
+                            let final_content = swap_quotes(preferred_quote, literal, raw_content);
+                            match final_content {
+                                Cow::Borrowed(final_content) => {
+                                    normalize_newlines(final_content, ['\r'])
+                                }
+                                Cow::Owned(final_content) => Cow::Owned(
+                                    normalize_newlines(&final_content, ['\r']).into_owned(),
+                                ),
+                            }
+                        }
+                        Cow::Owned(s) => {
+                            // content is owned, meaning we allocated a new string,
+                            // so we force replacing quotes, regardless
+                            let final_content = format!(
+                                "{}{}{}",
+                                preferred_quote.as_char(),
+                                s.as_str(),
+                                preferred_quote.as_char()
+                            );
+
+                            Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
+                        }
+                    }
                 } else {
                     normalize_newlines(literal, ['\r'])
                 }
