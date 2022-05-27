@@ -389,7 +389,12 @@ pub(crate) fn format_with_semicolon(
 /// This function determines which quotes should be used inside to enclose the string.
 /// The function take as a input the string **without quotes**.
 ///
-/// ## How it works
+/// # Returns
+///
+/// A tuple where the first quote is the preferred one, the second is the alternate (the other one).
+/// The first quote should be use to enclose the content of the string.
+///
+/// # How it works
 ///
 /// The function determines the preferred quote and alternate quote.
 /// The preferred quote is the one that comes from the formatter options. The alternate quote is the other one.
@@ -413,35 +418,29 @@ pub(crate) fn format_with_semicolon(
 /// Like this, we reduced the number of escaped quotes.
 fn computed_preferred_quote_style(
     quoteless_content: &str,
-    formatter: &Formatter<JsFormatOptions>,
+    chosen_quote_style: QuoteStyle,
 ) -> (QuoteStyle, QuoteStyle) {
-    let quote_style = formatter.options().quote_style;
-
-    let preferred = quote_style;
-    let alternate = match quote_style {
+    let preferred = chosen_quote_style;
+    let alternate = match chosen_quote_style {
         QuoteStyle::Double => QuoteStyle::Single,
         QuoteStyle::Single => QuoteStyle::Double,
     };
 
-    if quoteless_content.contains(preferred.as_char())
-        || quoteless_content.contains(alternate.as_char())
-    {
-        let (preferred_quotes_count, alternate_quotes_count) = quoteless_content.chars().fold(
-            (0, 0),
-            |(preferred_quotes_counter, alternate_quotes_counter), current_character| {
-                if current_character == preferred.as_char() {
-                    (preferred_quotes_counter + 1, alternate_quotes_counter)
-                } else if current_character == alternate.as_char() {
-                    (preferred_quotes_counter, alternate_quotes_counter + 1)
-                } else {
-                    (preferred_quotes_counter, alternate_quotes_counter)
-                }
-            },
-        );
+    let (preferred_quotes_count, alternate_quotes_count) = quoteless_content.chars().fold(
+        (0, 0),
+        |(preferred_quotes_counter, alternate_quotes_counter), current_character| {
+            if current_character == preferred.as_char() {
+                (preferred_quotes_counter + 1, alternate_quotes_counter)
+            } else if current_character == alternate.as_char() {
+                (preferred_quotes_counter, alternate_quotes_counter + 1)
+            } else {
+                (preferred_quotes_counter, alternate_quotes_counter)
+            }
+        },
+    );
 
-        if preferred_quotes_count > alternate_quotes_count {
-            return (alternate, preferred);
-        }
+    if preferred_quotes_count > alternate_quotes_count {
+        return (alternate, preferred);
     }
 
     (preferred, alternate)
@@ -590,72 +589,85 @@ fn reduce_escapes_from_string(
     reduced_string
 }
 
-const POSSIBLE_QUOTES: [char; 2] = ['\'', '"'];
-
-#[derive(Eq, PartialEq)]
-pub(crate) enum LiteralType {
-    Directive,
-    String,
+pub(crate) enum FormatLiteralStringToken<'token> {
+    String(&'token JsSyntaxToken),
+    Directive(&'token JsSyntaxToken),
 }
 
-pub(crate) fn format_string_literal_token(
-    token: JsSyntaxToken,
-    formatter: &Formatter<JsFormatOptions>,
-    literal_type: LiteralType,
-) -> FormatElement {
-    let literal = token.text_trimmed();
-
-    let content = match literal_type {
-        LiteralType::Directive => {
-            let raw_content = &literal[1..literal.len() - 1];
-
-            if raw_content.contains(['"', '\'']) {
-                normalize_newlines(literal, ['\r'])
-            } else {
-                let quote_style = formatter.options().quote_style;
-                let final_content = format!(
-                    "{}{}{}",
-                    quote_style.as_char(),
-                    raw_content,
-                    quote_style.as_char()
-                );
-
-                Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
-            }
+impl<'token> FormatLiteralStringToken<'token> {
+    pub fn from_directive(token: &'token JsSyntaxToken) -> Self {
+        Self::Directive(token)
+    }
+    pub fn from_string(token: &'token JsSyntaxToken) -> Self {
+        Self::String(token)
+    }
+    pub fn token(&self) -> &'token JsSyntaxToken {
+        match self {
+            FormatLiteralStringToken::String(token) => token,
+            FormatLiteralStringToken::Directive(token) => token,
         }
+    }
+}
 
-        LiteralType::String => {
-            // literal, in our syntax, might not have quotes so we need to check if they start with a possible quote
-            // is so, they are eligible for possible string manipulation
-            if literal.starts_with(POSSIBLE_QUOTES) {
-                // raw_content is the content of a string without the quotes
+const POSSIBLE_QUOTES: [char; 2] = ['\'', '"'];
+
+impl Format for FormatLiteralStringToken<'_> {
+    type Options = JsFormatOptions;
+
+    fn format(&self, formatter: &Formatter<Self::Options>) -> FormatResult<FormatElement> {
+        let chosen_quote_style = formatter.options().quote_style;
+        let token = self.token();
+        let literal = token.text_trimmed();
+
+        let content = match self {
+            FormatLiteralStringToken::Directive(_) => {
                 let raw_content = &literal[1..literal.len() - 1];
 
-                let (preferred_quote, alternate_quote) =
-                    computed_preferred_quote_style(raw_content, formatter);
-
-                let polished_raw_content =
-                    reduce_escapes_from_string(raw_content, preferred_quote, alternate_quote);
-
-                let final_content = format!(
-                    "{}{}{}",
-                    preferred_quote.as_char(),
-                    polished_raw_content,
-                    preferred_quote.as_char()
-                );
-
-                Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
-            } else {
-                normalize_newlines(literal, ['\r'])
+                if raw_content.contains(['"', '\'']) {
+                    normalize_newlines(literal, ['\r'])
+                } else {
+                    let content = format!(
+                        "{}{}{}",
+                        chosen_quote_style.as_char(),
+                        raw_content,
+                        chosen_quote_style.as_char()
+                    );
+                    Cow::Owned(normalize_newlines(&content, ['\r']).into_owned())
+                }
             }
-        }
-    };
+            FormatLiteralStringToken::String(_) => {
+                // literal, in our syntax, might not have quotes so we need to check if they start with a possible quote
+                // is so, they are eligible for possible string manipulation
+                if literal.starts_with(POSSIBLE_QUOTES) {
+                    // raw_content is the content of a string without the quotes
+                    let raw_content = &literal[1..literal.len() - 1];
 
-    formatter.format_replaced(
-        &token,
-        Token::from_syntax_token_cow_slice(content, &token, token.text_trimmed_range().start())
-            .into(),
-    )
+                    let (preferred_quote, alternate_quote) =
+                        computed_preferred_quote_style(raw_content, chosen_quote_style);
+
+                    let polished_raw_content =
+                        reduce_escapes_from_string(raw_content, preferred_quote, alternate_quote);
+
+                    let final_content = format!(
+                        "{}{}{}",
+                        preferred_quote.as_char(),
+                        polished_raw_content,
+                        preferred_quote.as_char()
+                    );
+
+                    Cow::Owned(normalize_newlines(&final_content, ['\r']).into_owned())
+                } else {
+                    normalize_newlines(literal, ['\r'])
+                }
+            }
+        };
+
+        Ok(formatter.format_replaced(
+            token,
+            Token::from_syntax_token_cow_slice(content, token, token.text_trimmed_range().start())
+                .into(),
+        ))
+    }
 }
 
 /// A call like expression is one of:

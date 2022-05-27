@@ -98,6 +98,7 @@ impl QuoteStyle {
         }
     }
 
+    /// Returns the quote, prepended with a backslash (escaped)
     pub fn as_escaped(&self) -> &str {
         match self {
             QuoteStyle::Double => "\\\"",
@@ -106,13 +107,11 @@ impl QuoteStyle {
     }
 
     pub fn as_bytes(&self) -> u8 {
-        match self {
-            QuoteStyle::Double => b'"',
-            QuoteStyle::Single => b'\'',
-        }
+        self.as_char() as u8
     }
 
-    pub fn as_escaped_code(&self) -> &str {
+    /// Returns the quote in HTML entity
+    pub fn as_html_entity(&self) -> &str {
         match self {
             QuoteStyle::Double => "&quot;",
             QuoteStyle::Single => "&apos;",
