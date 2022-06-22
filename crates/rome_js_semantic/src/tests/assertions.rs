@@ -24,6 +24,17 @@ use std::collections::{BTreeMap, HashMap};
 /// let a/*#A*/ = 1;
 /// ```
 ///
+/// #### Read Assertion
+///
+/// Test if the attached token is reference "reading" the value of a symbol.
+/// Pattern: ```/*READ <LABEL> */
+///
+/// /// Example:
+/// ```js
+/// let a/*#A*/ = 1;
+/// let b = a/*READ A*/ + 1;
+/// ```
+///
 /// #### At Scope Assertion
 ///
 /// Test if the attached token is a declaration that lives inside the specified scope.
@@ -97,20 +108,17 @@ pub fn assert(code: &str, test_name: &str) {
 
     let mut events_by_pos: HashMap<TextSize, Vec<SemanticEvent>> = HashMap::new();
     for event in semantic_events(r.syntax()) {
-        match &event {
-            SemanticEvent::DeclarationFound { range, .. } => {
-                let v = events_by_pos.entry(range.start()).or_default();
-                v.push(event);
-            }
-            SemanticEvent::ScopeStarted { range } => {
-                let v = events_by_pos.entry(range.start()).or_default();
-                v.push(event);
-            }
-            SemanticEvent::ScopeEnded { range, .. } => {
-                let v = events_by_pos.entry(range.end()).or_default();
-                v.push(event);
-            }
-        }
+        let pos = match &event {
+            SemanticEvent::DeclarationFound { range, .. } => range.start(),
+            SemanticEvent::ScopeStarted { range } => range.start(),
+            SemanticEvent::ScopeEnded { range, .. } => range.end(),
+            SemanticEvent::Read { range, .. } => range.start(),
+            SemanticEvent::HoistedRead { range, .. } => range.start(),
+            SemanticEvent::UnresolvedReference { range } => range.start(),
+        };
+
+        let v = events_by_pos.entry(pos).or_default();
+        v.push(event);
     }
 
     let assertions = SemanticAssertions::from_root(r.tree(), code, test_name);
@@ -124,6 +132,12 @@ pub fn assert(code: &str, test_name: &str) {
 struct DeclarationAssertion {
     range: TextRange,
     declaration_name: String,
+}
+
+#[derive(Clone, Debug)]
+struct ReadAssertion {
+    range: TextRange,
+    declaration_asertion_name: String,
 }
 
 #[derive(Clone, Debug)]
@@ -157,6 +171,7 @@ struct UniqueAssertion {
 #[derive(Clone, Debug)]
 enum SemanticAssertion {
     Declaration(DeclarationAssertion),
+    Read(ReadAssertion),
     ScopeStart(ScopeStartAssertion),
     ScopeEnd(ScopeEndAssertion),
     AtScope(AtScopeAssertion),
@@ -177,6 +192,18 @@ impl SemanticAssertion {
             Some(SemanticAssertion::Declaration(DeclarationAssertion {
                 range: token.text_range(),
                 declaration_name: name,
+            }))
+        } else if assertion_text.starts_with("/*READ ") {
+            let symbol_name = assertion_text
+                .trim()
+                .trim_start_matches("/*READ ")
+                .trim_end_matches("*/")
+                .trim()
+                .to_string();
+
+            Some(SemanticAssertion::Read(ReadAssertion {
+                range: token.text_range(),
+                declaration_asertion_name: symbol_name,
             }))
         } else if assertion_text.contains("/*START") {
             let scope_name = assertion_text
@@ -228,6 +255,7 @@ impl SemanticAssertion {
 #[derive(Debug)]
 struct SemanticAssertions {
     declarations_assertions: BTreeMap<String, DeclarationAssertion>,
+    read_assertions: Vec<ReadAssertion>,
     at_scope_assertions: Vec<AtScopeAssertion>,
     scope_start_assertions: BTreeMap<String, ScopeStartAssertion>,
     scope_end_assertions: Vec<ScopeEndAssertion>,
@@ -238,6 +266,7 @@ struct SemanticAssertions {
 impl SemanticAssertions {
     fn from_root(root: JsAnyRoot, code: &str, test_name: &str) -> Self {
         let mut declarations_assertions: BTreeMap<String, DeclarationAssertion> = BTreeMap::new();
+        let mut read_assertions = vec![];
         let mut at_scope_assertions = vec![];
         let mut scope_start_assertions: BTreeMap<String, ScopeStartAssertion> = BTreeMap::new();
         let mut scope_end_assertions = vec![];
@@ -267,6 +296,9 @@ impl SemanticAssertions {
                                 error_assertion_name_clash(&token, code, test_name, old);
                             }
                         }
+                        Some(SemanticAssertion::Read(assertion)) => {
+                            read_assertions.push(assertion);
+                        }
                         Some(SemanticAssertion::ScopeStart(assertion)) => {
                             // Scope start assertions names cannot clash
                             let old = scope_start_assertions
@@ -288,7 +320,8 @@ impl SemanticAssertions {
                         Some(SemanticAssertion::Unique(assertion)) => {
                             uniques.push(assertion);
                         }
-                        _ => {}
+
+                        None => {}
                     };
                 }
             }
@@ -296,6 +329,7 @@ impl SemanticAssertions {
 
         Self {
             declarations_assertions,
+            read_assertions,
             at_scope_assertions,
             scope_start_assertions,
             scope_end_assertions,
@@ -318,14 +352,66 @@ impl SemanticAssertions {
                     SemanticEvent::DeclarationFound { .. } => {
                         // OK because we are attached to a declaration
                     }
-                    _ => error_assertion_not_attached_to_a_declaration(
-                        code,
-                        assertion.range,
-                        test_name,
-                    ),
+                    _ => {
+                        println!("Assertion: {:?}", assertion);
+                        println!("Events: {:#?}", events_by_pos);
+                        error_assertion_not_attached_to_a_declaration(
+                            code,
+                            assertion.range,
+                            test_name,
+                        )
+                    }
                 }
             } else {
+                println!("Assertion: {:?}", assertion);
+                println!("Events: {:#?}", events_by_pos);
                 error_assertion_not_attached_to_a_declaration(code, assertion.range, test_name);
+            }
+        }
+
+        // Check every read assertion is ok
+
+        for assertion in self.read_assertions.iter() {
+            let decl = match self
+                .declarations_assertions
+                .get(&assertion.declaration_asertion_name)
+            {
+                Some(decl) => decl,
+                None => {
+                    panic!(
+                        "No declaration found with name: {}",
+                        assertion.declaration_asertion_name
+                    );
+                }
+            };
+
+            let events = match events_by_pos.get(&assertion.range.start()) {
+                Some(events) => events,
+                None => {
+                    println!("Assertion: {:?}", assertion);
+                    println!("Events: {:#?}", events_by_pos);
+                    panic!("No read event found at this range");
+                }
+            };
+
+            let at_least_one_match = events.iter().any(|e| {
+                let declaration_at_range = match &e {
+                    SemanticEvent::Read { declaration_at, .. } => *declaration_at,
+                    SemanticEvent::HoistedRead { declaration_at, .. } => Some(*declaration_at),
+                    _ => None,
+                };
+
+                if let Some(declaration_at_range) = declaration_at_range {
+                    code[declaration_at_range] == code[decl.range]
+                } else {
+                    false
+                }
+            });
+
+            if !at_least_one_match {
+                println!("Assertion: {:?}", assertion);
+                println!("Events: {:#?}", events_by_pos);
+                panic!("No matching read event found at this range");
             }
         }
 

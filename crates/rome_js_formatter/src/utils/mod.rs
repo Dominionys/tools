@@ -6,6 +6,7 @@ mod simple;
 pub mod string_utils;
 
 pub(crate) mod format_class;
+pub mod jsx_utils;
 mod member_chain;
 mod object;
 mod object_pattern_like;
@@ -39,7 +40,7 @@ pub(crate) use string_utils::*;
 /// We can have two kind of separators: `,`, `;` or ASI.
 /// Because of how the grammar crafts the nodes, the parent will add the separator to the node.
 /// So here, we create - on purpose - an empty node.
-pub(crate) struct FormatTypeMemberSeparator<'a> {
+pub struct FormatTypeMemberSeparator<'a> {
     token: Option<&'a JsSyntaxToken>,
 }
 

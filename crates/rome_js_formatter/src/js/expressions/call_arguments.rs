@@ -1,7 +1,7 @@
 use crate::builders::{format_close_delimiter, format_open_delimiter};
 use crate::prelude::*;
 use crate::utils::{is_call_like_expression, write_arguments_multi_line};
-use crate::FormatNodeFields;
+
 use rome_formatter::{format_args, write};
 use rome_js_syntax::{
     JsAnyCallArgument, JsAnyExpression, JsAnyFunctionBody, JsAnyStatement, JsArrayExpression,
@@ -10,8 +10,11 @@ use rome_js_syntax::{
 };
 use rome_rowan::{AstSeparatedElement, AstSeparatedList, SyntaxResult};
 
-impl FormatNodeFields<JsCallArguments> for FormatNodeRule<JsCallArguments> {
-    fn fmt_fields(node: &JsCallArguments, f: &mut JsFormatter) -> FormatResult<()> {
+#[derive(Debug, Clone, Default)]
+pub struct FormatJsCallArguments;
+
+impl FormatNodeRule<JsCallArguments> for FormatJsCallArguments {
+    fn fmt_fields(&self, node: &JsCallArguments, f: &mut JsFormatter) -> FormatResult<()> {
         let JsCallArgumentsFields {
             l_paren_token,
             args,
@@ -103,7 +106,6 @@ impl FormatNodeFields<JsCallArguments> for FormatNodeRule<JsCallArguments> {
                 // which means that if one is `false`, then the other is `true`.
                 // This means that in this branch we format the case where `should_group_first_argument`,
                 // in the else branch we format the case where `should_group_last_argument` is `true`.
-
                 write!(f, [l_leading_trivia, l_paren, l_trailing_trivia,])?;
                 if should_group_first_argument {
                     // special formatting of the first element
@@ -129,7 +131,6 @@ impl FormatNodeFields<JsCallArguments> for FormatNodeRule<JsCallArguments> {
                         }))
                         .finish()?;
                 }
-
                 write!(f, [r_leading_trivia, r_paren, r_trailing_trivia])
             });
 

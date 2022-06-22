@@ -1,32 +1,29 @@
 use crate::prelude::*;
 use crate::utils::object::write_member_name;
 use crate::utils::JsAnyBinaryLikeExpression;
-
-use rome_formatter::{format_args, write};
+use rome_formatter::{format_args, write, VecBuffer};
 use rome_js_syntax::{
-    JsAnyAssignmentPattern, JsAnyBindingPattern, JsAnyExpression, JsAnyFunctionBody,
-    JsAnyObjectAssignmentPatternMember, JsAnyObjectBindingPatternMember, JsAnyObjectMemberName,
-    JsAssignmentExpression, JsInitializerClause, JsObjectAssignmentPattern,
-    JsObjectAssignmentPatternProperty, JsObjectBindingPattern, JsPropertyObjectMember,
-    JsSyntaxKind, JsVariableDeclarator, TsAnyVariableAnnotation, TsType,
+    JsAnyAssignmentPattern, JsAnyExpression, JsAnyFunctionBody, JsAnyObjectAssignmentPatternMember,
+    JsAnyObjectBindingPatternMember, JsAnyObjectMemberName, JsAssignmentExpression,
+    JsObjectAssignmentPattern, JsObjectAssignmentPatternProperty, JsObjectBindingPattern,
+    JsPropertyObjectMember, JsSyntaxKind,
 };
 use rome_js_syntax::{JsAnyLiteralExpression, JsSyntaxNode};
 use rome_rowan::{declare_node_union, AstNode, SyntaxResult};
 
 declare_node_union! {
-    pub(crate) JsAnyAssignmentLike =
-        JsPropertyObjectMember |
+    pub(crate) JsAnyAssignmentLike = JsPropertyObjectMember |
         JsAssignmentExpression |
-        JsObjectAssignmentPatternProperty |
-        JsVariableDeclarator
+        JsObjectAssignmentPatternProperty
+
 }
 
 declare_node_union! {
-    pub(crate) LeftAssignmentLike = JsAnyAssignmentPattern | JsAnyObjectMemberName | JsAnyBindingPattern
+    pub(crate) LeftAssignmentLike = JsAnyAssignmentPattern | JsAnyObjectMemberName
 }
 
 declare_node_union! {
-    pub(crate) RightAssignmentLike = JsAnyExpression | JsAnyAssignmentPattern | JsInitializerClause
+    pub(crate) RightAssignmentLike = JsAnyExpression | JsAnyAssignmentPattern
 }
 
 declare_node_union! {
@@ -90,68 +87,12 @@ impl AnyObjectPattern {
 }
 
 impl LeftAssignmentLike {
-    fn as_object_pattern(&self) -> Option<AnyObjectPattern> {
+    fn as_object_assignment_pattern(&self) -> Option<AnyObjectPattern> {
         match self {
             LeftAssignmentLike::JsAnyAssignmentPattern(
                 JsAnyAssignmentPattern::JsObjectAssignmentPattern(node),
             ) => Some(AnyObjectPattern::from(node.clone())),
-            LeftAssignmentLike::JsAnyBindingPattern(
-                JsAnyBindingPattern::JsObjectBindingPattern(node),
-            ) => Some(AnyObjectPattern::from(node.clone())),
             _ => None,
-        }
-    }
-}
-
-/// [Prettier applies]: https://github.com/prettier/prettier/blob/fde0b49d7866e203ca748c306808a87b7c15548f/src/language-js/print/assignment.js#L278
-pub(crate) fn is_complex_type_annotation(
-    annotation: TsAnyVariableAnnotation,
-) -> SyntaxResult<bool> {
-    let is_complex = annotation
-        .type_annotation()?
-        .and_then(|type_annotation| type_annotation.ty().ok())
-        .and_then(|ty| match ty {
-            TsType::TsReferenceType(reference_type) => {
-                let type_arguments = reference_type.type_arguments()?;
-                let argument_list_len = type_arguments.ts_type_argument_list().len();
-
-                if argument_list_len <= 1 {
-                    return Some(false);
-                }
-
-                let has_at_least_a_complex_type = type_arguments
-                    .ts_type_argument_list()
-                    .iter()
-                    .flat_map(|p| p.ok())
-                    .any(|argument| {
-                        if matches!(argument, TsType::TsConditionalType(_)) {
-                            return true;
-                        }
-
-                        let is_complex_type = argument
-                            .as_ts_reference_type()
-                            .and_then(|reference_type| reference_type.type_arguments())
-                            .map_or(false, |type_arguments| {
-                                type_arguments.ts_type_argument_list().len() > 0
-                            });
-
-                        is_complex_type
-                    });
-                Some(has_at_least_a_complex_type)
-            }
-            _ => Some(false),
-        })
-        .unwrap_or(false);
-
-    Ok(is_complex)
-}
-
-impl RightAssignmentLike {
-    fn as_expression(&self) -> Option<JsAnyExpression> {
-        match self {
-            RightAssignmentLike::JsAnyExpression(expression) => Some(expression.clone()),
-            RightAssignmentLike::JsInitializerClause(initializer) => initializer.expression().ok(),
-            RightAssignmentLike::JsAnyAssignmentPattern(_) => None,
         }
     }
 }
@@ -165,9 +106,6 @@ impl Format<JsFormatContext> for RightAssignmentLike {
             RightAssignmentLike::JsAnyAssignmentPattern(assignment) => {
                 write!(f, [assignment.format()])
             }
-            RightAssignmentLike::JsInitializerClause(initializer) => {
-                write!(f, [space_token(), initializer.format()])
-            }
         }
     }
 }
@@ -177,19 +115,8 @@ impl Format<JsFormatContext> for RightAssignmentLike {
 /// Assignment like are:
 /// - Assignment
 /// - Object property member
-/// - Variable declaration
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub(crate) enum AssignmentLikeLayout {
-    /// This is a special layout usually used for variable declarations.
-    /// This layout is hit, usually, when a [variable declarator](JsVariableDeclarator) doesn't have initializer:
-    /// ```js
-    ///     let variable;
-    /// ```
-    /// ```ts
-    ///     let variable: Map<string, number>;
-    /// ```
-    OnlyLeft,
-
     /// First break right-hand side, then after operator.
     /// ```js
     /// {
@@ -202,7 +129,6 @@ pub(crate) enum AssignmentLikeLayout {
     /// }
     /// ```
     Fluid,
-
     /// First break after operator, then the sides are broken independently on their own lines.
     /// There is a soft line break after operator token.
     /// ```js
@@ -214,7 +140,6 @@ pub(crate) enum AssignmentLikeLayout {
     /// }
     /// ```
     BreakAfterOperator,
-
     /// First break right-hand side, then left-hand side. There are not any soft line breaks
     /// between left and right parts
     /// ```js
@@ -257,7 +182,7 @@ pub(crate) enum AssignmentLikeLayout {
     /// const a {
     ///     loreum: { ipsum },
     ///     something_else,
-    ///     happy_days: { fonzy }
+    ///     happy_days: { fonzy }  
     /// } = obj;
     /// ```
     ///
@@ -291,10 +216,6 @@ impl JsAnyAssignmentLike {
             JsAnyAssignmentLike::JsObjectAssignmentPatternProperty(assignment_pattern) => {
                 Ok(assignment_pattern.pattern()?.into())
             }
-            JsAnyAssignmentLike::JsVariableDeclarator(variable_declarator) => {
-                // SAFETY: Calling `unwrap` here is safe because we check `should_only_left` variant at the beginning of the `layout` function
-                Ok(variable_declarator.initializer().unwrap().into())
-            }
         }
     }
 
@@ -307,18 +228,6 @@ impl JsAnyAssignmentLike {
             JsAnyAssignmentLike::JsObjectAssignmentPatternProperty(property) => {
                 Ok(property.pattern()?.into())
             }
-            JsAnyAssignmentLike::JsVariableDeclarator(variable_declarator) => {
-                Ok(variable_declarator.id()?.into())
-            }
-        }
-    }
-
-    fn annotation(&self) -> Option<TsAnyVariableAnnotation> {
-        match self {
-            JsAnyAssignmentLike::JsVariableDeclarator(variable_declarator) => {
-                variable_declarator.variable_annotation()
-            }
-            _ => None,
         }
     }
 }
@@ -326,36 +235,24 @@ impl JsAnyAssignmentLike {
 const MIN_OVERLAP_FOR_BREAK: u8 = 3;
 
 impl JsAnyAssignmentLike {
-    fn write_left(&self, f: &mut JsFormatter) -> FormatResult<bool> {
+    fn write_left(&self, buffer: &mut VecBuffer<JsFormatContext>) -> FormatResult<bool> {
         match self {
             JsAnyAssignmentLike::JsPropertyObjectMember(property) => {
-                let width = write_member_name(&property.name()?, f)?;
+                let width = write_member_name(&property.name()?, buffer)?;
                 let text_width_for_break =
-                    (f.context().tab_width() + MIN_OVERLAP_FOR_BREAK) as usize;
+                    (buffer.context().tab_width() + MIN_OVERLAP_FOR_BREAK) as usize;
                 Ok(width < text_width_for_break)
             }
             JsAnyAssignmentLike::JsAssignmentExpression(assignment) => {
                 let left = assignment.left()?;
-                write!(f, [group_elements(&left.format())])?;
+                write!(buffer, [&left.format()])?;
                 Ok(false)
             }
             JsAnyAssignmentLike::JsObjectAssignmentPatternProperty(property) => {
-                let width = write_member_name(&property.member()?, f)?;
+                let width = write_member_name(&property.member()?, buffer)?;
                 let text_width_for_break =
-                    (f.context().tab_width() + MIN_OVERLAP_FOR_BREAK) as usize;
+                    (buffer.context().tab_width() + MIN_OVERLAP_FOR_BREAK) as usize;
                 Ok(width < text_width_for_break)
-            }
-            JsAnyAssignmentLike::JsVariableDeclarator(variable_declarator) => {
-                let id = variable_declarator.id()?;
-                let variable_annotation = variable_declarator.variable_annotation();
-                write!(
-                    f,
-                    [group_elements(&format_args![
-                        &id.format(),
-                        variable_annotation.format()
-                    ])]
-                )?;
-                Ok(false)
             }
         }
     }
@@ -373,13 +270,6 @@ impl JsAnyAssignmentLike {
             JsAnyAssignmentLike::JsObjectAssignmentPatternProperty(property) => {
                 let colon_token = property.colon_token()?;
                 write!(f, [colon_token.format()])
-            }
-            JsAnyAssignmentLike::JsVariableDeclarator(variable_declarator) => {
-                if let Some(initializer) = variable_declarator.initializer() {
-                    let eq_token = initializer.eq_token()?;
-                    write!(f, [space_token(), eq_token.format()])?
-                }
-                Ok(())
             }
         }
     }
@@ -403,25 +293,13 @@ impl JsAnyAssignmentLike {
                 }
                 Ok(())
             }
-            JsAnyAssignmentLike::JsVariableDeclarator(variable_declarator) => {
-                if let Some(initializer) = variable_declarator.initializer() {
-                    let expression = initializer.expression()?;
-                    write!(f, [space_token(), expression.format()])?;
-                }
-                Ok(())
-            }
         }
     }
 
     /// Returns the layout variant for an assignment like depending on right expression and left part length
     /// [Prettier applies]: https://github.com/prettier/prettier/blob/main/src/language-js/print/assignment.js
     fn layout(&self, is_left_short: bool) -> FormatResult<AssignmentLikeLayout> {
-        if self.should_only_left() {
-            return Ok(AssignmentLikeLayout::OnlyLeft);
-        }
-
-        let right = self.right()?.as_expression();
-
+        let right = self.right()?;
         if let Some(layout) = self.chain_formatting_layout()? {
             return Ok(layout);
         }
@@ -430,46 +308,34 @@ impl JsAnyAssignmentLike {
             return Ok(AssignmentLikeLayout::BreakLeftHandSide);
         }
 
-        if let Some(expression) = &right {
-            if should_break_after_operator(expression)? {
+        if let RightAssignmentLike::JsAnyExpression(expression) = &right {
+            if is_break_after_operator(expression)? {
                 return Ok(AssignmentLikeLayout::BreakAfterOperator);
             }
         }
-
         if is_left_short {
             return Ok(AssignmentLikeLayout::NeverBreakAfterOperator);
         }
 
         if matches!(
             right,
-            Some(JsAnyExpression::JsAnyLiteralExpression(
+            RightAssignmentLike::JsAnyExpression(JsAnyExpression::JsAnyLiteralExpression(
                 JsAnyLiteralExpression::JsStringLiteralExpression(_)
             )),
         ) {
             return Ok(AssignmentLikeLayout::BreakAfterOperator);
         }
 
-        if self.should_never_break_after_operator()? {
+        if self.is_never_break_after_operator()? {
             return Ok(AssignmentLikeLayout::NeverBreakAfterOperator);
         }
         Ok(AssignmentLikeLayout::Fluid)
-    }
-
-    /// Checks that a [JsAnyAssignmentLike] consists only of the left part
-    /// usually, when a [variable declarator](JsVariableDeclarator) doesn't have initializer
-    fn should_only_left(&self) -> bool {
-        if let JsAnyAssignmentLike::JsVariableDeclarator(declarator) = self {
-            declarator.initializer().is_none()
-        } else {
-            false
-        }
     }
 
     /// Checks if the right node is entitled of the chain formatting,
     /// and if so, it return the layout type
     fn chain_formatting_layout(&self) -> SyntaxResult<Option<AssignmentLikeLayout>> {
         let right = self.right()?;
-
         let right_is_tail = !matches!(
             right,
             RightAssignmentLike::JsAnyExpression(JsAnyExpression::JsAssignmentExpression(_))
@@ -515,7 +381,6 @@ impl JsAnyAssignmentLike {
                     RightAssignmentLike::JsAnyExpression(
                         JsAnyExpression::JsArrowFunctionExpression(arrow),
                     ) => {
-                        dbg!("here");
                         let this_body = arrow.body()?;
                         if matches!(
                             this_body,
@@ -539,18 +404,17 @@ impl JsAnyAssignmentLike {
         Ok(result)
     }
 
-    fn should_never_break_after_operator(&self) -> SyntaxResult<bool> {
-        let right = self.right()?.as_expression();
-
-        if let Some(JsAnyExpression::JsCallExpression(call_expression)) = &right {
-            if call_expression.callee()?.syntax().text() == "require" {
-                return Ok(true);
+    fn is_never_break_after_operator(&self) -> SyntaxResult<bool> {
+        let right = self.right()?;
+        if let RightAssignmentLike::JsAnyExpression(right) = &right {
+            if let JsAnyExpression::JsCallExpression(call_expression) = &right {
+                if call_expression.callee()?.syntax().text() == "require" {
+                    return Ok(true);
+                }
             }
-        }
 
-        if matches!(
-            right,
-            Some(
+            if matches!(
+                right,
                 JsAnyExpression::JsClassExpression(_)
                     | JsAnyExpression::JsTemplate(_)
                     | JsAnyExpression::JsAnyLiteralExpression(
@@ -559,9 +423,9 @@ impl JsAnyAssignmentLike {
                     | JsAnyExpression::JsAnyLiteralExpression(
                         JsAnyLiteralExpression::JsNumberLiteralExpression(_)
                     )
-            )
-        ) {
-            return Ok(true);
+            ) {
+                return Ok(true);
+            }
         }
 
         Ok(false)
@@ -570,23 +434,23 @@ impl JsAnyAssignmentLike {
     /// Particular function that checks if the left hand side of a [JsAnyAssignmentLike] should
     /// be broken on multiple lines
     fn should_break_left_hand_side(&self) -> SyntaxResult<bool> {
-        let is_complex_destructuring = self
-            .left()?
-            .as_object_pattern()
-            .and_then(|pattern| pattern.is_complex().ok())
-            .unwrap_or(false);
+        // TODO: here we have to add the check for variable declarator too
+        let is_complex_destructuring = if let JsAnyAssignmentLike::JsAssignmentExpression(_) = self
+        {
+            self.left()?
+                .as_object_assignment_pattern()
+                .and_then(|pattern| pattern.is_complex().ok())
+                .unwrap_or(false)
+        } else {
+            false
+        };
 
-        let has_complex_type_annotation = self
-            .annotation()
-            .and_then(|annotation| is_complex_type_annotation(annotation).ok())
-            .unwrap_or(false);
-
-        Ok(is_complex_destructuring || has_complex_type_annotation)
+        Ok(is_complex_destructuring)
     }
 }
 
 /// Checks if the function is entitled to be printed with layout [AssignmentLikeLayout::BreakAfterOperator]
-pub(crate) fn should_break_after_operator(right: &JsAnyExpression) -> SyntaxResult<bool> {
+pub(crate) fn is_break_after_operator(right: &JsAnyExpression) -> SyntaxResult<bool> {
     if has_new_line_before_comment(right.syntax()) {
         return Ok(true);
     }
@@ -638,18 +502,46 @@ pub(crate) fn has_new_line_before_comment(node: &JsSyntaxNode) -> bool {
 impl Format<JsFormatContext> for JsAnyAssignmentLike {
     fn fmt(&self, f: &mut JsFormatter) -> FormatResult<()> {
         let format_content = format_with(|f| {
+            // We create a temporary buffer because the left hand side has to conditionally add
+            // a group based on the layout, but the layout can only be computed by knowing the
+            // width of the left hand side. The left hand side can be a member, and that has a width
+            // can can be known only when it's formatted (it can incur in some transformation,
+            // like removing some escapes, etc.).
+            //
+            // 1. we crate a temporary buffer
+            // 2. we write the left hand side into the buffer and retrieve the `is_left_short` info
+            // which is computed only when we format it
+            // 3. we compute the layout
+            // 4. we write the left node inside the main buffer based on the layout
+            let mut buffer = VecBuffer::new(f.state_mut());
+            let is_left_short = self.write_left(&mut buffer)?;
+
             // Compare name only if we are in a position of computing it.
             // If not (for example, left is not an identifier), then let's fallback to false,
             // so we can continue the chain of checks
-            let is_left_short = self.write_left(f)?;
-            self.write_operator(f)?;
-
             let layout = self.layout(is_left_short)?;
+
+            let formatted_element = buffer.into_element();
+
+            if layout == AssignmentLikeLayout::BreakLeftHandSide {
+                write!(
+                    f,
+                    [&format_once(|f| { f.write_element(formatted_element) })]
+                )?;
+            } else {
+                write!(
+                    f,
+                    [group_elements(&format_once(|f| {
+                        f.write_element(formatted_element)
+                    }))]
+                )?;
+            }
+
+            self.write_operator(f)?;
 
             let right = &format_with(|f| self.write_right(f)).memoized();
 
             let inner_content = format_with(|f| match &layout {
-                AssignmentLikeLayout::OnlyLeft => Ok(()),
                 AssignmentLikeLayout::Fluid => {
                     let group_id = f.group_id("assignment_like");
 
@@ -708,9 +600,7 @@ impl Format<JsFormatContext> for JsAnyAssignmentLike {
 
             match layout {
                 // Layouts that don't need enclosing group
-                AssignmentLikeLayout::Chain
-                | AssignmentLikeLayout::ChainTail
-                | AssignmentLikeLayout::OnlyLeft => {
+                AssignmentLikeLayout::Chain | AssignmentLikeLayout::ChainTail => {
                     write!(f, [&inner_content])
                 }
                 _ => {
