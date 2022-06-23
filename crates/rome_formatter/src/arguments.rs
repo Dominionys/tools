@@ -119,6 +119,56 @@ impl<'fmt, Context> From<&'fmt Argument<'fmt, Context>> for Arguments<'fmt, Cont
 mod tests {
     use crate::prelude::*;
     use crate::{format_args, write, FormatState, VecBuffer};
+    use std::hash::Hasher;
+
+    #[test]
+    fn test_nesting_1() {
+        let mut context = FormatState::new(());
+        let mut buffer = VecBuffer::new(&mut context);
+
+        let mut inner_context = FormatState::new(());
+        let mut inner_buffer = VecBuffer::new(&mut inner_context);
+
+        write!(
+            &mut inner_buffer,
+            [labelled(
+                "label",
+                &format_args![
+                    token("function"),
+                    space_token(),
+                    token("a"),
+                    space_token(),
+                    group_elements(&format_args!(token("("), token(")")))
+                ]
+            ),]
+        )
+        .unwrap();
+
+        let element = inner_buffer.into_element();
+        let is_complex = match &element {
+            FormatElement::Label(label) => label.identifier == "label",
+            _ => false,
+        };
+
+        if is_complex {
+            let content = format_once(|f| f.write_element(element));
+            write!(&mut buffer, [group_elements(&content)]);
+        }
+
+        assert_eq!(
+            buffer.into_element(),
+            FormatElement::List(List::new(vec![
+                FormatElement::Token(Token::Static { text: "function" }),
+                FormatElement::Space,
+                FormatElement::Token(Token::Static { text: "a" }),
+                FormatElement::Space,
+                FormatElement::Group(Group::new(vec![
+                    FormatElement::Token(Token::Static { text: "(" }),
+                    FormatElement::Token(Token::Static { text: ")" }),
+                ]))
+            ]))
+        );
+    }
 
     #[test]
     fn test_nesting() {

@@ -70,6 +70,9 @@ pub enum FormatElement {
     /// An interned format element. Useful when the same content must be emitted multiple times to avoid
     /// deep cloning the IR when using the `best_fitting!` macro or `if_group_fits_on_line` and `if_group_breaks`.
     Interned(Interned),
+
+    ///
+    Label(Label),
 }
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
@@ -150,6 +153,10 @@ impl Debug for FormatElement {
             }
             FormatElement::ExpandParent => write!(fmt, "ExpandParent"),
             FormatElement::Interned(inner) => inner.fmt(fmt),
+            FormatElement::Label(label) => {
+                write!(fmt, "Label")?;
+                label.fmt(fmt)
+            }
         }
     }
 }
@@ -352,6 +359,21 @@ impl Deref for Interned {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Label {
+    pub(crate) content: Box<[FormatElement]>,
+    pub(crate) identifier: &'static str,
+}
+
+impl Label {
+    pub fn new(identifier: &'static str, content: Vec<FormatElement>) -> Self {
+        Self {
+            content: content.into_boxed_slice(),
+            identifier,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ConditionalGroupContent {
     pub(crate) content: Content,
@@ -509,7 +531,9 @@ impl FormatElement {
             FormatElement::Space => false,
             FormatElement::Line(line_mode) => matches!(line_mode, LineMode::Hard | LineMode::Empty),
             FormatElement::Indent(content) => content.will_break(),
-            FormatElement::Group(Group { content, .. }) | FormatElement::Comment(content) => {
+            FormatElement::Group(Group { content, .. })
+            | FormatElement::Comment(content)
+            | FormatElement::Label(Label { content, .. }) => {
                 content.iter().any(FormatElement::will_break)
             }
             FormatElement::ConditionalGroupContent(group) => group.content.will_break(),

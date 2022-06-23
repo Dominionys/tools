@@ -523,6 +523,49 @@ impl<Context> std::fmt::Debug for FormatComment<'_, Context> {
     }
 }
 
+///
+#[inline]
+pub fn labelled<'a, Content, Context>(
+    identifier: &'static str,
+    content: &'a Content,
+) -> FormatLabelled<'a, Context>
+where
+    Content: Format<Context>,
+{
+    FormatLabelled {
+        content: Argument::new(content),
+        identifier,
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct FormatLabelled<'a, Context> {
+    content: Argument<'a, Context>,
+    identifier: &'static str,
+}
+
+impl<Context> Format<Context> for FormatLabelled<'_, Context> {
+    fn fmt(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
+        let mut buffer = VecBuffer::new(f.state_mut());
+
+        buffer.write_fmt(Arguments::from(&self.content))?;
+        let content = buffer.into_vec();
+
+        let label = Label::new(self.identifier, content);
+
+        f.write_element(FormatElement::Label(label))
+    }
+}
+
+impl<Context> std::fmt::Debug for FormatLabelled<'_, Context> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Label")
+            .field(&"{{name}}")
+            .field(&"{{content}}")
+            .finish()
+    }
+}
+
 /// Inserts a single space. Allows to separate different tokens.
 ///
 /// # Examples
