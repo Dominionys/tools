@@ -3,17 +3,19 @@ use crate::utils::object::write_member_name;
 use crate::utils::JsAnyBinaryLikeExpression;
 use rome_formatter::{format_args, write, VecBuffer};
 use rome_js_syntax::{
-    JsAnyAssignmentPattern, JsAnyBindingPattern, JsAnyClassMemberName, JsAnyExpression,
-    JsAnyFunctionBody, JsAnyObjectAssignmentPatternMember, JsAnyObjectBindingPatternMember,
-    JsAnyObjectMemberName, JsAssignmentExpression, JsInitializerClause, JsLiteralMemberName,
-    JsObjectAssignmentPattern, JsObjectAssignmentPatternProperty, JsObjectBindingPattern,
-    JsPropertyClassMember, JsPropertyClassMemberFields, JsPropertyObjectMember, JsSyntaxKind,
+    JsAnyAssignmentPattern, JsAnyBindingPattern, JsAnyCallArgument, JsAnyClassMemberName,
+    JsAnyExpression, JsAnyFunctionBody, JsAnyObjectAssignmentPatternMember,
+    JsAnyObjectBindingPatternMember, JsAnyObjectMemberName, JsAssignmentExpression,
+    JsInitializerClause, JsLiteralMemberName, JsObjectAssignmentPattern,
+    JsObjectAssignmentPatternProperty, JsObjectBindingPattern, JsPropertyClassMember,
+    JsPropertyClassMemberFields, JsPropertyObjectMember, JsSyntaxKind, JsUnaryOperator,
     JsVariableDeclarator, TsAnyVariableAnnotation, TsIdentifierBinding,
     TsPropertySignatureClassMember, TsPropertySignatureClassMemberFields, TsType,
     TsTypeAliasDeclaration,
 };
 use rome_js_syntax::{JsAnyLiteralExpression, JsSyntaxNode};
 use rome_rowan::{declare_node_union, AstNode, SyntaxResult};
+use std::iter;
 
 declare_node_union! {
     pub(crate) JsAnyAssignmentLike =
@@ -514,7 +516,7 @@ impl JsAnyAssignmentLike {
 
     /// Returns the layout variant for an assignment like depending on right expression and left part length
     /// [Prettier applies]: https://github.com/prettier/prettier/blob/main/src/language-js/print/assignment.js
-    fn layout(&self, is_left_short: bool) -> FormatResult<AssignmentLikeLayout> {
+    fn layout(&self, is_left_short: bool, threshold: u16) -> FormatResult<AssignmentLikeLayout> {
         if self.has_only_left_hand_side() {
             return Ok(AssignmentLikeLayout::OnlyLeft);
         }
@@ -537,8 +539,21 @@ impl JsAnyAssignmentLike {
             return Ok(AssignmentLikeLayout::NeverBreakAfterOperator);
         }
 
+        let node = iter::successors(right, |node| match node {
+            JsAnyExpression::JsUnaryExpression(unary) => unary.argument().ok(),
+            JsAnyExpression::TsNonNullAssertionExpression(assertion) => assertion.expression().ok(),
+            _ => None,
+        })
+        .last();
+
+        if let Some(expression) = node.clone() {
+            if is_poorly_breakable_member_or_call_chain(expression, threshold, false)? {
+                return Ok(AssignmentLikeLayout::BreakAfterOperator);
+            }
+        }
+
         if matches!(
-            right,
+            node,
             Some(JsAnyExpression::JsAnyLiteralExpression(
                 JsAnyLiteralExpression::JsStringLiteralExpression(_)
             )),
@@ -782,7 +797,9 @@ pub(crate) fn has_new_line_before_comment(node: &JsSyntaxNode) -> bool {
 
 impl Format<JsFormatContext> for JsAnyAssignmentLike {
     fn fmt(&self, f: &mut JsFormatter) -> FormatResult<()> {
-        let format_content = format_with(|f| {
+        let format_content = format_with(|f: &mut Formatter<JsFormatContext>| {
+            let threshold = f.context().line_width().value() / 4;
+
             // We create a temporary buffer because the left hand side has to conditionally add
             // a group based on the layout, but the layout can only be computed by knowing the
             // width of the left hand side. The left hand side can be a member, and that has a width
@@ -807,7 +824,7 @@ impl Format<JsFormatContext> for JsAnyAssignmentLike {
             // Compare name only if we are in a position of computing it.
             // If not (for example, left is not an identifier), then let's fallback to false,
             // so we can continue the chain of checks
-            let layout = self.layout(is_left_short)?;
+            let layout = self.layout(is_left_short, threshold)?;
 
             let formatted_element = buffer.into_element();
 
@@ -905,4 +922,115 @@ impl Format<JsFormatContext> for JsAnyAssignmentLike {
 
         write!(f, [format_content])
     }
+}
+
+fn is_poorly_breakable_member_or_call_chain(
+    expression: JsAnyExpression,
+    threshold: u16,
+    is_deep: bool,
+) -> SyntaxResult<bool> {
+    if let JsAnyExpression::JsCallExpression(call_expression) = expression {
+        // const doc = printCallExpression(path, options, print);
+        // if (doc.label === "member-chain") {
+        //     return false;
+        // }
+        let arguments = call_expression.arguments()?.args();
+        let arguments_len = arguments.len();
+
+        let is_poorly_breakable_call = match arguments_len {
+            0 => true,
+            1 => {
+                let argument = arguments.iter().next().unwrap()?;
+                is_lone_short_argument(argument, threshold)?
+            }
+            _ => false,
+        };
+
+        if !is_poorly_breakable_call {
+            return Ok(false);
+        }
+
+        // if (isCallExpressionWithComplexTypeArguments(node, print)) {
+        //     return false;
+        // }
+        return is_poorly_breakable_member_or_call_chain(
+            call_expression.callee()?,
+            threshold,
+            true,
+        );
+    }
+
+    let object = match &expression {
+        JsAnyExpression::JsStaticMemberExpression(expression) => Some(expression.object()?),
+        JsAnyExpression::JsComputedMemberExpression(expression) => Some(expression.object()?),
+        _ => None,
+    };
+
+    if let Some(object) = object.clone() {
+        return is_poorly_breakable_member_or_call_chain(object, threshold, true);
+    }
+
+    return Ok(is_deep
+        && matches!(
+            expression,
+            JsAnyExpression::JsIdentifierExpression(_) | JsAnyExpression::JsThisExpression(_)
+        ));
+}
+
+fn is_lone_short_argument(argument: JsAnyCallArgument, threshold: u16) -> SyntaxResult<bool> {
+    if argument.syntax().has_leading_comments() || argument.syntax().has_trailing_comments() {
+        return Ok(false);
+    }
+
+    if let JsAnyCallArgument::JsAnyExpression(expression) = argument {
+        match expression {
+            JsAnyExpression::JsThisExpression(_) => {
+                return Ok(true);
+            }
+            JsAnyExpression::JsIdentifierExpression(identifier) => {
+                if identifier.name()?.value_token()?.text_trimmed().len() <= threshold as usize {
+                    return Ok(true);
+                }
+            }
+            JsAnyExpression::JsUnaryExpression(unary_expression) => {
+                let is_signed = matches!(
+                    unary_expression.operator()?,
+                    JsUnaryOperator::Plus | JsUnaryOperator::Minus
+                );
+
+                let argument = unary_expression.argument()?;
+                let is_numeric_literal = matches!(
+                    argument,
+                    JsAnyExpression::JsAnyLiteralExpression(
+                        JsAnyLiteralExpression::JsNumberLiteralExpression(_)
+                    )
+                );
+                let has_comments = argument.syntax().has_leading_comments()
+                    || argument.syntax().has_trailing_comments();
+
+                if is_signed && is_numeric_literal && !has_comments {
+                    return Ok(true);
+                }
+            }
+            JsAnyExpression::JsAnyLiteralExpression(literal) => {
+                return match literal {
+                    JsAnyLiteralExpression::JsRegexLiteralExpression(regex) => {
+                        Ok(regex.value_token()?.text_trimmed().len() <= threshold as usize)
+                    }
+                    JsAnyLiteralExpression::JsStringLiteralExpression(string) => {
+                        Ok(string.value_token()?.text_trimmed().len() <= threshold as usize)
+                    }
+                    _ => Ok(true),
+                }
+            }
+            JsAnyExpression::JsTemplate(_) => {
+                // node.expressions.length === 0 &&
+                //     node.quasis[0].value.raw.length <= threshold &&
+                //     !node.quasis[0].value.raw.includes("\n")
+            }
+            _ => {}
+        }
+    }
+
+    Ok(false)
 }
