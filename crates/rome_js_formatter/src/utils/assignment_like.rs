@@ -644,7 +644,6 @@ impl JsAnyAssignmentLike {
                 .map(|expression| expression.as_js_arrow_function_expression().is_some())
                 .unwrap_or(false);
 
-            dbg!("{} {}", can_left_break, is_arrow_function_declarator);
             if can_left_break && is_arrow_function_declarator {
                 return Ok(true);
             }
