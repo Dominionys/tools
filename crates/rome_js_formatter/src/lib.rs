@@ -457,16 +457,10 @@ mod test {
     // use this test check if your snippet prints as you wish, without using a snapshot
     fn quick_test() {
         let src = r#"
-const MyComponentWithLongName2: React.VoidFunctionComponent<
-  MyComponentWithLongNameProps
-> = ({
-  x,
-}) => {
-  const a = useA();
-  return (
-   f
-  );
+const MyComponentWithLongName: React.VoidFunctionComponent<MyComponentWithLongNameProps> = ({ x, y }) => {
+  return <div>{x + y + a}</div>;
 };
+
         "#;
         let syntax = SourceType::tsx();
         let tree = parse(src, 0, syntax);

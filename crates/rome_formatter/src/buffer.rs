@@ -487,6 +487,10 @@ pub trait BufferExtensions: Buffer + Sized {
         WillBreakBuffer::new(self)
     }
 
+    fn inspect_can_break(&mut self) -> CanBreakBuffer<Self::Context> {
+        CanBreakBuffer::new(self)
+    }
+
     /// It creates a buffer where all the elements are ignored, so the elements
     /// are not written anywhere at all.
     ///
@@ -598,6 +602,60 @@ impl<Context> Buffer for WillBreakBuffer<'_, Context> {
 struct WillBreakSnapshot {
     inner: BufferSnapshot,
     breaks: bool,
+}
+
+#[must_use = "must eventually call `can_break()` to retrieve the information"]
+pub struct CanBreakBuffer<'buffer, Context> {
+    can_break: bool,
+    inner: &'buffer mut dyn Buffer<Context = Context>,
+}
+
+impl<'buffer, Context> CanBreakBuffer<'buffer, Context> {
+    pub fn new(buffer: &'buffer mut dyn Buffer<Context = Context>) -> Self {
+        Self {
+            can_break: false,
+            inner: buffer,
+        }
+    }
+
+    pub fn can_break(&self) -> bool {
+        self.can_break
+    }
+}
+
+impl<Context> Buffer for CanBreakBuffer<'_, Context> {
+    type Context = Context;
+
+    fn write_element(&mut self, element: FormatElement) -> FormatResult<()> {
+        self.can_break = self.can_break || element.will_break();
+        self.inner.write_element(element)
+    }
+
+    fn state(&self) -> &FormatState<Self::Context> {
+        self.inner.state()
+    }
+
+    fn state_mut(&mut self) -> &mut FormatState<Self::Context> {
+        self.inner.state_mut()
+    }
+
+    fn snapshot(&self) -> BufferSnapshot {
+        BufferSnapshot::Any(Box::new(CanBreakSnapshot {
+            inner: self.inner.snapshot(),
+            can_break: self.can_break,
+        }))
+    }
+
+    fn restore_snapshot(&mut self, snapshot: BufferSnapshot) {
+        let snapshot = snapshot.unwrap_any::<CanBreakSnapshot>();
+        self.inner.restore_snapshot(snapshot.inner);
+        self.can_break = snapshot.can_break;
+    }
+}
+
+struct CanBreakSnapshot {
+    inner: BufferSnapshot,
+    can_break: bool,
 }
 
 pub struct NullBuffer<'buffer, Context> {

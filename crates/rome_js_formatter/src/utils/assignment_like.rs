@@ -439,7 +439,11 @@ impl JsAnyAssignmentLike {
 
     /// Returns the layout variant for an assignment like depending on right expression and left part length
     /// [Prettier applies]: https://github.com/prettier/prettier/blob/main/src/language-js/print/assignment.js
-    fn layout(&self, is_left_short: bool) -> FormatResult<AssignmentLikeLayout> {
+    fn layout(
+        &self,
+        is_left_short: bool,
+        can_left_break: bool,
+    ) -> FormatResult<AssignmentLikeLayout> {
         if self.has_only_left_hand_side() {
             return Ok(AssignmentLikeLayout::OnlyLeft);
         }
@@ -450,7 +454,7 @@ impl JsAnyAssignmentLike {
             return Ok(layout);
         }
 
-        if self.should_break_left_hand_side()? {
+        if self.should_break_left_hand_side(can_left_break)? {
             return Ok(AssignmentLikeLayout::BreakLeftHandSide);
         }
 
@@ -619,7 +623,7 @@ impl JsAnyAssignmentLike {
 
     /// Particular function that checks if the left hand side of a [JsAnyAssignmentLike] should
     /// be broken on multiple lines
-    fn should_break_left_hand_side(&self) -> SyntaxResult<bool> {
+    fn should_break_left_hand_side(&self, can_left_break: bool) -> SyntaxResult<bool> {
         let is_complex_destructuring = self
             .left()?
             .as_object_pattern()
@@ -632,6 +636,19 @@ impl JsAnyAssignmentLike {
             .unwrap_or(false);
 
         let is_complex_type_alias = self.is_complex_type_alias()?;
+
+        if let JsAnyAssignmentLike::JsVariableDeclarator(declarator) = self {
+            let is_arrow_function_declarator = declarator
+                .initializer()
+                .and_then(|initializer| initializer.expression().ok())
+                .map(|expression| expression.as_js_arrow_function_expression().is_some())
+                .unwrap_or(false);
+
+            dbg!("{} {}", can_left_break, is_arrow_function_declarator);
+            if can_left_break && is_arrow_function_declarator {
+                return Ok(true);
+            }
+        }
 
         Ok(is_complex_destructuring || has_complex_type_annotation || is_complex_type_alias)
     }
@@ -718,19 +735,22 @@ impl Format<JsFormatContext> for JsAnyAssignmentLike {
             // 3. we compute the layout
             // 4. we write the left node inside the main buffer based on the layout
             let mut buffer = VecBuffer::new(f.state_mut());
+            let mut can_break_buffer = buffer.inspect_can_break();
             let mut is_left_short = false;
             write!(
-                buffer,
+                can_break_buffer,
                 [&format_once(|f| {
                     is_left_short = self.write_left(f)?;
                     Ok(())
                 })]
             )?;
 
+            let can_left_break = can_break_buffer.can_break();
+
             // Compare name only if we are in a position of computing it.
             // If not (for example, left is not an identifier), then let's fallback to false,
             // so we can continue the chain of checks
-            let layout = self.layout(is_left_short)?;
+            let layout = self.layout(is_left_short, can_left_break)?;
 
             let formatted_element = buffer.into_element();
 

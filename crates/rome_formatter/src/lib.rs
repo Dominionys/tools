@@ -45,8 +45,8 @@ use crate::printed_tokens::PrintedTokens;
 use crate::printer::{Printer, PrinterOptions};
 pub use arguments::{Argument, Arguments};
 pub use buffer::{
-    Buffer, BufferExtensions, BufferSnapshot, Inspect, NullBuffer, PreambleBuffer, VecBuffer,
-    WillBreakBuffer,
+    Buffer, BufferExtensions, BufferSnapshot, CanBreakBuffer, Inspect, NullBuffer, PreambleBuffer,
+    VecBuffer, WillBreakBuffer,
 };
 pub use builders::{
     block_indent, comment, empty_line, get_lines_before, group_elements, hard_line_break,

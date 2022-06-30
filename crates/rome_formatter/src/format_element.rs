@@ -524,6 +524,28 @@ impl FormatElement {
         }
     }
 
+    pub fn can_break(&self) -> bool {
+        match self {
+            FormatElement::Space => false,
+            FormatElement::Line(line_mode) => {
+                matches!(line_mode, LineMode::Soft | LineMode::SoftOrSpace)
+            }
+            FormatElement::Group(Group { content, .. })
+            | FormatElement::ConditionalGroupContent(ConditionalGroupContent { content, .. })
+            | FormatElement::Comment(content)
+            | FormatElement::Fill(Fill { content, .. })
+            | FormatElement::Verbatim(Verbatim { content, .. })
+            | FormatElement::Indent(content) => content.iter().any(FormatElement::can_break),
+            FormatElement::List(list) => list.content.iter().any(FormatElement::can_break),
+            FormatElement::Token(token) => token.contains('\n'),
+            FormatElement::LineSuffix(_) => false,
+            FormatElement::BestFitting(_) => false,
+            FormatElement::LineSuffixBoundary => false,
+            FormatElement::ExpandParent => true,
+            FormatElement::Interned(inner) => inner.0.can_break(),
+        }
+    }
+
     /// Utility function to get the "last element" of a [FormatElement], recursing
     /// into lists and groups to find the last element that's not
     /// a line break, verbatim or a comment.
