@@ -1,15 +1,16 @@
 use crate::prelude::*;
+use crate::utils::member_chain::MemberChainLabel;
 use crate::utils::object::write_member_name;
-use crate::utils::JsAnyBinaryLikeExpression;
+use crate::utils::{format_call_expression, JsAnyBinaryLikeExpression};
 use rome_formatter::{format_args, write, VecBuffer};
 use rome_js_syntax::{
     JsAnyAssignmentPattern, JsAnyBindingPattern, JsAnyCallArgument, JsAnyClassMemberName,
     JsAnyExpression, JsAnyFunctionBody, JsAnyObjectAssignmentPatternMember,
     JsAnyObjectBindingPatternMember, JsAnyObjectMemberName, JsAssignmentExpression,
-    JsInitializerClause, JsLiteralMemberName, JsObjectAssignmentPattern,
+    JsCallExpression, JsInitializerClause, JsLiteralMemberName, JsObjectAssignmentPattern,
     JsObjectAssignmentPatternProperty, JsObjectBindingPattern, JsPropertyClassMember,
-    JsPropertyClassMemberFields, JsPropertyObjectMember, JsSyntaxKind, JsUnaryOperator,
-    JsVariableDeclarator, TsAnyVariableAnnotation, TsIdentifierBinding,
+    JsPropertyClassMemberFields, JsPropertyObjectMember, JsSyntaxKind, JsUnaryExpression,
+    JsUnaryOperator, JsVariableDeclarator, TsAnyVariableAnnotation, TsIdentifierBinding,
     TsPropertySignatureClassMember, TsPropertySignatureClassMemberFields, TsType,
     TsTypeAliasDeclaration,
 };
@@ -516,7 +517,11 @@ impl JsAnyAssignmentLike {
 
     /// Returns the layout variant for an assignment like depending on right expression and left part length
     /// [Prettier applies]: https://github.com/prettier/prettier/blob/main/src/language-js/print/assignment.js
-    fn layout(&self, is_left_short: bool, threshold: u16) -> FormatResult<AssignmentLikeLayout> {
+    fn layout(
+        &self,
+        is_left_short: bool,
+        f: &mut Formatter<JsFormatContext>,
+    ) -> FormatResult<AssignmentLikeLayout> {
         if self.has_only_left_hand_side() {
             return Ok(AssignmentLikeLayout::OnlyLeft);
         }
@@ -547,7 +552,7 @@ impl JsAnyAssignmentLike {
         .last();
 
         if let Some(expression) = node.clone() {
-            if is_poorly_breakable_member_or_call_chain(expression, threshold, false)? {
+            if is_poorly_breakable_member_or_call_chain(expression, false, f)? {
                 return Ok(AssignmentLikeLayout::BreakAfterOperator);
             }
         }
@@ -798,8 +803,6 @@ pub(crate) fn has_new_line_before_comment(node: &JsSyntaxNode) -> bool {
 impl Format<JsFormatContext> for JsAnyAssignmentLike {
     fn fmt(&self, f: &mut JsFormatter) -> FormatResult<()> {
         let format_content = format_with(|f: &mut Formatter<JsFormatContext>| {
-            let threshold = f.context().line_width().value() / 4;
-
             // We create a temporary buffer because the left hand side has to conditionally add
             // a group based on the layout, but the layout can only be computed by knowing the
             // width of the left hand side. The left hand side can be a member, and that has a width
@@ -821,12 +824,12 @@ impl Format<JsFormatContext> for JsAnyAssignmentLike {
                 })]
             )?;
 
+            let formatted_element = buffer.into_element();
+
             // Compare name only if we are in a position of computing it.
             // If not (for example, left is not an identifier), then let's fallback to false,
             // so we can continue the chain of checks
-            let layout = self.layout(is_left_short, threshold)?;
-
-            let formatted_element = buffer.into_element();
+            let layout = self.layout(is_left_short, f)?;
 
             if matches!(
                 layout,
@@ -926,23 +929,35 @@ impl Format<JsFormatContext> for JsAnyAssignmentLike {
 
 fn is_poorly_breakable_member_or_call_chain(
     expression: JsAnyExpression,
-    threshold: u16,
     is_deep: bool,
+    f: &mut Formatter<JsFormatContext>,
 ) -> SyntaxResult<bool> {
+    let threshold = f.context().line_width().value() / 4;
+
     if let JsAnyExpression::JsCallExpression(call_expression) = expression {
-        // const doc = printCallExpression(path, options, print);
-        // if (doc.label === "member-chain") {
-        //     return false;
-        // }
-        let arguments = call_expression.arguments()?.args();
-        let arguments_len = arguments.len();
+        let is_member_chain = {
+            // let mut null_buffer = f.inspect_null();
+            // let mut buffer = null_buffer.inspect_is_labelled::<MemberChainLabel>();
+            // write!(buffer, [call_expression.format()]);
+            // buffer.is_labelled()
+            false
+        };
+
+        if is_member_chain {
+            return Ok(false);
+        }
+
+        let args = call_expression.arguments()?.args();
+        let arguments_len = args.len();
 
         let is_poorly_breakable_call = match arguments_len {
             0 => true,
-            1 => {
-                let argument = arguments.iter().next().unwrap()?;
-                is_lone_short_argument(argument, threshold)?
-            }
+            1 => args
+                .iter()
+                .next()
+                .map(|first_argument| Ok(is_lone_short_argument(first_argument?, threshold)?))
+                .transpose()?
+                .unwrap_or(false),
             _ => false,
         };
 
@@ -950,14 +965,11 @@ fn is_poorly_breakable_member_or_call_chain(
             return Ok(false);
         }
 
-        // if (isCallExpressionWithComplexTypeArguments(node, print)) {
-        //     return false;
-        // }
-        return is_poorly_breakable_member_or_call_chain(
-            call_expression.callee()?,
-            threshold,
-            true,
-        );
+        if is_call_expression_with_complex_type_arguments(&call_expression, f)? {
+            return Ok(false);
+        }
+
+        return is_poorly_breakable_member_or_call_chain(call_expression.callee()?, true, f);
     }
 
     let object = match &expression {
@@ -966,8 +978,8 @@ fn is_poorly_breakable_member_or_call_chain(
         _ => None,
     };
 
-    if let Some(object) = object.clone() {
-        return is_poorly_breakable_member_or_call_chain(object, threshold, true);
+    if let Some(object) = object {
+        return is_poorly_breakable_member_or_call_chain(object, true, f);
     }
 
     return Ok(is_deep
@@ -982,53 +994,105 @@ fn is_lone_short_argument(argument: JsAnyCallArgument, threshold: u16) -> Syntax
         return Ok(false);
     }
 
-    if let JsAnyCallArgument::JsAnyExpression(expression) = argument {
-        match expression {
-            JsAnyExpression::JsThisExpression(_) => {
-                return Ok(true);
-            }
-            JsAnyExpression::JsIdentifierExpression(identifier) => {
-                if identifier.name()?.value_token()?.text_trimmed().len() <= threshold as usize {
-                    return Ok(true);
-                }
-            }
-            JsAnyExpression::JsUnaryExpression(unary_expression) => {
-                let is_signed = matches!(
-                    unary_expression.operator()?,
-                    JsUnaryOperator::Plus | JsUnaryOperator::Minus
-                );
-
-                let argument = unary_expression.argument()?;
-                let is_numeric_literal = matches!(
-                    argument,
-                    JsAnyExpression::JsAnyLiteralExpression(
-                        JsAnyLiteralExpression::JsNumberLiteralExpression(_)
+    let is_lone_short_argument = argument
+        .as_js_any_expression()
+        .map(|expression| {
+            return match expression {
+                JsAnyExpression::JsThisExpression(_) => Ok(true),
+                JsAnyExpression::JsIdentifierExpression(identifier) => {
+                    Ok(
+                        identifier.name()?.value_token()?.text_trimmed().len()
+                            <= threshold as usize,
                     )
-                );
-                let has_comments = argument.syntax().has_leading_comments()
-                    || argument.syntax().has_trailing_comments();
+                }
+                JsAnyExpression::JsUnaryExpression(unary_expression) => {
+                    return is_signed_numeric_literal(unary_expression);
+                }
+                JsAnyExpression::JsAnyLiteralExpression(literal) => {
+                    return match literal {
+                        JsAnyLiteralExpression::JsRegexLiteralExpression(regex) => {
+                            Ok(regex.value_token()?.text_trimmed().len() <= threshold as usize)
+                        }
+                        JsAnyLiteralExpression::JsStringLiteralExpression(string) => {
+                            Ok(string.value_token()?.text_trimmed().len() <= threshold as usize)
+                        }
+                        _ => Ok(true),
+                    }
+                }
+                JsAnyExpression::JsTemplate(_) => {
+                    // node.expressions.length === 0 &&
+                    //     node.quasis[0].value.raw.length <= threshold &&
+                    //     !node.quasis[0].value.raw.includes("\n")
+                    Ok(false)
+                }
+                _ => Ok(false),
+            };
+        })
+        .transpose()?
+        .unwrap_or(false);
 
-                if is_signed && is_numeric_literal && !has_comments {
-                    return Ok(true);
-                }
-            }
-            JsAnyExpression::JsAnyLiteralExpression(literal) => {
-                return match literal {
-                    JsAnyLiteralExpression::JsRegexLiteralExpression(regex) => {
-                        Ok(regex.value_token()?.text_trimmed().len() <= threshold as usize)
-                    }
-                    JsAnyLiteralExpression::JsStringLiteralExpression(string) => {
-                        Ok(string.value_token()?.text_trimmed().len() <= threshold as usize)
-                    }
-                    _ => Ok(true),
-                }
-            }
-            JsAnyExpression::JsTemplate(_) => {
-                // node.expressions.length === 0 &&
-                //     node.quasis[0].value.raw.length <= threshold &&
-                //     !node.quasis[0].value.raw.includes("\n")
-            }
-            _ => {}
+    Ok(is_lone_short_argument)
+}
+
+fn is_signed_numeric_literal(expression: JsUnaryExpression) -> SyntaxResult<bool> {
+    let is_signed = matches!(
+        unary_expression.operator()?,
+        JsUnaryOperator::Plus | JsUnaryOperator::Minus
+    );
+
+    let argument = unary_expression.argument()?;
+    let is_numeric_literal = matches!(
+        argument,
+        JsAnyExpression::JsAnyLiteralExpression(JsAnyLiteralExpression::JsNumberLiteralExpression(
+            _
+        ))
+    );
+    let has_comments =
+        argument.syntax().has_leading_comments() || argument.syntax().has_trailing_comments();
+
+    Ok(is_signed && is_numeric_literal && !has_comments)
+}
+
+fn is_call_expression_with_complex_type_arguments(
+    expression: &JsCallExpression,
+    f: &mut Formatter<JsFormatContext>,
+) -> SyntaxResult<bool> {
+    if let Some(type_arguments) = expression.type_arguments() {
+        let ts_type_argument_list = type_arguments.ts_type_argument_list();
+
+        let type_arguments_len = type_arguments.ts_type_argument_list().len();
+        if type_arguments_len > 1 {
+            return Ok(true);
+        }
+
+        let is_first_argument_complex = ts_type_argument_list
+            .iter()
+            .next()
+            .map(|first_argument| Ok(first_argument?))
+            .transpose()?
+            .map(|first_argument| {
+                matches!(
+                    first_argument,
+                    TsType::TsUnionType(_)
+                        | TsType::TsIntersectionType(_)
+                        | TsType::TsObjectType(_)
+                )
+            })
+            .unwrap_or(false);
+
+        let will_break = {
+            let mut null_buffer = f.inspect_null();
+            let mut buffer = null_buffer.inspect_will_break();
+            write!(buffer, [type_arguments.format()]);
+            buffer.will_break()
+        };
+
+        if is_first_argument_complex {
+            return Ok(true);
+        }
+
+        if will_break {
+            return Ok(true);
         }
     }
 
