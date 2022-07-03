@@ -948,9 +948,8 @@ fn is_poorly_breakable_member_or_call_chain(
         }
 
         let args = call_expression.arguments()?.args();
-        let arguments_len = args.len();
 
-        let is_poorly_breakable_call = match arguments_len {
+        let is_poorly_breakable_call = match args.len() {
             0 => true,
             1 => args
                 .iter()
@@ -1035,12 +1034,13 @@ fn is_lone_short_argument(argument: JsAnyCallArgument, threshold: u16) -> Syntax
 }
 
 fn is_signed_numeric_literal(expression: JsUnaryExpression) -> SyntaxResult<bool> {
+    let argument = unary_expression.argument()?;
+
     let is_signed = matches!(
         unary_expression.operator()?,
         JsUnaryOperator::Plus | JsUnaryOperator::Minus
     );
 
-    let argument = unary_expression.argument()?;
     let is_numeric_literal = matches!(
         argument,
         JsAnyExpression::JsAnyLiteralExpression(JsAnyLiteralExpression::JsNumberLiteralExpression(
@@ -1060,8 +1060,7 @@ fn is_call_expression_with_complex_type_arguments(
     if let Some(type_arguments) = expression.type_arguments() {
         let ts_type_argument_list = type_arguments.ts_type_argument_list();
 
-        let type_arguments_len = type_arguments.ts_type_argument_list().len();
-        if type_arguments_len > 1 {
+        if ts_type_argument_list.len() > 1 {
             return Ok(true);
         }
 
@@ -1081,10 +1080,11 @@ fn is_call_expression_with_complex_type_arguments(
             .unwrap_or(false);
 
         let will_break = {
-            let mut null_buffer = f.inspect_null();
-            let mut buffer = null_buffer.inspect_will_break();
-            write!(buffer, [type_arguments.format()]);
-            buffer.will_break()
+            // let mut null_buffer = f.inspect_null();
+            // let mut buffer = null_buffer.inspect_will_break();
+            // write!(buffer, [type_arguments.format()]);
+            // buffer.will_break()
+            false
         };
 
         if is_first_argument_complex {
