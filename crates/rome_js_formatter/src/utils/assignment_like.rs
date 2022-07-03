@@ -1,18 +1,18 @@
 use crate::prelude::*;
 use crate::utils::member_chain::MemberChainLabel;
 use crate::utils::object::write_member_name;
-use crate::utils::{format_call_expression, JsAnyBinaryLikeExpression};
+use crate::utils::JsAnyBinaryLikeExpression;
 use rome_formatter::{format_args, write, VecBuffer};
 use rome_js_syntax::{
     JsAnyAssignmentPattern, JsAnyBindingPattern, JsAnyCallArgument, JsAnyClassMemberName,
     JsAnyExpression, JsAnyFunctionBody, JsAnyObjectAssignmentPatternMember,
-    JsAnyObjectBindingPatternMember, JsAnyObjectMemberName, JsAssignmentExpression,
-    JsCallExpression, JsInitializerClause, JsLiteralMemberName, JsObjectAssignmentPattern,
-    JsObjectAssignmentPatternProperty, JsObjectBindingPattern, JsPropertyClassMember,
-    JsPropertyClassMemberFields, JsPropertyObjectMember, JsSyntaxKind, JsUnaryExpression,
-    JsUnaryOperator, JsVariableDeclarator, TsAnyVariableAnnotation, TsIdentifierBinding,
-    TsPropertySignatureClassMember, TsPropertySignatureClassMemberFields, TsType,
-    TsTypeAliasDeclaration,
+    JsAnyObjectBindingPatternMember, JsAnyObjectMemberName, JsAnyTemplateElement,
+    JsAssignmentExpression, JsCallExpression, JsInitializerClause, JsLiteralMemberName,
+    JsObjectAssignmentPattern, JsObjectAssignmentPatternProperty, JsObjectBindingPattern,
+    JsPropertyClassMember, JsPropertyClassMemberFields, JsPropertyObjectMember, JsSyntaxKind,
+    JsUnaryExpression, JsUnaryOperator, JsVariableDeclarator, TsAnyVariableAnnotation,
+    TsIdentifierBinding, TsPropertySignatureClassMember, TsPropertySignatureClassMemberFields,
+    TsType, TsTypeAliasDeclaration,
 };
 use rome_js_syntax::{JsAnyLiteralExpression, JsSyntaxNode};
 use rome_rowan::{declare_node_union, AstNode, SyntaxResult};
@@ -551,18 +551,13 @@ impl JsAnyAssignmentLike {
         })
         .last();
 
-        if let Some(expression) = node.clone() {
-            if is_poorly_breakable_member_or_call_chain(expression, false, f)? {
-                return Ok(AssignmentLikeLayout::BreakAfterOperator);
-            }
-        }
-
         if matches!(
             node,
             Some(JsAnyExpression::JsAnyLiteralExpression(
                 JsAnyLiteralExpression::JsStringLiteralExpression(_)
             )),
-        ) {
+        ) || is_poorly_breakable_member_or_call_chain(node, f)?
+        {
             return Ok(AssignmentLikeLayout::BreakAfterOperator);
         }
 
@@ -928,64 +923,75 @@ impl Format<JsFormatContext> for JsAnyAssignmentLike {
 }
 
 fn is_poorly_breakable_member_or_call_chain(
-    expression: JsAnyExpression,
-    is_deep: bool,
+    expression: Option<JsAnyExpression>,
     f: &mut Formatter<JsFormatContext>,
 ) -> SyntaxResult<bool> {
     let threshold = f.context().line_width().value() / 4;
 
-    if let JsAnyExpression::JsCallExpression(call_expression) = expression {
-        let is_member_chain = {
-            // let mut null_buffer = f.inspect_null();
-            // let mut buffer = null_buffer.inspect_is_labelled::<MemberChainLabel>();
-            // write!(buffer, [call_expression.format()]);
-            // buffer.is_labelled()
-            false
-        };
+    let mut expression = expression;
+    let mut is_deep = false;
 
-        if is_member_chain {
-            return Ok(false);
+    while let Some(node) = expression.take() {
+        match node {
+            JsAnyExpression::JsCallExpression(call_expression) => {
+                let is_member_chain = {
+                    // let mut null_buffer = f.inspect_null();
+                    // let mut buffer = null_buffer.inspect_is_labelled::<MemberChainLabel>();
+                    // write!(buffer, [call_expression.format()]);
+                    // buffer.is_labelled()
+                    false
+                };
+
+                if is_member_chain {
+                    return Ok(false);
+                }
+
+                let args = call_expression.arguments()?.args();
+
+                let is_poorly_breakable_call = match args.len() {
+                    0 => true,
+                    1 => args
+                        .iter()
+                        .next()
+                        .map(|first_argument| {
+                            Ok(is_lone_short_argument(first_argument?, threshold)?)
+                        })
+                        .transpose()?
+                        .unwrap_or(false),
+                    _ => false,
+                };
+
+                if !is_poorly_breakable_call {
+                    return Ok(false);
+                }
+
+                if is_call_expression_with_complex_type_arguments(&call_expression, f)? {
+                    return Ok(false);
+                }
+
+                is_deep = true;
+                expression = Some(call_expression.callee()?);
+            }
+            JsAnyExpression::JsStaticMemberExpression(node) => {
+                is_deep = true;
+                expression = Some(node.object()?);
+            }
+            JsAnyExpression::JsComputedMemberExpression(node) => {
+                is_deep = true;
+                expression = Some(node.object()?);
+            }
+            expression => {
+                return Ok(is_deep
+                    && matches!(
+                        expression,
+                        JsAnyExpression::JsIdentifierExpression(_)
+                            | JsAnyExpression::JsThisExpression(_)
+                    ));
+            }
         }
-
-        let args = call_expression.arguments()?.args();
-
-        let is_poorly_breakable_call = match args.len() {
-            0 => true,
-            1 => args
-                .iter()
-                .next()
-                .map(|first_argument| Ok(is_lone_short_argument(first_argument?, threshold)?))
-                .transpose()?
-                .unwrap_or(false),
-            _ => false,
-        };
-
-        if !is_poorly_breakable_call {
-            return Ok(false);
-        }
-
-        if is_call_expression_with_complex_type_arguments(&call_expression, f)? {
-            return Ok(false);
-        }
-
-        return is_poorly_breakable_member_or_call_chain(call_expression.callee()?, true, f);
     }
 
-    let object = match &expression {
-        JsAnyExpression::JsStaticMemberExpression(expression) => Some(expression.object()?),
-        JsAnyExpression::JsComputedMemberExpression(expression) => Some(expression.object()?),
-        _ => None,
-    };
-
-    if let Some(object) = object {
-        return is_poorly_breakable_member_or_call_chain(object, true, f);
-    }
-
-    return Ok(is_deep
-        && matches!(
-            expression,
-            JsAnyExpression::JsIdentifierExpression(_) | JsAnyExpression::JsThisExpression(_)
-        ));
+    Ok(false)
 }
 
 fn is_lone_short_argument(argument: JsAnyCallArgument, threshold: u16) -> SyntaxResult<bool> {
@@ -993,51 +999,57 @@ fn is_lone_short_argument(argument: JsAnyCallArgument, threshold: u16) -> Syntax
         return Ok(false);
     }
 
-    let is_lone_short_argument = argument
-        .as_js_any_expression()
-        .map(|expression| {
-            return match expression {
-                JsAnyExpression::JsThisExpression(_) => Ok(true),
-                JsAnyExpression::JsIdentifierExpression(identifier) => {
-                    Ok(
-                        identifier.name()?.value_token()?.text_trimmed().len()
-                            <= threshold as usize,
-                    )
-                }
-                JsAnyExpression::JsUnaryExpression(unary_expression) => {
-                    return is_signed_numeric_literal(unary_expression);
-                }
-                JsAnyExpression::JsAnyLiteralExpression(literal) => {
-                    return match literal {
-                        JsAnyLiteralExpression::JsRegexLiteralExpression(regex) => {
-                            Ok(regex.value_token()?.text_trimmed().len() <= threshold as usize)
-                        }
-                        JsAnyLiteralExpression::JsStringLiteralExpression(string) => {
-                            Ok(string.value_token()?.text_trimmed().len() <= threshold as usize)
-                        }
-                        _ => Ok(true),
+    if let JsAnyCallArgument::JsAnyExpression(expression) = argument {
+        return match expression {
+            JsAnyExpression::JsThisExpression(_) => Ok(true),
+            JsAnyExpression::JsIdentifierExpression(identifier) => {
+                Ok(identifier.name()?.value_token()?.text_trimmed().len() <= threshold as usize)
+            }
+            JsAnyExpression::JsUnaryExpression(unary_expression) => {
+                is_signed_numeric_literal(unary_expression)
+            }
+            JsAnyExpression::JsAnyLiteralExpression(literal) => {
+                return match literal {
+                    JsAnyLiteralExpression::JsRegexLiteralExpression(regex) => {
+                        Ok(regex.value_token()?.text_trimmed().len() <= threshold as usize)
                     }
+                    JsAnyLiteralExpression::JsStringLiteralExpression(string) => {
+                        Ok(string.value_token()?.text_trimmed().len() <= threshold as usize)
+                    }
+                    _ => Ok(true),
                 }
-                JsAnyExpression::JsTemplate(_) => {
-                    // node.expressions.length === 0 &&
-                    //     node.quasis[0].value.raw.length <= threshold &&
-                    //     !node.quasis[0].value.raw.includes("\n")
-                    Ok(false)
-                }
-                _ => Ok(false),
-            };
-        })
-        .transpose()?
-        .unwrap_or(false);
+            }
+            JsAnyExpression::JsTemplate(template) => {
+                let elements = template.elements();
 
-    Ok(is_lone_short_argument)
+                match elements.len() {
+                    0 => Ok(true),
+                    1 => {
+                        if let Some(JsAnyTemplateElement::JsTemplateChunkElement(element)) =
+                            elements.iter().next()
+                        {
+                            let token = element.template_chunk_token()?;
+                            let text_trimmed = token.text_trimmed();
+                            return Ok(!text_trimmed.contains('\n')
+                                && text_trimmed.len() <= threshold as usize);
+                        }
+                        Ok(false)
+                    }
+                    _ => Ok(false),
+                }
+            }
+            _ => Ok(false),
+        };
+    }
+
+    Ok(false)
 }
 
 fn is_signed_numeric_literal(expression: JsUnaryExpression) -> SyntaxResult<bool> {
-    let argument = unary_expression.argument()?;
+    let argument = expression.argument()?;
 
     let is_signed = matches!(
-        unary_expression.operator()?,
+        expression.operator()?,
         JsUnaryOperator::Plus | JsUnaryOperator::Minus
     );
 
@@ -1055,7 +1067,7 @@ fn is_signed_numeric_literal(expression: JsUnaryExpression) -> SyntaxResult<bool
 
 fn is_call_expression_with_complex_type_arguments(
     expression: &JsCallExpression,
-    f: &mut Formatter<JsFormatContext>,
+    _f: &mut Formatter<JsFormatContext>,
 ) -> SyntaxResult<bool> {
     if let Some(type_arguments) = expression.type_arguments() {
         let ts_type_argument_list = type_arguments.ts_type_argument_list();
