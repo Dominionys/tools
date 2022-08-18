@@ -404,7 +404,7 @@ impl FusedIterator for ScopeBindingsIter {}
 
 /// The façade for all semantic information.
 /// - Scope: [scope]
-/// - Declrations: [declaration]
+/// - Declarations: [declaration]
 ///
 /// See [SemanticModelData] for more information about the internals.
 #[derive(Clone)]
