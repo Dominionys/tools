@@ -197,7 +197,7 @@ impl JsBinaryExpression {
         )
     }
 
-    /// Whether this is a comparison operation similar to optional chain
+    /// Whether this is a comparison operation similar to the optional chain
     /// ```js
     /// foo === undefined;
     /// foo == undefined;
@@ -490,8 +490,8 @@ impl JsRegexLiteralExpression {
 }
 
 impl JsAnyExpression {
-    /// Extract first non `JsParenthesizedExpression` from `JsAnyExpression`
-    pub fn remove_parentheses(self) -> JsAnyExpression {
+    /// Try to extract non `JsParenthesizedExpression` from `JsAnyExpression`
+    pub fn omit_parentheses(self) -> JsAnyExpression {
         let first = self
             .as_js_parenthesized_expression()
             .and_then(|expression| expression.expression().ok());

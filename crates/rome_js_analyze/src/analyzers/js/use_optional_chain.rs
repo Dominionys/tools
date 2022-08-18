@@ -295,6 +295,28 @@ enum ChainOrdering {
     Different,
 }
 
+/// The main idea of the `LogicalAndChain`:
+/// 1. Check that the current chain isn't in another `LogicalAndChain`. We need to find the topmost logical expression which will be the head of the first current chain.
+/// 2. Go down thought logical expressions and collect other chains and compare them with the current one.
+/// 3. If a chain is a sub-chain of the current chain, we assign that sub-chain to new current one. Difference between current chain and sub-chain is a tail.
+/// 4. Save the first tail `JsAnyExpression` to the buffer.
+/// 5. Transform every `JsAnyExpression` from the buffer to optional expression.
+///
+/// E.g. `foo && foo.bar.baz && foo.bar.baz.zoo;`.
+/// The logical expression `foo && foo.bar.baz` isn't the topmost. We skip it.
+/// `foo && foo.bar.baz && foo.bar.baz.zoo;` is the topmost and it'll be a start point.
+/// We start collecting a chain. We collect `JsAnyExpression` but for clarity let's use string identifiers.
+/// `foo.bar.baz.zoo;` -> `[foo, bar, baz, zoo]`
+/// Next step we take a next chain and also collect it.
+/// `foo.bar.baz` -> `[foo, bar, baz]`
+/// By comparing them we understand that one is a sub-chain of the other. `[foo, bar, baz]` is new current chain. `[zoo]` is a tail.
+/// We save `zoo` expression to the buffer.
+/// Next step we take a next chain and also collect it.
+/// `foo` -> `[foo]`
+/// By comparing them we understand that one is a sub-chain of the other. `[foo]` is new current chain. `[bar, baz]` is a tail.
+/// We save `bar` expression to the buffer.
+/// Iterate buffer `[bar, zoo]` we need to make every `JsAnyExpression` optional: `foo?.bar.baz?.zoo;`
+///
 #[derive(Debug)]
 pub(crate) struct LogicalAndChain {
     head: JsAnyExpression,
@@ -510,7 +532,7 @@ impl LogicalOrLikeChain {
         let is_right_empty_object = logical
             .right()
             .ok()?
-            .remove_parentheses()
+            .omit_parentheses()
             .as_js_object_expression()?
             .is_empty();
 
@@ -564,7 +586,7 @@ impl LogicalOrLikeChain {
                 _ => return chain,
             };
 
-            if let JsAnyExpression::JsLogicalExpression(logical) = object.remove_parentheses() {
+            if let JsAnyExpression::JsLogicalExpression(logical) = object.omit_parentheses() {
                 let is_valid_operator = logical.operator().map_or(false, |operator| {
                     matches!(
                         operator,
@@ -581,7 +603,7 @@ impl LogicalOrLikeChain {
                     .ok()
                     .and_then(|right| {
                         right
-                            .remove_parentheses()
+                            .omit_parentheses()
                             .as_js_object_expression()
                             .map(|object| object.is_empty())
                     })
