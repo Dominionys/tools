@@ -149,3 +149,4 @@ if ((this ?? {}).#bar) { foo.bar; }
 (((typeof this) as string) || {}).#bar;
 (new foo || {}).bar;
 (foo() || {}).bar;
+((foo || {}).bar() || {}).baz;

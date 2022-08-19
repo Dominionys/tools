@@ -155,6 +155,7 @@ if ((this ?? {}).#bar) { foo.bar; }
 (((typeof this) as string) || {}).#bar;
 (new foo || {}).bar;
 (foo() || {}).bar;
+((foo || {}).bar() || {}).baz;
 
 ```
 
@@ -2450,7 +2451,7 @@ warning[js/useOptionalChain]: Change to an optional chain.
     │ --------------------------------------
 
 Suggested fix: Change to an optional chain.
-        | @@ -146,6 +146,6 @@
+        | @@ -146,7 +146,7 @@
 145 145 |   if ((this ?? {}).#bar) { foo.bar; }
 146 146 |   
 147 147 |   (undefined && this ?? {}).#bar;
@@ -2458,6 +2459,7 @@ Suggested fix: Change to an optional chain.
     148 | + ((typeof this) as string)?.#bar;
 149 149 |   (new foo || {}).bar;
 150 150 |   (foo() || {}).bar;
+151 151 |   ((foo || {}).bar() || {}).baz;
 
 
 ```
@@ -2470,13 +2472,14 @@ warning[js/useOptionalChain]: Change to an optional chain.
     │ -------------------
 
 Suggested fix: Change to an optional chain.
-        | @@ -147,5 +147,5 @@
+        | @@ -147,6 +147,6 @@
 146 146 |   
 147 147 |   (undefined && this ?? {}).#bar;
 148 148 |   (((typeof this) as string) || {}).#bar;
 149     | - (new foo || {}).bar;
     149 | + new foo?.bar;
 150 150 |   (foo() || {}).bar;
+151 151 |   ((foo || {}).bar() || {}).baz;
 
 
 ```
@@ -2489,12 +2492,31 @@ warning[js/useOptionalChain]: Change to an optional chain.
     │ -----------------
 
 Suggested fix: Change to an optional chain.
-        | @@ -148,4 +148,4 @@
+        | @@ -148,5 +148,5 @@
 147 147 |   (undefined && this ?? {}).#bar;
 148 148 |   (((typeof this) as string) || {}).#bar;
 149 149 |   (new foo || {}).bar;
 150     | - (foo() || {}).bar;
     150 | + foo()?.bar;
+151 151 |   ((foo || {}).bar() || {}).baz;
+
+
+```
+
+```
+warning[js/useOptionalChain]: Change to an optional chain.
+    ┌─ nullishAndLogicalOr.ts:152:1
+    │
+152 │ ((foo || {}).bar() || {}).baz;
+    │ -----------------------------
+
+Suggested fix: Change to an optional chain.
+        | @@ -149,4 +149,4 @@
+148 148 |   (((typeof this) as string) || {}).#bar;
+149 149 |   (new foo || {}).bar;
+150 150 |   (foo() || {}).bar;
+151     | - ((foo || {}).bar() || {}).baz;
+    151 | + foo?.bar()?.baz;
 
 
 ```

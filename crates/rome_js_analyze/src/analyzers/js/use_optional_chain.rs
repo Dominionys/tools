@@ -648,7 +648,8 @@ impl LogicalOrLikeChain {
             return None;
         }
 
-        let parent = LogicalOrLikeChain::get_chain_parent(JsAnyExpression::from(logical.clone()))?;
+        let parent =
+            LogicalOrLikeChain::get_chain_parent_member(JsAnyExpression::from(logical.clone()))?;
 
         let member = match parent {
             JsAnyExpression::JsComputedMemberExpression(expression) => {
@@ -749,6 +750,30 @@ impl LogicalOrLikeChain {
         }
 
         chain
+    }
+
+    /// Traversal by parent to find the parent member of a chain.
+    fn get_chain_parent_member(expression: JsAnyExpression) -> Option<JsAnyMemberExpression> {
+        iter::successors(expression.parent::<JsAnyExpression>(), |expression| {
+            if matches!(expression, JsAnyExpression::JsParenthesizedExpression(_)) {
+                expression.parent::<JsAnyExpression>()
+            } else {
+                None
+            }
+        })
+        .last()
+        .and_then(|parent| {
+            let member = match parent {
+                JsAnyExpression::JsComputedMemberExpression(expression) => {
+                    JsAnyMemberExpression::from(expression)
+                }
+                JsAnyExpression::JsStaticMemberExpression(expression) => {
+                    JsAnyMemberExpression::from(expression)
+                }
+                _ => return None,
+            };
+            Some(member)
+        })
     }
 
     /// Traversal by parent to find the parent of a chain.
