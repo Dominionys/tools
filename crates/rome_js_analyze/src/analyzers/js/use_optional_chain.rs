@@ -295,6 +295,12 @@ enum ChainOrdering {
     Different,
 }
 
+/// `LogicalAndChain` handles cases with `JsLogicalExpression` which has `JsLogicalOperator::LogicalAnd` operator:
+/// ```js
+/// foo && foo.bar && foo.bar.baz && foo.bar.baz.buzz;
+/// foo.bar && foo.bar.baz && foo.bar.baz.buzz;
+/// foo !== undefined && foo.bar;
+/// ```
 /// The main idea of the `LogicalAndChain`:
 /// 1. Check that the current chain isn't in another `LogicalAndChain`. We need to find the topmost logical expression which will be the head of the first current chain.
 /// 2. Go down thought logical expressions and collect other chains and compare them with the current one.
@@ -522,6 +528,28 @@ impl LogicalAndChain {
     }
 }
 
+/// `LogicalOrLikeChain` handles cases with `JsLogicalExpression` which has `JsLogicalOperator::NullishCoalescing` or `JsLogicalOperator::LogicalOr` operator:
+/// ```js
+/// (foo || {}).bar;
+/// (foo ?? {}).bar;
+/// ((foo ?? {}).bar || {}).baz;
+/// ```
+/// The main idea of the `LogicalOrLikeChain`:
+/// 1. Check that the current member expressions isn't in another `LogicalOrLikeChain`. We need to find the topmost member expression.
+/// 2. Go down thought logical expressions and collect left and member expressions to buffer.
+/// 3. Transform every left `JsAnyExpression` and member `JsAnyMemberExpression` expressions into optional `JsAnyMemberExpression`.
+///
+/// E.g. `((foo ?? {}).bar || {}).baz;`.
+/// The member expression `(foo ?? {}).bar` isn't the topmost. We skip it.
+/// `((foo ?? {}).bar || {}).baz;` is the topmost and it'll be a start point.
+/// We start collecting a left and member expressions to buffer.
+/// First expression is `((foo ?? {}).bar || {}).baz;`:
+/// Buffer is `[((foo ?? {}).bar, ((foo ?? {}).bar || {}).baz;)]`
+/// Next expressions is `((foo ?? {}).bar || {}).baz;`:
+/// Buffer is `[(foo, (foo ?? {}).bar), ((foo ?? {}).bar, ((foo ?? {}).bar || {}).baz;)]`
+/// Iterate buffer, take member expressions and replace object with left parts:
+/// `foo?.bar?.baz;`
+///
 #[derive(Debug)]
 pub(crate) struct LogicalOrLikeChain {
     member: JsAnyMemberExpression,
