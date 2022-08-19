@@ -323,7 +323,9 @@ enum LogicalAndChainOrdering {
 /// `LogicalAndChain` handles cases with `JsLogicalExpression` which has `JsLogicalOperator::LogicalAnd` operator:
 /// ```js
 /// foo && foo.bar && foo.bar.baz && foo.bar.baz.buzz;
+///
 /// foo.bar && foo.bar.baz && foo.bar.baz.buzz;
+///
 /// foo !== undefined && foo.bar;
 /// ```
 /// The main idea of the `LogicalAndChain`:
@@ -457,8 +459,8 @@ impl LogicalAndChain {
         Ok(false)
     }
 
-    /// This function compare two `LogicalAndChain` and return `LogicalAndChainOrdering`
-    /// by comparing their `JsAnyExpression` nodes.
+    /// This function compares two `LogicalAndChain` and returns `LogicalAndChainOrdering`
+    /// by comparing their `token_text_trimmed` for every `JsAnyExpression` node.
     fn cmp_chain(&self, other: &LogicalAndChain) -> SyntaxResult<LogicalAndChainOrdering> {
         let chain_ordering = match self.buf.len().cmp(&other.buf.len()) {
             Ordering::Less => return Ok(LogicalAndChainOrdering::Different),
@@ -529,13 +531,27 @@ impl LogicalAndChain {
         Ok(chain_ordering)
     }
 
+    /// This function returns a list of `JsAnyExpression` which we need to transform into an option chain expression.
     fn optional_chain_expression_nodes(mut self) -> Option<VecDeque<JsAnyExpression>> {
         let mut optional_chain_expression_nodes = VecDeque::with_capacity(self.buf.len());
 
+        // We take a head of next sub-chain
+        // E.g. `foo && foo.bar && foo.bar.baz`
+        // The head is `foo.bar.baz` expression.
+        // The parent of the head is a logical expression `foo && foo.bar && foo.bar.baz`.
+        // The next chain head is a left part of the logical expression `foo && foo.bar`
         let mut next_chain_head = self.head.parent::<JsLogicalExpression>()?.left().ok();
 
         while let Some(expression) = next_chain_head.take() {
             let expression = match expression {
+                // Extract a left `JsAnyExpression` from `JsBinaryExpression` if it's optional chain like
+                // ```js
+                // (foo === undefined) && foo.bar;
+                // ```
+                // is roughly equivalent to
+                // ```js
+                // foo && foo.bar;
+                // ```
                 JsAnyExpression::JsBinaryExpression(expression) => expression
                     .is_optional_chain_like()
                     .ok()?
@@ -546,6 +562,7 @@ impl LogicalAndChain {
             let head = match expression {
                 JsAnyExpression::JsLogicalExpression(logical) => {
                     if matches!(logical.operator().ok()?, JsLogicalOperator::LogicalAnd) {
+                        // Here we move our sub-chain head over the chains of logical expression
                         next_chain_head = logical.left().ok();
 
                         logical.right().ok()?
@@ -564,6 +581,11 @@ impl LogicalAndChain {
 
             match self.cmp_chain(&branch).ok()? {
                 LogicalAndChainOrdering::SubChain => {
+                    // Here we reduce our main `JsAnyExpression` buffer by splitting the main buffer.
+                    // Let's say that we have two buffers:
+                    // The main is `[foo, bar, baz]` and a branch is `[foo]`
+                    // After splitting the main buffer will be `[foo]` and the tail will be `[bar, baz]`.
+                    // It means that we need to transform `bar` (first tail expression) into the optional one.
                     let mut tail = self.buf.split_off(branch.buf.len());
 
                     if let Some(part) = tail.pop_front() {
