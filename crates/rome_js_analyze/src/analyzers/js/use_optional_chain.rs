@@ -430,14 +430,16 @@ impl LogicalAndChain {
         // The grand-parent of the head is logical expression `foo && foo.bar && foo.bar.baz`
         if let Some(parent) = self.head.parent::<JsLogicalExpression>() {
             if let Some(grand_parent) = parent.parent::<JsLogicalExpression>() {
-                let operator = grand_parent.operator()?;
+                let grand_parent_operator = grand_parent.operator()?;
 
-                if !matches!(operator, JsLogicalOperator::LogicalAnd) {
+                if !matches!(grand_parent_operator, JsLogicalOperator::LogicalAnd) {
                     return Ok(false);
                 }
 
                 let grand_parent_logical_left = grand_parent.left()?;
 
+                // Here we check that we came from the left side of the logical expression.
+                // Because only the left-hand parts can be sub-chains.
                 if grand_parent_logical_left.as_js_logical_expression() == Some(&parent) {
                     let grand_parent_right_chain = LogicalAndChain::new(grand_parent.right()?);
 
@@ -455,6 +457,8 @@ impl LogicalAndChain {
         Ok(false)
     }
 
+    /// This function compare two `LogicalAndChain` and return `LogicalAndChainOrdering`
+    /// by comparing their `JsAnyExpression` nodes.
     fn cmp_chain(&self, other: &LogicalAndChain) -> SyntaxResult<LogicalAndChainOrdering> {
         let chain_ordering = match self.buf.len().cmp(&other.buf.len()) {
             Ordering::Less => return Ok(LogicalAndChainOrdering::Different),
@@ -469,7 +473,7 @@ impl LogicalAndChain {
                     JsAnyExpression::JsCallExpression(main_expression),
                     JsAnyExpression::JsCallExpression(branch_expression),
                 ) => (main_expression.callee()?, branch_expression.callee()?),
-                _ => (main_expression.clone(), branch_expression.clone()), //TODO maybe COW?
+                _ => (main_expression.clone(), branch_expression.clone()),
             };
 
             let (main_value_token, branch_value_token) = match (main_expression, branch_expression)
