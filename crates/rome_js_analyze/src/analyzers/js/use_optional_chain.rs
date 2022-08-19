@@ -356,6 +356,11 @@ pub(crate) struct LogicalAndChain {
 
 impl LogicalAndChain {
     fn new(head: JsAnyExpression) -> LogicalAndChain {
+        /// Iterate over `JsAnyExpression` and collect every expression which is a part of the chain:
+        /// ```js
+        /// foo.bar[baz];
+        /// ```
+        /// `[JsReferenceIdentifier, JsStaticMemberExpression, JsComputedMemberExpression]`
         fn collect_chain(expression: JsAnyExpression) -> VecDeque<JsAnyExpression> {
             let mut buf = VecDeque::new();
 
@@ -363,6 +368,14 @@ impl LogicalAndChain {
 
             while let Some(expression) = current_expression.take() {
                 let expression = match expression {
+                    // Extract a left `JsAnyExpression` from `JsBinaryExpression` if it's optional chain like
+                    // ```js
+                    // (foo === undefined) && foo.bar;
+                    // ```
+                    // is roughly equivalent to
+                    // ```js
+                    // foo && foo.bar;
+                    // ```
                     JsAnyExpression::JsBinaryExpression(expression) => {
                         if expression.is_optional_chain_like().unwrap_or(false) {
                             match expression.left() {
@@ -407,7 +420,14 @@ impl LogicalAndChain {
         LogicalAndChain { head, buf }
     }
 
+    /// This function checks if `LogicalAndChain` is inside another parent `LogicalAndChain`
+    /// and the chain is sub-chain of parent chain
     fn is_inside_another_chain(&self) -> SyntaxResult<bool> {
+        // Because head of the chain is right expression of logical expression we need to take a parent and a grand-parent.
+        // E.g. `foo && foo.bar && foo.bar.baz`
+        // The head of the sub-chain is `foo.bar`.
+        // The parent of the head is logical expression `foo && foo.bar`
+        // The grand-parent of the head is logical expression `foo && foo.bar && foo.bar.baz`
         if let Some(parent) = self.head.parent::<JsLogicalExpression>() {
             if let Some(grand_parent) = parent.parent::<JsLogicalExpression>() {
                 let operator = grand_parent.operator()?;
