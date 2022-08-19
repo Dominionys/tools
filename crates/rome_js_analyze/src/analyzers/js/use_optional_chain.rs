@@ -289,9 +289,34 @@ impl Rule for UseOptionalChain {
     }
 }
 
-enum ChainOrdering {
+/// An `LogicalAndChainOrdering` is the result of a comparison between two logical and chain.
+enum LogicalAndChainOrdering {
+    /// An ordering where a chain is a sub-chain of another.
+    /// ```js
+    /// foo && foo.bar
+    /// ```
+    /// is sub-chain of
+    /// ```js
+    /// foo && foo.bar && foo.bar.baz
+    /// ```
     SubChain,
+    /// An ordering where a chain is equal to another.
+    /// ```js
+    /// foo && foo.bar
+    /// ```
+    /// is equal
+    /// ```js
+    /// foo && foo.bar
+    /// ```
     Equal,
+    /// An ordering where a chain is different to another.
+    /// ```js
+    /// foo && foo.bar
+    /// ```
+    /// is different
+    /// ```js
+    /// bar && bar.bar && bar.bar.baz
+    /// ```
     Different,
 }
 
@@ -399,8 +424,10 @@ impl LogicalAndChain {
                     let result = grand_parent_right_chain.cmp_chain(self)?;
 
                     return match result {
-                        ChainOrdering::SubChain | ChainOrdering::Equal => Ok(true),
-                        ChainOrdering::Different => Ok(false),
+                        LogicalAndChainOrdering::SubChain | LogicalAndChainOrdering::Equal => {
+                            Ok(true)
+                        }
+                        LogicalAndChainOrdering::Different => Ok(false),
                     };
                 }
             }
@@ -408,11 +435,11 @@ impl LogicalAndChain {
         Ok(false)
     }
 
-    fn cmp_chain(&self, other: &LogicalAndChain) -> SyntaxResult<ChainOrdering> {
+    fn cmp_chain(&self, other: &LogicalAndChain) -> SyntaxResult<LogicalAndChainOrdering> {
         let chain_ordering = match self.buf.len().cmp(&other.buf.len()) {
-            Ordering::Less => return Ok(ChainOrdering::Different),
-            Ordering::Equal => ChainOrdering::Equal,
-            Ordering::Greater => ChainOrdering::SubChain,
+            Ordering::Less => return Ok(LogicalAndChainOrdering::Different),
+            Ordering::Equal => LogicalAndChainOrdering::Equal,
+            Ordering::Greater => LogicalAndChainOrdering::SubChain,
         };
 
         for (main_expression, branch_expression) in self.buf.iter().zip(&other.buf) {
@@ -445,7 +472,7 @@ impl LogicalAndChain {
                         main_expression.value_token()?,
                         branch_expression.value_token()?,
                     ),
-                    _ => return Ok(ChainOrdering::Different),
+                    _ => return Ok(LogicalAndChainOrdering::Different),
                 },
                 (
                     JsAnyExpression::JsStaticMemberExpression(main_expression),
@@ -458,7 +485,7 @@ impl LogicalAndChain {
                         JsAnyName::JsPrivateName(main_name),
                         JsAnyName::JsPrivateName(branch_name),
                     ) => (main_name.value_token()?, branch_name.value_token()?),
-                    _ => return Ok(ChainOrdering::Different),
+                    _ => return Ok(LogicalAndChainOrdering::Different),
                 },
                 (
                     JsAnyExpression::JsIdentifierExpression(main_expression),
@@ -467,11 +494,11 @@ impl LogicalAndChain {
                     main_expression.name()?.value_token()?,
                     branch_expression.name()?.value_token()?,
                 ),
-                _ => return Ok(ChainOrdering::Different),
+                _ => return Ok(LogicalAndChainOrdering::Different),
             };
 
             if main_value_token.token_text_trimmed() != branch_value_token.token_text_trimmed() {
-                return Ok(ChainOrdering::Different);
+                return Ok(LogicalAndChainOrdering::Different);
             }
         }
 
@@ -512,15 +539,15 @@ impl LogicalAndChain {
             let branch = LogicalAndChain::new(head);
 
             match self.cmp_chain(&branch).ok()? {
-                ChainOrdering::SubChain => {
+                LogicalAndChainOrdering::SubChain => {
                     let mut tail = self.buf.split_off(branch.buf.len());
 
                     if let Some(part) = tail.pop_front() {
                         optional_chain_expression_nodes.push_front(part)
                     };
                 }
-                ChainOrdering::Equal => continue,
-                ChainOrdering::Different => return None,
+                LogicalAndChainOrdering::Equal => continue,
+                LogicalAndChainOrdering::Different => return None,
             }
         }
 
