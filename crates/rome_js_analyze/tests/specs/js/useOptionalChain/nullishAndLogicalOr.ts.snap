@@ -153,6 +153,8 @@ if ((this ?? {}).#bar) { foo.bar; }
 
 (undefined && this ?? {}).#bar;
 (((typeof this) as string) || {}).#bar;
+(new foo || {}).bar;
+(foo() || {}).bar;
 
 ```
 
@@ -2427,13 +2429,15 @@ warning[js/useOptionalChain]: Change to an optional chain.
     │ ------------------------------
 
 Suggested fix: Change to an optional chain.
-        | @@ -145,5 +145,5 @@
+        | @@ -145,7 +145,7 @@
 144 144 |   if (foo) { (this ?? {}).#bar; }
 145 145 |   if ((this ?? {}).#bar) { foo.bar; }
 146 146 |   
 147     | - (undefined && this ?? {}).#bar;
     147 | + (undefined && this)?.#bar;
 148 148 |   (((typeof this) as string) || {}).#bar;
+149 149 |   (new foo || {}).bar;
+150 150 |   (foo() || {}).bar;
 
 
 ```
@@ -2446,12 +2450,51 @@ warning[js/useOptionalChain]: Change to an optional chain.
     │ --------------------------------------
 
 Suggested fix: Change to an optional chain.
-        | @@ -146,4 +146,4 @@
+        | @@ -146,6 +146,6 @@
 145 145 |   if ((this ?? {}).#bar) { foo.bar; }
 146 146 |   
 147 147 |   (undefined && this ?? {}).#bar;
 148     | - (((typeof this) as string) || {}).#bar;
     148 | + ((typeof this) as string)?.#bar;
+149 149 |   (new foo || {}).bar;
+150 150 |   (foo() || {}).bar;
+
+
+```
+
+```
+warning[js/useOptionalChain]: Change to an optional chain.
+    ┌─ nullishAndLogicalOr.ts:150:1
+    │
+150 │ (new foo || {}).bar;
+    │ -------------------
+
+Suggested fix: Change to an optional chain.
+        | @@ -147,5 +147,5 @@
+146 146 |   
+147 147 |   (undefined && this ?? {}).#bar;
+148 148 |   (((typeof this) as string) || {}).#bar;
+149     | - (new foo || {}).bar;
+    149 | + new foo?.bar;
+150 150 |   (foo() || {}).bar;
+
+
+```
+
+```
+warning[js/useOptionalChain]: Change to an optional chain.
+    ┌─ nullishAndLogicalOr.ts:151:1
+    │
+151 │ (foo() || {}).bar;
+    │ -----------------
+
+Suggested fix: Change to an optional chain.
+        | @@ -148,4 +148,4 @@
+147 147 |   (undefined && this ?? {}).#bar;
+148 148 |   (((typeof this) as string) || {}).#bar;
+149 149 |   (new foo || {}).bar;
+150     | - (foo() || {}).bar;
+    150 | + foo()?.bar;
 
 
 ```

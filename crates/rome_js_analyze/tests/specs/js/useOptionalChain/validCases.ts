@@ -34,3 +34,5 @@ foo[123] && foo[1234].baz;
 foo[true] && foo[false].baz;
 foo[12n] && foo[123n].baz;
 foo[/\w+/] && foo[/ab+c/].baz;
+
+((foo || {})()).bar;

@@ -353,7 +353,7 @@ enum LogicalAndChainOrdering {
 #[derive(Debug)]
 pub(crate) struct LogicalAndChain {
     head: JsAnyExpression,
-    /// The buffer where we collection `JsAnyExpression` which need to make optional chain.
+    /// The buffer of `JsAnyExpression` which need to make optional chain.
     buf: VecDeque<JsAnyExpression>,
 }
 
@@ -424,7 +424,7 @@ impl LogicalAndChain {
     }
 
     /// This function checks if `LogicalAndChain` is inside another parent `LogicalAndChain`
-    /// and the chain is sub-chain of parent chain
+    /// and the chain is sub-chain of parent chain.
     fn is_inside_another_chain(&self) -> SyntaxResult<bool> {
         // Because head of the chain is right expression of logical expression we need to take a parent and a grand-parent.
         // E.g. `foo && foo.bar && foo.bar.baz`
@@ -630,7 +630,7 @@ pub(crate) struct LogicalOrLikeChain {
 }
 
 impl LogicalOrLikeChain {
-    /// Create a `LogicalOrLikeChain` if `JsLogicalExpression` is optional chain like and the `JsLogicalExpression` is inside member expression
+    /// Create a `LogicalOrLikeChain` if `JsLogicalExpression` is optional chain like and the `JsLogicalExpression` is inside member expression.
     /// ```js
     /// (foo || {}).bar;
     /// ```
@@ -663,7 +663,7 @@ impl LogicalOrLikeChain {
         Some(LogicalOrLikeChain { member })
     }
 
-    /// This function checks if `LogicalOrLikeChain` is inside another parent `LogicalOrLikeChain`
+    /// This function checks if `LogicalOrLikeChain` is inside another parent `LogicalOrLikeChain`.
     /// E.g.
     /// `(foo ?? {}).bar` is inside `((foo ?? {}).bar || {}).baz;`
     fn is_inside_another_chain(&self) -> bool {
@@ -738,6 +738,10 @@ impl LogicalOrLikeChain {
                 };
 
                 // Set next member expression from the left part
+                // Find next member expression
+                // E.g. `((foo || {}).baz() || {}).bar`
+                // If current member chain is `bar` the next member chain is baz.
+                // Need to downward traversal to find first `JsAnyExpression` which we can't include in chain
                 next_member_chain = LogicalOrLikeChain::get_member(left.clone());
 
                 chain.push_front((left, member))
@@ -747,6 +751,8 @@ impl LogicalOrLikeChain {
         chain
     }
 
+    /// Traversal by parent to find the parent of a chain.
+    /// This function is opposite to the `get_member` function.
     fn get_chain_parent(expression: JsAnyExpression) -> Option<JsAnyExpression> {
         iter::successors(expression.parent::<JsAnyExpression>(), |expression| {
             if matches!(
@@ -767,6 +773,10 @@ impl LogicalOrLikeChain {
         .last()
     }
 
+    /// Downward traversal to find the member.
+    /// E.g. `((foo || {}).baz() || {}).bar`
+    /// If current member chain is `bar` the next member chain is baz.
+    /// Need to downward traversal to find first `JsAnyExpression` which we can't include in chain.
     fn get_member(expression: JsAnyExpression) -> Option<JsAnyMemberExpression> {
         let expression = iter::successors(Some(expression), |expression| match expression {
             JsAnyExpression::JsParenthesizedExpression(expression) => expression.expression().ok(),
