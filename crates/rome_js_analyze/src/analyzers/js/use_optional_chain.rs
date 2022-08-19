@@ -353,6 +353,7 @@ enum LogicalAndChainOrdering {
 #[derive(Debug)]
 pub(crate) struct LogicalAndChain {
     head: JsAnyExpression,
+    /// The buffer where we collection `JsAnyExpression` which need to make optional chain.
     buf: VecDeque<JsAnyExpression>,
 }
 
@@ -535,7 +536,7 @@ impl LogicalAndChain {
     fn optional_chain_expression_nodes(mut self) -> Option<VecDeque<JsAnyExpression>> {
         let mut optional_chain_expression_nodes = VecDeque::with_capacity(self.buf.len());
 
-        // We take a head of next sub-chain
+        // Take a head of a next sub-chain
         // E.g. `foo && foo.bar && foo.bar.baz`
         // The head is `foo.bar.baz` expression.
         // The parent of the head is a logical expression `foo && foo.bar && foo.bar.baz`.
@@ -615,12 +616,12 @@ impl LogicalAndChain {
 /// E.g. `((foo ?? {}).bar || {}).baz;`.
 /// The member expression `(foo ?? {}).bar` isn't the topmost. We skip it.
 /// `((foo ?? {}).bar || {}).baz;` is the topmost and it'll be a start point.
-/// We start collecting a left and member expressions to buffer.
+/// We start collecting pairs of a left and member expressions to buffer.
 /// First expression is `((foo ?? {}).bar || {}).baz;`:
 /// Buffer is `[((foo ?? {}).bar, ((foo ?? {}).bar || {}).baz;)]`
 /// Next expressions is `((foo ?? {}).bar || {}).baz;`:
 /// Buffer is `[(foo, (foo ?? {}).bar), ((foo ?? {}).bar, ((foo ?? {}).bar || {}).baz;)]`
-/// Iterate buffer, take member expressions and replace object with left parts:
+/// Iterate buffer, take member expressions and replace object with left parts and make the expression optional chain:
 /// `foo?.bar?.baz;`
 ///
 #[derive(Debug)]
@@ -629,10 +630,16 @@ pub(crate) struct LogicalOrLikeChain {
 }
 
 impl LogicalOrLikeChain {
+    /// Create a `LogicalOrLikeChain` if `JsLogicalExpression` is optional chain like and the `JsLogicalExpression` is inside member expression
+    /// ```js
+    /// (foo || {}).bar;
+    /// ```
     fn new(logical: &JsLogicalExpression) -> Option<LogicalOrLikeChain> {
         let is_right_empty_object = logical
             .right()
             .ok()?
+            // Handle case when a right expression is inside parentheses
+            // E.g. (foo || (({}))).bar;
             .omit_parentheses()
             .as_js_object_expression()?
             .is_empty();
@@ -656,6 +663,9 @@ impl LogicalOrLikeChain {
         Some(LogicalOrLikeChain { member })
     }
 
+    /// This function checks if `LogicalOrLikeChain` is inside another parent `LogicalOrLikeChain`
+    /// E.g.
+    /// `(foo ?? {}).bar` is inside `((foo ?? {}).bar || {}).baz;`
     fn is_inside_another_chain(&self) -> bool {
         LogicalOrLikeChain::get_chain_parent(JsAnyExpression::from(self.member.clone())).map_or(
             false,
@@ -674,20 +684,26 @@ impl LogicalOrLikeChain {
         )
     }
 
+    /// This function returns a list of pairs `(JsAnyExpression, JsAnyMemberExpression)` which we need to transform into an option chain expression.
     fn optional_chain_expression_nodes(
         &self,
     ) -> VecDeque<(JsAnyExpression, JsAnyMemberExpression)> {
         let mut chain = VecDeque::new();
 
-        let mut member = Some(self.member.clone());
+        // Start from the topmost member expression
+        let mut next_member_chain = Some(self.member.clone());
 
-        while let Some(current_member) = member.take() {
-            let object = match current_member.object() {
+        while let Some(member) = next_member_chain.take() {
+            let object = match member.object() {
                 Ok(object) => object,
                 _ => return chain,
             };
 
-            if let JsAnyExpression::JsLogicalExpression(logical) = object.omit_parentheses() {
+            // Handle case when a object expression is inside parentheses
+            // E.g. (((foo || {}))).bar;
+            let object = object.omit_parentheses();
+
+            if let JsAnyExpression::JsLogicalExpression(logical) = object {
                 let is_valid_operator = logical.operator().map_or(false, |operator| {
                     matches!(
                         operator,
@@ -704,6 +720,8 @@ impl LogicalOrLikeChain {
                     .ok()
                     .and_then(|right| {
                         right
+                            // Handle case when a right expression is inside parentheses
+                            // E.g. (foo || (({}))).bar;
                             .omit_parentheses()
                             .as_js_object_expression()
                             .map(|object| object.is_empty())
@@ -719,9 +737,10 @@ impl LogicalOrLikeChain {
                     Err(_) => return chain,
                 };
 
-                member = LogicalOrLikeChain::get_member(left.clone());
+                // Set next member expression from the left part
+                next_member_chain = LogicalOrLikeChain::get_member(left.clone());
 
-                chain.push_front((left, current_member))
+                chain.push_front((left, member))
             }
         }
 
