@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["QuoteProperties",""],["QuoteStyle",""]],"struct":[["JsCommentStyle",""],["JsFormatContext",""],["TabWidth",""]]};
