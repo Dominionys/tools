@@ -103,27 +103,11 @@
 <span id="97">97</span>
 <span id="98">98</span>
 <span id="99">99</span>
-<span id="100">100</span>
-<span id="101">101</span>
-<span id="102">102</span>
-<span id="103">103</span>
-<span id="104">104</span>
-<span id="105">105</span>
-<span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{
-    <span class="ident">is_callee</span>, <span class="ident">is_member_object</span>, <span class="ident">is_spread</span>, <span class="ident">is_tag</span>, <span class="ident">ExpressionNode</span>, <span class="ident">NeedsParentheses</span>,
-};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{<span class="ident">is_callee</span>, <span class="ident">is_member_object</span>, <span class="ident">is_spread</span>, <span class="ident">is_tag</span>, <span class="ident">NeedsParentheses</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter::write</span>;
-<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsAnyExpression</span>, <span class="ident">JsSyntaxNode</span>};
+<span class="kw">use</span> <span class="ident">rome_js_syntax::JsSyntaxNode</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsSyntaxKind</span>, <span class="ident">TsTypeAssertionExpression</span>, <span class="ident">TsTypeAssertionExpressionFields</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
@@ -163,18 +147,6 @@
             <span class="ident">JsSyntaxKind::TS_AS_EXPRESSION</span> =&gt; <span class="bool-val">true</span>,
             <span class="kw">_</span> =&gt; <span class="ident">type_cast_like_needs_parens</span>(<span class="self">self</span>.<span class="ident">syntax</span>(), <span class="ident">parent</span>),
         }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ExpressionNode</span> <span class="kw">for</span> <span class="ident">TsTypeAssertionExpression</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">into</span>()
     }
 }
 

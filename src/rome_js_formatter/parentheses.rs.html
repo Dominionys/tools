@@ -1083,74 +1083,6 @@
 <span id="1077">1077</span>
 <span id="1078">1078</span>
 <span id="1079">1079</span>
-<span id="1080">1080</span>
-<span id="1081">1081</span>
-<span id="1082">1082</span>
-<span id="1083">1083</span>
-<span id="1084">1084</span>
-<span id="1085">1085</span>
-<span id="1086">1086</span>
-<span id="1087">1087</span>
-<span id="1088">1088</span>
-<span id="1089">1089</span>
-<span id="1090">1090</span>
-<span id="1091">1091</span>
-<span id="1092">1092</span>
-<span id="1093">1093</span>
-<span id="1094">1094</span>
-<span id="1095">1095</span>
-<span id="1096">1096</span>
-<span id="1097">1097</span>
-<span id="1098">1098</span>
-<span id="1099">1099</span>
-<span id="1100">1100</span>
-<span id="1101">1101</span>
-<span id="1102">1102</span>
-<span id="1103">1103</span>
-<span id="1104">1104</span>
-<span id="1105">1105</span>
-<span id="1106">1106</span>
-<span id="1107">1107</span>
-<span id="1108">1108</span>
-<span id="1109">1109</span>
-<span id="1110">1110</span>
-<span id="1111">1111</span>
-<span id="1112">1112</span>
-<span id="1113">1113</span>
-<span id="1114">1114</span>
-<span id="1115">1115</span>
-<span id="1116">1116</span>
-<span id="1117">1117</span>
-<span id="1118">1118</span>
-<span id="1119">1119</span>
-<span id="1120">1120</span>
-<span id="1121">1121</span>
-<span id="1122">1122</span>
-<span id="1123">1123</span>
-<span id="1124">1124</span>
-<span id="1125">1125</span>
-<span id="1126">1126</span>
-<span id="1127">1127</span>
-<span id="1128">1128</span>
-<span id="1129">1129</span>
-<span id="1130">1130</span>
-<span id="1131">1131</span>
-<span id="1132">1132</span>
-<span id="1133">1133</span>
-<span id="1134">1134</span>
-<span id="1135">1135</span>
-<span id="1136">1136</span>
-<span id="1137">1137</span>
-<span id="1138">1138</span>
-<span id="1139">1139</span>
-<span id="1140">1140</span>
-<span id="1141">1141</span>
-<span id="1142">1142</span>
-<span id="1143">1143</span>
-<span id="1144">1144</span>
-<span id="1145">1145</span>
-<span id="1146">1146</span>
-<span id="1147">1147</span>
 </pre><pre class="rust"><code><span class="doccomment">//! JavaScript supports parenthesizing expressions, assignments, and TypeScript types.</span>
 <span class="doccomment">//! Parenthesizing an expression can be desired to change the precedence of an expression or to ease</span>
 <span class="doccomment">//! readability.</span>
@@ -1161,7 +1093,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The [NeedsParentheses] trait forms the foundation of Rome&#39;s parentheses formatting and is implemented</span>
 <span class="doccomment">//! by all nodes supporting parentheses (expressions, assignments, and types). The trait&#39;s main method</span>
-<span class="doccomment">//! is the [`needs_parentheses`](NeedsParentheses::needs_parentheses)</span>
+<span class="doccomment">//! is the [NeedsParentheses::needs_parentheses]</span>
 <span class="doccomment">//! method that implements the rules when a node requires parentheses.</span>
 <span class="doccomment">//! A node requires parentheses to:</span>
 <span class="doccomment">//! * improve readability: `a &lt;&lt; b &lt;&lt; 3` is harder to read than `(a &lt;&lt; b) &lt;&lt; 3`</span>
@@ -1175,27 +1107,20 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! There are two measures taken by Rome to ensure formatting is stable regardless of the number of parenthesized nodes in a tree:</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ## Removing and adding of parentheses</span>
-<span class="doccomment">//! The [FormatNodeRule](rome_js_formatter::FormatNodeRule) always inserts parentheses around a node if the rules `needs_parentheses` method</span>
-<span class="doccomment">//! returns `true`. This by itself would result in the formatter adding an extra pair of parentheses with every format pass for nodes where parentheses are necessary.</span>
-<span class="doccomment">//! This is why the [rome_js_formatter::FormatJsParenthesizedExpression] rule always removes the parentheses and relies on the</span>
-<span class="doccomment">//! [FormatNodeRule](rome_js_formatter::FormatNodeRule) to add the parentheses again when necessary.</span>
+<span class="doccomment">//! ## Removing parenthesized nodes</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ## Testing for a a child or parent node.</span>
+<span class="doccomment">//! The JavaScript formatter [pre-processes](crate:JsFormatSyntaxRewriter] the input CST and removes all parenthesized expressions, assignments, and types except if:</span>
+<span class="doccomment">//! * The parenthesized node has a syntax error (skipped token trivia, missing inner expression)</span>
+<span class="doccomment">//! * The node has a directly preceding closure type cast comment</span>
+<span class="doccomment">//! * The inner expression is an unknown node</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! There are many places where a formatting rule applies different formatting depending on the type of a</span>
-<span class="doccomment">//! child node or parent node. The decision taken by these rules shouldn&#39;t differ just because a node happens to be parenthesized</span>
-<span class="doccomment">//! because doing so would yield different results if the formatter removes the parentheses in the first pass.</span>
+<span class="doccomment">//! Removing the parenthesized nodes has the benefit that a input tree with parentheses and an input tree</span>
+<span class="doccomment">//! without parentheses have the same structure for as far as the formatter is concerned and thus,</span>
+<span class="doccomment">//! the formatter makes the same decisions for both trees.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! The [NeedsParentheses] trait offers a [`resolve_parent`](NeedsParentheses::resolve_parent] method</span>
-<span class="doccomment">//! that returns the first parent of a node that isn&#39;t parenthesized.</span>
-<span class="doccomment">//! For example, calling [JsSyntaxNode::parent] on the `a` identifier in `(a).b` returns the [JsParenthesizedExpression](rome_js_syntax::JsParenthesizedExpression)</span>
-<span class="doccomment">//! but calling [`resolve_parent`](NeedsParentheses::resolve_parent] returns the [JsStaticMemberExpression](rome_js_syntax::JsStaticMemberExpression).</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This module further offers node specific traits like [ExpressionNode] that implement additional methods to resolve a node.</span>
-<span class="doccomment">//! Calling [`resolve`](ExpressionNode::resolve) returns the node itself if it isn&#39;t a [JsParenthesizedExpression](rome_js_syntax::JsParenthesizedExpression)</span>
-<span class="doccomment">//! or traverses down the parenthesized expression and returns the first non [JsParenthesizedExpression](rome_js_syntax::JsParenthesizedExpression) node.</span>
-<span class="doccomment">//! For example, calling resolve on `a` returns `a` but calling resolve on `((a))` also returns `a`.</span>
+<span class="doccomment">//! ## Parentheses insertion</span>
+<span class="doccomment">//! The parentheses that get removed by the pre-processing step are re-inserted by the [crate::FormatNodeRule].</span>
+<span class="doccomment">//! The rule inserts parentheses for each node where [crate::FormatNodeRule::needs_parentheses] returns true.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">JsAnyBinaryLikeExpression</span>, <span class="ident">JsAnyBinaryLikeLeftExpression</span>};
 
@@ -1203,64 +1128,25 @@
     <span class="ident">JsAnyAssignment</span>, <span class="ident">JsAnyAssignmentPattern</span>, <span class="ident">JsAnyExpression</span>, <span class="ident">JsAnyFunctionBody</span>,
     <span class="ident">JsAnyLiteralExpression</span>, <span class="ident">JsArrowFunctionExpression</span>, <span class="ident">JsAssignmentExpression</span>, <span class="ident">JsBinaryExpression</span>,
     <span class="ident">JsBinaryOperator</span>, <span class="ident">JsComputedMemberAssignment</span>, <span class="ident">JsComputedMemberExpression</span>,
-    <span class="ident">JsConditionalExpression</span>, <span class="ident">JsLanguage</span>, <span class="ident">JsSequenceExpression</span>, <span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxNode</span>,
+    <span class="ident">JsConditionalExpression</span>, <span class="ident">JsLanguage</span>, <span class="ident">JsParenthesizedAssignment</span>, <span class="ident">JsParenthesizedExpression</span>,
+    <span class="ident">JsSequenceExpression</span>, <span class="ident">JsStaticMemberAssignment</span>, <span class="ident">JsStaticMemberExpression</span>, <span class="ident">JsSyntaxKind</span>,
+    <span class="ident">JsSyntaxNode</span>, <span class="ident">JsSyntaxToken</span>, <span class="ident">TsConditionalType</span>, <span class="ident">TsIndexedAccessType</span>,
+    <span class="ident">TsIntersectionTypeElementList</span>, <span class="ident">TsParenthesizedType</span>, <span class="ident">TsType</span>, <span class="ident">TsUnionTypeVariantList</span>,
 };
-<span class="kw">use</span> <span class="ident">rome_rowan::AstNode</span>;
+<span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">declare_node_union</span>, <span class="ident">match_ast</span>, <span class="ident">AstNode</span>, <span class="ident">AstSeparatedList</span>, <span class="ident">SyntaxResult</span>};
 
 <span class="doccomment">/// Node that may be parenthesized to ensure it forms valid syntax or to improve readability</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">NeedsParentheses</span>: <span class="ident">AstNode</span><span class="op">&lt;</span><span class="ident">Language</span> <span class="op">=</span> <span class="ident">JsLanguage</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">needs_parentheses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">resolve_parent</span>()
+        <span class="self">self</span>.<span class="ident">syntax</span>()
+            .<span class="ident">parent</span>()
             .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">parent</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="kw-2">&amp;</span><span class="ident">parent</span>))
-    }
-
-    <span class="kw">fn</span> <span class="ident">resolve_parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JsSyntaxNode</span><span class="op">&gt;</span> {
-        <span class="ident">resolve_parent</span>(<span class="self">self</span>.<span class="ident">syntax</span>())
     }
 
     <span class="doccomment">/// Returns `true` if this node requires parentheses to form valid syntax or improve readability.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns `false` if the parentheses can be omitted safely without changing semantics.</span>
     <span class="kw">fn</span> <span class="ident">needs_parentheses_with_parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span>;
-}
-
-<span class="doccomment">/// Trait implemented by all JavaScript expressions.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ExpressionNode</span>: <span class="ident">NeedsParentheses</span> {
-    <span class="doccomment">/// Resolves an expression to the first non parenthesized expression.</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span>;
-
-    <span class="doccomment">/// Consumes `self` and returns the first expression that isn&#39;t a parenthesized expression.</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span>;
-
-    <span class="doccomment">/// Resolves an expression to the first non parenthesized expression and returns its [JsSyntaxNode].</span>
-    <span class="kw">fn</span> <span class="ident">resolve_syntax</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsSyntaxNode</span> {
-        <span class="self">self</span>.<span class="ident">resolve</span>().<span class="ident">into_syntax</span>()
-    }
-
-    <span class="doccomment">/// Consumes `self` and returns the [JsSyntaxNode] of the first expression that isn&#39;t a parenthesized expression.</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved_syntax</span>(<span class="self">self</span>) -&gt; <span class="ident">JsSyntaxNode</span> {
-        <span class="self">self</span>.<span class="ident">into_resolved</span>().<span class="ident">into_syntax</span>()
-    }
-}
-
-<span class="doccomment">/// Resolves to the first parent that isn&#39;t a parenthesized expression, assignment, or type.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">resolve_parent</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JsSyntaxNode</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">parent</span>();
-
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent</span>) <span class="op">=</span> <span class="ident">current</span> {
-        <span class="kw">if</span> <span class="macro">matches!</span>(
-            <span class="ident">parent</span>.<span class="ident">kind</span>(),
-            <span class="ident">JsSyntaxKind::JS_PARENTHESIZED_EXPRESSION</span>
-                <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_PARENTHESIZED_ASSIGNMENT</span>
-                <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_PARENTHESIZED_TYPE</span>
-        ) {
-            <span class="ident">current</span> <span class="op">=</span> <span class="ident">parent</span>.<span class="ident">parent</span>();
-        } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">parent</span>);
-        }
-    }
-
-    <span class="prelude-val">None</span>
 }
 
 <span class="kw">impl</span> <span class="ident">NeedsParentheses</span> <span class="kw">for</span> <span class="ident">JsAnyLiteralExpression</span> {
@@ -1305,38 +1191,6 @@
             <span class="ident">JsAnyLiteralExpression::JsStringLiteralExpression</span>(<span class="ident">string</span>) =&gt; {
                 <span class="ident">string</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>)
             }
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ExpressionNode</span> <span class="kw">for</span> <span class="ident">JsAnyLiteralExpression</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyLiteralExpression::JsBigIntLiteralExpression</span>(<span class="ident">big_int</span>) =&gt; <span class="ident">big_int</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyLiteralExpression::JsBooleanLiteralExpression</span>(<span class="ident">boolean</span>) =&gt; <span class="ident">boolean</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyLiteralExpression::JsNullLiteralExpression</span>(<span class="ident">null_literal</span>) =&gt; <span class="ident">null_literal</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyLiteralExpression::JsNumberLiteralExpression</span>(<span class="ident">number_literal</span>) =&gt; {
-                <span class="ident">number_literal</span>.<span class="ident">resolve</span>()
-            }
-            <span class="ident">JsAnyLiteralExpression::JsRegexLiteralExpression</span>(<span class="ident">regex</span>) =&gt; <span class="ident">regex</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyLiteralExpression::JsStringLiteralExpression</span>(<span class="ident">string</span>) =&gt; <span class="ident">string</span>.<span class="ident">resolve</span>(),
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyLiteralExpression::JsBigIntLiteralExpression</span>(<span class="ident">big_int</span>) =&gt; <span class="ident">big_int</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyLiteralExpression::JsBooleanLiteralExpression</span>(<span class="ident">boolean</span>) =&gt; <span class="ident">boolean</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyLiteralExpression::JsNullLiteralExpression</span>(<span class="ident">null_literal</span>) =&gt; {
-                <span class="ident">null_literal</span>.<span class="ident">into_resolved</span>()
-            }
-            <span class="ident">JsAnyLiteralExpression::JsNumberLiteralExpression</span>(<span class="ident">number_literal</span>) =&gt; {
-                <span class="ident">number_literal</span>.<span class="ident">into_resolved</span>()
-            }
-            <span class="ident">JsAnyLiteralExpression::JsRegexLiteralExpression</span>(<span class="ident">regex</span>) =&gt; <span class="ident">regex</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyLiteralExpression::JsStringLiteralExpression</span>(<span class="ident">string</span>) =&gt; <span class="ident">string</span>.<span class="ident">into_resolved</span>(),
         }
     }
 }
@@ -1487,98 +1341,6 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ExpressionNode</span> <span class="kw">for</span> <span class="ident">JsAnyExpression</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyExpression::ImportMeta</span>(<span class="ident">meta</span>) =&gt; <span class="ident">meta</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsAnyLiteralExpression</span>(<span class="ident">literal</span>) =&gt; <span class="ident">literal</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsArrayExpression</span>(<span class="ident">array</span>) =&gt; <span class="ident">array</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsArrowFunctionExpression</span>(<span class="ident">arrow</span>) =&gt; <span class="ident">arrow</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsAssignmentExpression</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsAwaitExpression</span>(<span class="ident">await_expression</span>) =&gt; <span class="ident">await_expression</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsBinaryExpression</span>(<span class="ident">binary</span>) =&gt; <span class="ident">binary</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsCallExpression</span>(<span class="ident">call</span>) =&gt; <span class="ident">call</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsClassExpression</span>(<span class="ident">class</span>) =&gt; <span class="ident">class</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsComputedMemberExpression</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsConditionalExpression</span>(<span class="ident">conditional</span>) =&gt; <span class="ident">conditional</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsFunctionExpression</span>(<span class="ident">function</span>) =&gt; <span class="ident">function</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsIdentifierExpression</span>(<span class="ident">identifier</span>) =&gt; <span class="ident">identifier</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsImportCallExpression</span>(<span class="ident">import_call</span>) =&gt; <span class="ident">import_call</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsInExpression</span>(<span class="ident">in_expression</span>) =&gt; <span class="ident">in_expression</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsInstanceofExpression</span>(<span class="ident">instanceof</span>) =&gt; <span class="ident">instanceof</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsLogicalExpression</span>(<span class="ident">logical</span>) =&gt; <span class="ident">logical</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsNewExpression</span>(<span class="ident">new</span>) =&gt; <span class="ident">new</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsObjectExpression</span>(<span class="ident">object</span>) =&gt; <span class="ident">object</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsParenthesizedExpression</span>(<span class="ident">parenthesized</span>) =&gt; <span class="ident">parenthesized</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsPostUpdateExpression</span>(<span class="ident">update</span>) =&gt; <span class="ident">update</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsPreUpdateExpression</span>(<span class="ident">update</span>) =&gt; <span class="ident">update</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsSequenceExpression</span>(<span class="ident">sequence</span>) =&gt; <span class="ident">sequence</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsStaticMemberExpression</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsSuperExpression</span>(<span class="ident">sup</span>) =&gt; <span class="ident">sup</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsTemplate</span>(<span class="ident">template</span>) =&gt; <span class="ident">template</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsThisExpression</span>(<span class="ident">this</span>) =&gt; <span class="ident">this</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsUnaryExpression</span>(<span class="ident">unary</span>) =&gt; <span class="ident">unary</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsUnknownExpression</span>(<span class="ident">unknown</span>) =&gt; <span class="ident">unknown</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsYieldExpression</span>(<span class="ident">yield_expression</span>) =&gt; <span class="ident">yield_expression</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::JsxTagExpression</span>(<span class="ident">jsx</span>) =&gt; <span class="ident">jsx</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::NewTarget</span>(<span class="ident">target</span>) =&gt; <span class="ident">target</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::TsAsExpression</span>(<span class="ident">as_expression</span>) =&gt; <span class="ident">as_expression</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::TsNonNullAssertionExpression</span>(<span class="ident">non_null</span>) =&gt; <span class="ident">non_null</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyExpression::TsTypeAssertionExpression</span>(<span class="ident">type_assertion</span>) =&gt; <span class="ident">type_assertion</span>.<span class="ident">resolve</span>(),
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyExpression::ImportMeta</span>(<span class="ident">meta</span>) =&gt; <span class="ident">meta</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsAnyLiteralExpression</span>(<span class="ident">literal</span>) =&gt; <span class="ident">literal</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsArrayExpression</span>(<span class="ident">array</span>) =&gt; <span class="ident">array</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsArrowFunctionExpression</span>(<span class="ident">arrow</span>) =&gt; <span class="ident">arrow</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsAssignmentExpression</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsAwaitExpression</span>(<span class="ident">await_expression</span>) =&gt; {
-                <span class="ident">await_expression</span>.<span class="ident">into_resolved</span>()
-            }
-            <span class="ident">JsAnyExpression::JsBinaryExpression</span>(<span class="ident">binary</span>) =&gt; <span class="ident">binary</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsCallExpression</span>(<span class="ident">call</span>) =&gt; <span class="ident">call</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsClassExpression</span>(<span class="ident">class</span>) =&gt; <span class="ident">class</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsComputedMemberExpression</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsConditionalExpression</span>(<span class="ident">conditional</span>) =&gt; <span class="ident">conditional</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsFunctionExpression</span>(<span class="ident">function</span>) =&gt; <span class="ident">function</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsIdentifierExpression</span>(<span class="ident">identifier</span>) =&gt; <span class="ident">identifier</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsImportCallExpression</span>(<span class="ident">import_call</span>) =&gt; <span class="ident">import_call</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsInExpression</span>(<span class="ident">in_expression</span>) =&gt; <span class="ident">in_expression</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsInstanceofExpression</span>(<span class="ident">instanceof</span>) =&gt; <span class="ident">instanceof</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsLogicalExpression</span>(<span class="ident">logical</span>) =&gt; <span class="ident">logical</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsNewExpression</span>(<span class="ident">new</span>) =&gt; <span class="ident">new</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsObjectExpression</span>(<span class="ident">object</span>) =&gt; <span class="ident">object</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsParenthesizedExpression</span>(<span class="ident">parenthesized</span>) =&gt; {
-                <span class="ident">parenthesized</span>.<span class="ident">into_resolved</span>()
-            }
-            <span class="ident">JsAnyExpression::JsPostUpdateExpression</span>(<span class="ident">update</span>) =&gt; <span class="ident">update</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsPreUpdateExpression</span>(<span class="ident">update</span>) =&gt; <span class="ident">update</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsSequenceExpression</span>(<span class="ident">sequence</span>) =&gt; <span class="ident">sequence</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsStaticMemberExpression</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsSuperExpression</span>(<span class="ident">sup</span>) =&gt; <span class="ident">sup</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsTemplate</span>(<span class="ident">template</span>) =&gt; <span class="ident">template</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsThisExpression</span>(<span class="ident">this</span>) =&gt; <span class="ident">this</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsUnaryExpression</span>(<span class="ident">unary</span>) =&gt; <span class="ident">unary</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsUnknownExpression</span>(<span class="ident">unknown</span>) =&gt; <span class="ident">unknown</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::JsYieldExpression</span>(<span class="ident">yield_expression</span>) =&gt; {
-                <span class="ident">yield_expression</span>.<span class="ident">into_resolved</span>()
-            }
-            <span class="ident">JsAnyExpression::JsxTagExpression</span>(<span class="ident">jsx</span>) =&gt; <span class="ident">jsx</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::NewTarget</span>(<span class="ident">target</span>) =&gt; <span class="ident">target</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::TsAsExpression</span>(<span class="ident">as_expression</span>) =&gt; <span class="ident">as_expression</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::TsNonNullAssertionExpression</span>(<span class="ident">non_null</span>) =&gt; <span class="ident">non_null</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyExpression::TsTypeAssertionExpression</span>(<span class="ident">type_assertion</span>) =&gt; {
-                <span class="ident">type_assertion</span>.<span class="ident">into_resolved</span>()
-            }
-        }
-    }
-}
-
 <span class="doccomment">/// Returns the left most expression of `expression`.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// For example, returns `a` for `(a ? b : c) + d` because it first resolves the</span>
@@ -1611,7 +1373,6 @@
     <span class="kw">use</span> <span class="ident">JsAnyExpression</span>::<span class="kw-2">*</span>;
 
     <span class="kw">let</span> <span class="ident">left_expression</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">expression</span> {
-        <span class="ident">JsParenthesizedExpression</span>(<span class="ident">parenthesized</span>) =&gt; <span class="ident">parenthesized</span>.<span class="ident">expression</span>().<span class="ident">ok</span>(),
         <span class="ident">JsSequenceExpression</span>(<span class="ident">sequence</span>) =&gt; <span class="ident">sequence</span>.<span class="ident">left</span>().<span class="ident">ok</span>(),
         <span class="ident">JsStaticMemberExpression</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">object</span>().<span class="ident">ok</span>(),
         <span class="ident">JsComputedMemberExpression</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">object</span>().<span class="ident">ok</span>(),
@@ -1652,15 +1413,13 @@
                 <span class="kw">return</span> <span class="bool-val">true</span>;
             }
 
-            <span class="ident">JsSyntaxKind::JS_PARENTHESIZED_EXPRESSION</span>
-            <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_STATIC_MEMBER_EXPRESSION</span>
+            <span class="ident">JsSyntaxKind::JS_STATIC_MEMBER_EXPRESSION</span>
             <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_STATIC_MEMBER_ASSIGNMENT</span>
             <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_TEMPLATE</span>
             <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_CALL_EXPRESSION</span>
             <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_NEW_EXPRESSION</span>
             <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_AS_EXPRESSION</span>
-            <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_NON_NULL_ASSERTION_EXPRESSION</span>
-            <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_PARENTHESIZED_ASSIGNMENT</span> =&gt; <span class="ident">parent</span>,
+            <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_NON_NULL_ASSERTION_EXPRESSION</span> =&gt; <span class="ident">parent</span>,
             <span class="ident">JsSyntaxKind::JS_SEQUENCE_EXPRESSION</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">JsSequenceExpression::unwrap_cast</span>(<span class="ident">parent</span>);
 
@@ -1788,18 +1547,11 @@
     ));
     <span class="ident">debug_assert_is_parent</span>(<span class="ident">expression</span>, <span class="ident">parent</span>);
 
-    <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
-        <span class="ident">JsSyntaxKind::JS_BINARY_EXPRESSION</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">binary</span> <span class="op">=</span> <span class="ident">JsBinaryExpression::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
-
-            <span class="macro">matches!</span>(<span class="ident">binary</span>.<span class="ident">operator</span>(), <span class="prelude-val">Ok</span>(<span class="ident">JsBinaryOperator::Exponent</span>))
-                <span class="op">&amp;&amp;</span> <span class="ident">binary</span>
-                    .<span class="ident">left</span>()
-                    .<span class="ident">map</span>(<span class="ident">ExpressionNode::into_resolved_syntax</span>)
-                    .<span class="ident">as_ref</span>()
-                    <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">expression</span>)
-        }
-        <span class="kw">_</span> =&gt; <span class="ident">update_or_lower_expression_needs_parentheses</span>(<span class="ident">expression</span>, <span class="ident">parent</span>),
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">binary</span>) <span class="op">=</span> <span class="ident">JsBinaryExpression::cast_ref</span>(<span class="ident">parent</span>) {
+        <span class="macro">matches!</span>(<span class="ident">binary</span>.<span class="ident">operator</span>(), <span class="prelude-val">Ok</span>(<span class="ident">JsBinaryOperator::Exponent</span>))
+            <span class="op">&amp;&amp;</span> <span class="ident">binary</span>.<span class="ident">left</span>().<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>).<span class="ident">as_ref</span>() <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">expression</span>)
+    } <span class="kw">else</span> {
+        <span class="ident">update_or_lower_expression_needs_parentheses</span>(<span class="ident">expression</span>, <span class="ident">parent</span>)
     }
 }
 
@@ -1832,31 +1584,27 @@
     <span class="ident">debug_assert_is_expression</span>(<span class="ident">node</span>);
     <span class="ident">debug_assert_is_parent</span>(<span class="ident">node</span>, <span class="ident">parent</span>);
 
-    <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
-        <span class="comment">// Only allows expression in the `object` child.</span>
-        <span class="ident">JsSyntaxKind::JS_STATIC_MEMBER_EXPRESSION</span> =&gt; <span class="bool-val">true</span>,
-        <span class="ident">JsSyntaxKind::JS_STATIC_MEMBER_ASSIGNMENT</span> =&gt; <span class="bool-val">true</span>,
-
-        <span class="ident">JsSyntaxKind::JS_COMPUTED_MEMBER_EXPRESSION</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">member_expression</span> <span class="op">=</span> <span class="ident">JsComputedMemberExpression::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
-
-            <span class="ident">member_expression</span>
-                .<span class="ident">object</span>()
-                .<span class="ident">map</span>(<span class="ident">ExpressionNode::into_resolved_syntax</span>)
-                .<span class="ident">as_ref</span>()
-                <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
+    <span class="macro">match_ast!</span> {
+        <span class="kw">match</span> <span class="ident">parent</span> {
+            <span class="comment">// Only allows expression in the `object` child.</span>
+            <span class="ident">JsStaticMemberExpression</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+            <span class="ident">JsStaticMemberAssignment</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+            <span class="ident">JsComputedMemberExpression</span>(<span class="ident">member_expression</span>) =&gt; {
+                 <span class="ident">member_expression</span>
+                    .<span class="ident">object</span>()
+                    .<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>)
+                    .<span class="ident">as_ref</span>()
+                    <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
+            },
+            <span class="ident">JsComputedMemberAssignment</span>(<span class="ident">assignment</span>) =&gt; {
+                <span class="ident">assignment</span>
+                    .<span class="ident">object</span>()
+                    .<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>)
+                    .<span class="ident">as_ref</span>()
+                    <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
+            },
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
         }
-
-        <span class="ident">JsSyntaxKind::JS_COMPUTED_MEMBER_ASSIGNMENT</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">member_assignment</span> <span class="op">=</span> <span class="ident">JsComputedMemberAssignment::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
-
-            <span class="ident">member_assignment</span>
-                .<span class="ident">object</span>()
-                .<span class="ident">map</span>(<span class="ident">ExpressionNode::into_resolved_syntax</span>)
-                .<span class="ident">as_ref</span>()
-                <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
-        }
-        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
@@ -1882,35 +1630,35 @@
 <span class="doccomment">/// is_conditional_test(`b`, `a ? b : c`) -&gt; false</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_conditional_test</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
-        <span class="ident">JsSyntaxKind::JS_CONDITIONAL_EXPRESSION</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">conditional</span> <span class="op">=</span> <span class="ident">JsConditionalExpression::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
-
-            <span class="ident">conditional</span>
-                .<span class="ident">test</span>()
-                .<span class="ident">map</span>(<span class="ident">ExpressionNode::into_resolved_syntax</span>)
-                .<span class="ident">as_ref</span>()
-                <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
+    <span class="macro">match_ast!</span> {
+        <span class="kw">match</span> <span class="ident">parent</span> {
+            <span class="ident">JsConditionalExpression</span>(<span class="ident">conditional</span>) =&gt; {
+                <span class="ident">conditional</span>
+                    .<span class="ident">test</span>()
+                    .<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>)
+                    .<span class="ident">as_ref</span>()
+                    <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
+            },
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>
         }
-        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_arrow_function_body</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
     <span class="ident">debug_assert_is_expression</span>(<span class="ident">node</span>);
 
-    <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
-        <span class="ident">JsSyntaxKind::JS_ARROW_FUNCTION_EXPRESSION</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">arrow</span> <span class="op">=</span> <span class="ident">JsArrowFunctionExpression::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
-
-            <span class="kw">match</span> <span class="ident">arrow</span>.<span class="ident">body</span>() {
-                <span class="prelude-val">Ok</span>(<span class="ident">JsAnyFunctionBody::JsAnyExpression</span>(<span class="ident">expression</span>)) =&gt; {
-                    <span class="kw-2">&amp;</span><span class="ident">expression</span>.<span class="ident">resolve_syntax</span>() <span class="op">==</span> <span class="ident">node</span>
+    <span class="macro">match_ast!</span> {
+        <span class="kw">match</span> <span class="ident">parent</span> {
+            <span class="ident">JsArrowFunctionExpression</span>(<span class="ident">arrow</span>) =&gt; {
+                <span class="kw">match</span> <span class="ident">arrow</span>.<span class="ident">body</span>() {
+                    <span class="prelude-val">Ok</span>(<span class="ident">JsAnyFunctionBody::JsAnyExpression</span>(<span class="ident">expression</span>)) =&gt; {
+                        <span class="ident">expression</span>.<span class="ident">syntax</span>() <span class="op">==</span> <span class="ident">node</span>
+                    }
+                    <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                 }
-                <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
-            }
+            },
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>
         }
-        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
@@ -1935,59 +1683,114 @@
     )
 }
 
+<span class="doccomment">/// Returns `true` if a TS primary type needs parentheses</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">operator_type_or_higher_needs_parens</span>(
+    <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>,
+    <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>,
+) -&gt; <span class="ident">bool</span> {
+    <span class="ident">debug_assert_is_parent</span>(<span class="ident">node</span>, <span class="ident">parent</span>);
+
+    <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
+        <span class="ident">JsSyntaxKind::TS_ARRAY_TYPE</span>
+        <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_TYPE_OPERATOR_TYPE</span>
+        <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_REST_TUPLE_TYPE_ELEMENT</span>
+        <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_OPTIONAL_TUPLE_TYPE_ELEMENT</span> =&gt; <span class="bool-val">true</span>,
+        <span class="ident">JsSyntaxKind::TS_INDEXED_ACCESS_TYPE</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">indexed</span> <span class="op">=</span> <span class="ident">TsIndexedAccessType::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
+
+            <span class="ident">indexed</span>.<span class="ident">object_type</span>().<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>).<span class="ident">as_ref</span>() <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
+        }
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+    }
+}
+
+<span class="doccomment">/// Tests if `node` is the check type of a [TsConditionalType]</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```javascript</span>
+<span class="doccomment">/// type s = A extends string ? string : number //  true for `A`, false for `string` and `number`</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_check_type</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
+    <span class="ident">debug_assert_is_parent</span>(<span class="ident">node</span>, <span class="ident">parent</span>);
+
+    <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
+        <span class="ident">JsSyntaxKind::TS_CONDITIONAL_TYPE</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">conditional</span> <span class="op">=</span> <span class="ident">TsConditionalType::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
+
+            <span class="ident">conditional</span>.<span class="ident">check_type</span>().<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>).<span class="ident">as_ref</span>() <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
+        }
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+    }
+}
+
+<span class="doccomment">/// Returns `true` if node is in a union or intersection type with more than one variant</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```javascript</span>
+<span class="doccomment">/// type A = &amp;string // -&gt; false for `string` because `string` is the only variant</span>
+<span class="doccomment">/// type B = string &amp; number // -&gt; true for `string` or `number`</span>
+<span class="doccomment">/// type C = |string // -&gt; false</span>
+<span class="doccomment">/// type D = string | number // -&gt; true</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_in_many_type_union_or_intersection_list</span>(
+    <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>,
+    <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>,
+) -&gt; <span class="ident">bool</span> {
+    <span class="ident">debug_assert_is_parent</span>(<span class="ident">node</span>, <span class="ident">parent</span>);
+
+    <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
+        <span class="ident">JsSyntaxKind::TS_UNION_TYPE_VARIANT_LIST</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">TsUnionTypeVariantList::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
+
+            <span class="ident">list</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span>
+        }
+        <span class="ident">JsSyntaxKind::TS_INTERSECTION_TYPE_ELEMENT_LIST</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">TsIntersectionTypeElementList::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
+
+            <span class="ident">list</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span>
+        }
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+    }
+}
+
+<span class="macro">declare_node_union!</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">JsAnyParenthesized</span> <span class="op">=</span> <span class="ident">JsParenthesizedExpression</span> <span class="op">|</span> <span class="ident">JsParenthesizedAssignment</span> <span class="op">|</span> <span class="ident">TsParenthesizedType</span>
+}
+
+<span class="kw">impl</span> <span class="ident">JsAnyParenthesized</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">l_paren_token</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">JsSyntaxToken</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">JsAnyParenthesized::JsParenthesizedExpression</span>(<span class="ident">expression</span>) =&gt; <span class="ident">expression</span>.<span class="ident">l_paren_token</span>(),
+            <span class="ident">JsAnyParenthesized::JsParenthesizedAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">l_paren_token</span>(),
+            <span class="ident">JsAnyParenthesized::TsParenthesizedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">l_paren_token</span>(),
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">inner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">JsSyntaxNode</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">JsAnyParenthesized::JsParenthesizedExpression</span>(<span class="ident">expression</span>) =&gt; {
+                <span class="ident">expression</span>.<span class="ident">expression</span>().<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>)
+            }
+            <span class="ident">JsAnyParenthesized::JsParenthesizedAssignment</span>(<span class="ident">assignment</span>) =&gt; {
+                <span class="ident">assignment</span>.<span class="ident">assignment</span>().<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>)
+            }
+            <span class="ident">JsAnyParenthesized::TsParenthesizedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">ty</span>().<span class="ident">map</span>(<span class="ident">AstNode::into_syntax</span>),
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">r_paren_token</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">JsSyntaxToken</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">JsAnyParenthesized::JsParenthesizedExpression</span>(<span class="ident">expression</span>) =&gt; <span class="ident">expression</span>.<span class="ident">r_paren_token</span>(),
+            <span class="ident">JsAnyParenthesized::JsParenthesizedAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">r_paren_token</span>(),
+            <span class="ident">JsAnyParenthesized::TsParenthesizedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">r_paren_token</span>(),
+        }
+    }
+}
+
 <span class="doccomment">/// Returns `true` if `parent` is a [JsAnyBinaryLikeExpression] and `node` is the `left` or `right` of that expression.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_binary_like_left_or_right</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
     <span class="ident">debug_assert_is_expression</span>(<span class="ident">node</span>);
     <span class="ident">debug_assert_is_parent</span>(<span class="ident">node</span>, <span class="ident">parent</span>);
 
     <span class="ident">JsAnyBinaryLikeExpression::can_cast</span>(<span class="ident">parent</span>.<span class="ident">kind</span>())
-}
-
-<span class="doccomment">/// Trait implemented by all JavaScript assignments.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AssignmentNode</span>: <span class="ident">NeedsParentheses</span> {
-    <span class="doccomment">/// Resolves an assignment to the first non parenthesized assignment.</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyAssignmentPattern</span>;
-
-    <span class="doccomment">/// Consumes `self` and returns the first assignment that isn&#39;t a parenthesized assignment.</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyAssignmentPattern</span>;
-
-    <span class="doccomment">/// Resolves an assignment to the first non parenthesized assignment and returns its [JsSyntaxNode].</span>
-    <span class="kw">fn</span> <span class="ident">resolve_syntax</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsSyntaxNode</span> {
-        <span class="self">self</span>.<span class="ident">resolve</span>().<span class="ident">into_syntax</span>()
-    }
-
-    <span class="doccomment">/// Consumes `self` and returns the [JsSyntaxNode] of the first assignment  that isn&#39;t a assignment expression.</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved_syntax</span>(<span class="self">self</span>) -&gt; <span class="ident">JsSyntaxNode</span> {
-        <span class="self">self</span>.<span class="ident">into_resolved</span>().<span class="ident">into_syntax</span>()
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">AssignmentNode</span> <span class="kw">for</span> <span class="ident">JsAnyAssignment</span> {
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyAssignmentPattern</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyAssignment::JsComputedMemberAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignment::JsIdentifierAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignment::JsParenthesizedAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignment::JsStaticMemberAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignment::JsUnknownAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignment::TsAsAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignment::TsNonNullAssertionAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignment::TsTypeAssertionAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyAssignmentPattern</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyAssignment::JsComputedMemberAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignment::JsIdentifierAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignment::JsParenthesizedAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignment::JsStaticMemberAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignment::JsUnknownAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignment::TsAsAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignment::TsNonNullAssertionAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignment::TsTypeAssertionAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-        }
-    }
 }
 
 <span class="kw">impl</span> <span class="ident">NeedsParentheses</span> <span class="kw">for</span> <span class="ident">JsAnyAssignment</span> {
@@ -2042,28 +1845,6 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">AssignmentNode</span> <span class="kw">for</span> <span class="ident">JsAnyAssignmentPattern</span> {
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyAssignmentPattern</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyAssignmentPattern::JsAnyAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignmentPattern::JsArrayAssignmentPattern</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-            <span class="ident">JsAnyAssignmentPattern::JsObjectAssignmentPattern</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">resolve</span>(),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyAssignmentPattern</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">JsAnyAssignmentPattern::JsAnyAssignment</span>(<span class="ident">assignment</span>) =&gt; <span class="ident">assignment</span>.<span class="ident">into_resolved</span>(),
-            <span class="ident">JsAnyAssignmentPattern::JsArrayAssignmentPattern</span>(<span class="ident">assignment</span>) =&gt; {
-                <span class="ident">assignment</span>.<span class="ident">into_resolved</span>()
-            }
-            <span class="ident">JsAnyAssignmentPattern::JsObjectAssignmentPattern</span>(<span class="ident">assignment</span>) =&gt; {
-                <span class="ident">assignment</span>.<span class="ident">into_resolved</span>()
-            }
-        }
-    }
-}
-
 <span class="kw">impl</span> <span class="ident">NeedsParentheses</span> <span class="kw">for</span> <span class="ident">JsAnyAssignmentPattern</span> {
     <span class="kw">fn</span> <span class="ident">needs_parentheses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span> {
@@ -2092,6 +1873,86 @@
     }
 }
 
+<span class="kw">impl</span> <span class="ident">NeedsParentheses</span> <span class="kw">for</span> <span class="ident">TsType</span> {
+    <span class="kw">fn</span> <span class="ident">needs_parentheses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">TsType::TsAnyType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsArrayType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsBigIntLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsBigintType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsBooleanLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsBooleanType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsConditionalType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsConstructorType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsFunctionType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsImportType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsIndexedAccessType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsInferType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsIntersectionType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsMappedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsNeverType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsNonPrimitiveType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsNullLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsNumberLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsNumberType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsObjectType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsParenthesizedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsReferenceType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsStringLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsStringType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsSymbolType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsTemplateLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsThisType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsTupleType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsTypeOperatorType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsTypeofType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsUndefinedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsUnionType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsUnknownType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+            <span class="ident">TsType::TsVoidType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses</span>(),
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">needs_parentheses_with_parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">TsType::TsAnyType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsArrayType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsBigIntLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsBigintType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsBooleanLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsBooleanType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsConditionalType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsConstructorType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsFunctionType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsImportType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsIndexedAccessType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsInferType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsIntersectionType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsMappedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsNeverType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsNonPrimitiveType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsNullLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsNumberLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsNumberType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsObjectType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsParenthesizedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsReferenceType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsStringLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsStringType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsSymbolType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsTemplateLiteralType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsThisType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsTupleType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsTypeOperatorType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsTypeofType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsUndefinedType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsUnionType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsUnknownType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+            <span class="ident">TsType::TsVoidType</span>(<span class="ident">ty</span>) =&gt; <span class="ident">ty</span>.<span class="ident">needs_parentheses_with_parent</span>(<span class="ident">parent</span>),
+        }
+    }
+}
+
 <span class="kw">fn</span> <span class="ident">debug_assert_is_expression</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) {
     <span class="macro">debug_assert!</span>(
         <span class="ident">JsAnyExpression::can_cast</span>(<span class="ident">node</span>.<span class="ident">kind</span>()),
@@ -2099,9 +1960,9 @@
     )
 }
 
-<span class="kw">fn</span> <span class="ident">debug_assert_is_parent</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">debug_assert_is_parent</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) {
     <span class="macro">debug_assert!</span>(
-        <span class="ident">resolve_parent</span>(<span class="ident">node</span>).<span class="ident">as_ref</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">parent</span>),
+        <span class="ident">node</span>.<span class="ident">parent</span>().<span class="ident">as_ref</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">parent</span>),
         <span class="string">&quot;Node {node:#?} is not a child of ${parent:#?}&quot;</span>
     )
 }
@@ -2109,6 +1970,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::NeedsParentheses</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transform</span>;
     <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsLanguage</span>, <span class="ident">SourceType</span>};
     <span class="kw">use</span> <span class="ident">rome_rowan::AstNode</span>;
 
@@ -2128,7 +1990,8 @@
         );
 
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse</span>.<span class="ident">syntax</span>();
-        <span class="kw">let</span> <span class="ident">matching_nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">descendants</span>().<span class="ident">filter_map</span>(<span class="ident">T::cast</span>).<span class="ident">collect</span>();
+        <span class="kw">let</span> (<span class="ident">transformed</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">transform</span>(<span class="ident">root</span>);
+        <span class="kw">let</span> <span class="ident">matching_nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">transformed</span>.<span class="ident">descendants</span>().<span class="ident">filter_map</span>(<span class="ident">T::cast</span>).<span class="ident">collect</span>();
 
         <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="ident">index</span> {
             <span class="ident">matching_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
@@ -2168,7 +2031,8 @@
         );
 
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse</span>.<span class="ident">syntax</span>();
-        <span class="kw">let</span> <span class="ident">matching_nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">descendants</span>().<span class="ident">filter_map</span>(<span class="ident">T::cast</span>).<span class="ident">collect</span>();
+        <span class="kw">let</span> (<span class="ident">transformed</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">transform</span>(<span class="ident">root</span>);
+        <span class="kw">let</span> <span class="ident">matching_nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">transformed</span>.<span class="ident">descendants</span>().<span class="ident">filter_map</span>(<span class="ident">T::cast</span>).<span class="ident">collect</span>();
 
         <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="ident">index</span> {
             <span class="ident">matching_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {

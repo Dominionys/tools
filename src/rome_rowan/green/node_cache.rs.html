@@ -363,9 +363,9 @@
 <span id="357">357</span>
 <span id="358">358</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">hashbrown::hash_map</span>::{<span class="ident">RawEntryMut</span>, <span class="ident">RawOccupiedEntryMut</span>, <span class="ident">RawVacantEntryMut</span>};
+<span class="kw">use</span> <span class="ident">rome_text_size::TextSize</span>;
 <span class="kw">use</span> <span class="ident">rustc_hash::FxHasher</span>;
 <span class="kw">use</span> <span class="ident">std::hash</span>::{<span class="ident">BuildHasherDefault</span>, <span class="ident">Hash</span>, <span class="ident">Hasher</span>};
-<span class="kw">use</span> <span class="ident">text_size::TextSize</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::green::Slot</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax</span>::{<span class="ident">TriviaPiece</span>, <span class="ident">TriviaPieceKind</span>};
@@ -687,7 +687,7 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::green::node_cache::token_hash</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::green::trivia::GreenTrivia</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">GreenToken</span>, <span class="ident">RawSyntaxKind</span>};
-    <span class="kw">use</span> <span class="ident">text_size::TextSize</span>;
+    <span class="kw">use</span> <span class="ident">rome_text_size::TextSize</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">green_token_hash</span>() {

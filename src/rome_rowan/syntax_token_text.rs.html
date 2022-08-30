@@ -106,9 +106,9 @@
 <span id="100">100</span>
 <span id="101">101</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::GreenToken</span>;
+<span class="kw">use</span> <span class="ident">rome_text_size</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 <span class="kw">use</span> <span class="ident">std::ops::Deref</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Borrow</span>, <span class="ident">fmt::Formatter</span>};
-<span class="kw">use</span> <span class="ident">text_size</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 
 <span class="doccomment">/// Reference to the text of a SyntaxToken without having to worry about the lifetime of `&amp;str`.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Eq</span>, <span class="ident">Clone</span>)]</span>

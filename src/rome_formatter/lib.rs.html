@@ -1429,6 +1429,83 @@
 <span id="1423">1423</span>
 <span id="1424">1424</span>
 <span id="1425">1425</span>
+<span id="1426">1426</span>
+<span id="1427">1427</span>
+<span id="1428">1428</span>
+<span id="1429">1429</span>
+<span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
+<span id="1450">1450</span>
+<span id="1451">1451</span>
+<span id="1452">1452</span>
+<span id="1453">1453</span>
+<span id="1454">1454</span>
+<span id="1455">1455</span>
+<span id="1456">1456</span>
+<span id="1457">1457</span>
+<span id="1458">1458</span>
+<span id="1459">1459</span>
+<span id="1460">1460</span>
+<span id="1461">1461</span>
+<span id="1462">1462</span>
+<span id="1463">1463</span>
+<span id="1464">1464</span>
+<span id="1465">1465</span>
+<span id="1466">1466</span>
+<span id="1467">1467</span>
+<span id="1468">1468</span>
+<span id="1469">1469</span>
+<span id="1470">1470</span>
+<span id="1471">1471</span>
+<span id="1472">1472</span>
+<span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Infrastructure for code formatting</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module defines [FormatElement], an IR to format code documents and provides a mean to print</span>
@@ -1466,6 +1543,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">printed_tokens</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">printer</span>;
+<span class="kw">mod</span> <span class="ident">source_map</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">token</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::formatter::Formatter</span>;
@@ -1494,9 +1572,9 @@
     <span class="ident">Language</span>, <span class="ident">RawSyntaxKind</span>, <span class="ident">SyntaxElement</span>, <span class="ident">SyntaxError</span>, <span class="ident">SyntaxKind</span>, <span class="ident">SyntaxNode</span>, <span class="ident">SyntaxResult</span>,
     <span class="ident">SyntaxToken</span>, <span class="ident">SyntaxTriviaPieceComments</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>, <span class="ident">TokenAtOffset</span>,
 };
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">source_map</span>::{<span class="ident">TransformSourceMap</span>, <span class="ident">TransformSourceMapBuilder</span>};
 <span class="kw">use</span> <span class="ident">std::error::Error</span>;
 <span class="kw">use</span> <span class="ident">std::num::ParseIntError</span>;
-<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Hash</span>)]</span>
@@ -1632,11 +1710,23 @@
     }
 }
 
-<span class="doccomment">/// Context configuring how an object gets formatted.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Defines the common formatting options. Implementations can define additional options that</span>
-<span class="doccomment">/// are specific to formatting a specific object.</span>
+<span class="doccomment">/// Context object storing data relevant when formatting an object.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FormatContext</span> {
+    <span class="kw">type</span> <span class="ident">Options</span>: <span class="ident">FormatOptions</span>;
+
+    <span class="doccomment">/// Returns the formatting options</span>
+    <span class="kw">fn</span> <span class="ident">options</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Options</span>;
+
+    <span class="doccomment">/// Returns [None] if the CST has not been pre-processed.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Returns [Some] if the CST has been pre-processed to simplify formatting.</span>
+    <span class="doccomment">/// The source map can be used to map positions of the formatted nodes back to their original</span>
+    <span class="doccomment">/// source locations or to resolve the source text.</span>
+    <span class="kw">fn</span> <span class="ident">source_map</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">TransformSourceMap</span><span class="op">&gt;</span>;
+}
+
+<span class="doccomment">/// Options customizing how the source code should be formatted.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FormatOptions</span> {
     <span class="doccomment">/// The indent style.</span>
     <span class="kw">fn</span> <span class="ident">indent_style</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IndentStyle</span>;
 
@@ -1655,37 +1745,47 @@
     <span class="kw">type</span> <span class="ident">Language</span>: <span class="ident">Language</span>;
     <span class="kw">type</span> <span class="ident">Style</span>: <span class="ident">CommentStyle</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Rule for formatting leading comments.</span>
+    <span class="kw">type</span> <span class="ident">LeadingCommentRule</span>: <span class="ident">FormatRule</span><span class="op">&lt;</span><span class="ident">SourceComment</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span>, <span class="ident">Context</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Default</span>;
+
     <span class="doccomment">/// Customizes how comments are formatted</span>
+    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Prefer FormatLanguage::comment_style&quot;</span>)]</span>
     <span class="kw">fn</span> <span class="ident">comment_style</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Style</span>;
 
-    <span class="doccomment">/// Returns a ref counted [Comments].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The use of a [Rc] is necessary to achieve that [Comments] has a lifetime that is independent of the [crate::Formatter].</span>
-    <span class="doccomment">/// Having independent lifetimes is necessary to support the use case where a (formattable object)[Format]</span>
-    <span class="doccomment">/// iterates over all comments and writes them into the [crate::Formatter] (mutably borrowing the [crate::Formatter] and in turn this context).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```block</span>
-    <span class="doccomment">/// for leading in f.context().comments().leading_comments(node) {</span>
-    <span class="doccomment">///     ^</span>
-    <span class="doccomment">///     |- Borrows comments</span>
-    <span class="doccomment">///   write!(f, [comment(leading.piece.text())])?;</span>
-    <span class="doccomment">///          ^</span>
-    <span class="doccomment">///          |- Mutably borrows the formatter, state, context (and comments, if they aren&#39;t wrapped by a Rc)</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">fn</span> <span class="ident">comments</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Comments</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">/// Consumes `self` and returns a new context with the provided extracted (`comments`)[Comments].</span>
-    <span class="kw">fn</span> <span class="ident">with_comments</span>(<span class="self">self</span>, <span class="ident">comments</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Comments</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span>;
+    <span class="doccomment">/// Returns a reference to the program&#39;s comments.</span>
+    <span class="kw">fn</span> <span class="ident">comments</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Comments</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span>;
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SimpleFormatContext</span> {
+    <span class="ident">options</span>: <span class="ident">SimpleFormatOptions</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">SimpleFormatContext</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">options</span>: <span class="ident">SimpleFormatOptions</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">options</span> }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">FormatContext</span> <span class="kw">for</span> <span class="ident">SimpleFormatContext</span> {
+    <span class="kw">type</span> <span class="ident">Options</span> <span class="op">=</span> <span class="ident">SimpleFormatOptions</span>;
+
+    <span class="kw">fn</span> <span class="ident">options</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Options</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">options</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">source_map</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">TransformSourceMap</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span>
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SimpleFormatOptions</span> {
     <span class="kw">pub</span> <span class="ident">indent_style</span>: <span class="ident">IndentStyle</span>,
     <span class="kw">pub</span> <span class="ident">line_width</span>: <span class="ident">LineWidth</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">FormatContext</span> <span class="kw">for</span> <span class="ident">SimpleFormatContext</span> {
+<span class="kw">impl</span> <span class="ident">FormatOptions</span> <span class="kw">for</span> <span class="ident">SimpleFormatOptions</span> {
     <span class="kw">fn</span> <span class="ident">indent_style</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">IndentStyle</span> {
         <span class="self">self</span>.<span class="ident">indent_style</span>
     }
@@ -1702,7 +1802,7 @@
 }
 
 <span class="doccomment">/// Lightweight sourcemap marker between source and output tokens</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>,
     <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>, <span class="ident">serde::Deserialize</span>, <span class="ident">schemars::JsonSchema</span>)
@@ -1741,11 +1841,24 @@
     <span class="ident">Context</span>: <span class="ident">FormatContext</span>,
 {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Printed</span> {
-        <span class="ident">Printer::new</span>(<span class="self">self</span>.<span class="ident">context</span>.<span class="ident">as_print_options</span>()).<span class="ident">print</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">root</span>)
+        <span class="kw">let</span> <span class="ident">print_options</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">options</span>().<span class="ident">as_print_options</span>();
+
+        <span class="kw">let</span> <span class="ident">printed</span> <span class="op">=</span> <span class="ident">Printer::new</span>(<span class="ident">print_options</span>).<span class="ident">print</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">root</span>);
+
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">source_map</span>() {
+            <span class="prelude-val">Some</span>(<span class="ident">source_map</span>) =&gt; <span class="ident">source_map</span>.<span class="ident">map_printed</span>(<span class="ident">printed</span>),
+            <span class="prelude-val">None</span> =&gt; <span class="ident">printed</span>,
+        }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_with_indent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">indent</span>: <span class="ident">u16</span>) -&gt; <span class="ident">Printed</span> {
-        <span class="ident">Printer::new</span>(<span class="self">self</span>.<span class="ident">context</span>.<span class="ident">as_print_options</span>()).<span class="ident">print_with_indent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">root</span>, <span class="ident">indent</span>)
+        <span class="kw">let</span> <span class="ident">print_options</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">options</span>().<span class="ident">as_print_options</span>();
+        <span class="kw">let</span> <span class="ident">printed</span> <span class="op">=</span> <span class="ident">Printer::new</span>(<span class="ident">print_options</span>).<span class="ident">print_with_indent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">root</span>, <span class="ident">indent</span>);
+
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">source_map</span>() {
+            <span class="prelude-val">Some</span>(<span class="ident">source_map</span>) =&gt; <span class="ident">source_map</span>.<span class="ident">map_printed</span>(<span class="ident">printed</span>),
+            <span class="prelude-val">None</span> =&gt; <span class="ident">printed</span>,
+        }
     }
 }
 
@@ -1798,7 +1911,8 @@
     }
 
     <span class="doccomment">/// Returns a list of [SourceMarker] mapping byte positions</span>
-    <span class="doccomment">/// in the output string to the input source code</span>
+    <span class="doccomment">/// in the output string to the input source code.</span>
+    <span class="doccomment">/// It&#39;s not guaranteed that the markers are sorted by source position.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sourcemap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">SourceMarker</span>] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sourcemap</span>
     }
@@ -1807,6 +1921,12 @@
     <span class="doccomment">/// in the output string to the input source code, consuming the result</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_sourcemap</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SourceMarker</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sourcemap</span>
+    }
+
+    <span class="doccomment">/// Takes the list of [SourceMarker] mapping byte positions in the output string</span>
+    <span class="doccomment">/// to the input source code.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_sourcemap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SourceMarker</span><span class="op">&gt;</span> {
+        <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">sourcemap</span>)
     }
 
     <span class="doccomment">/// Access the resulting code, borrowing the result</span>
@@ -1829,6 +1949,11 @@
     <span class="doccomment">/// Ranges of the formatted code that have been formatted as verbatim.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verbatim_ranges</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">TextRange</span>] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">verbatim_ranges</span>
+    }
+
+    <span class="doccomment">/// Takes the ranges of nodes that have been formatted as verbatim, replacing them with an empty list.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_verbatim_ranges</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TextRange</span><span class="op">&gt;</span> {
+        <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">verbatim_ranges</span>)
     }
 }
 
@@ -2207,38 +2332,85 @@
 
     <span class="ident">buffer</span>.<span class="ident">write_fmt</span>(<span class="ident">arguments</span>)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">Formatted</span> {
-        <span class="ident">root</span>: <span class="ident">buffer</span>.<span class="ident">into_element</span>(),
-        <span class="ident">context</span>: <span class="ident">state</span>.<span class="ident">into_context</span>(),
-    })
+    <span class="prelude-val">Ok</span>(<span class="ident">Formatted::new</span>(<span class="ident">buffer</span>.<span class="ident">into_element</span>(), <span class="ident">state</span>.<span class="ident">into_context</span>()))
+}
+
+<span class="doccomment">/// Entry point for formatting a [SyntaxNode] for a specific language.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FormatLanguage</span> {
+    <span class="kw">type</span> <span class="ident">SyntaxLanguage</span>: <span class="ident">Language</span>;
+
+    <span class="doccomment">/// The type of the formatting context</span>
+    <span class="kw">type</span> <span class="ident">Context</span>: <span class="ident">CstFormatContext</span><span class="op">&lt;</span><span class="ident">Language</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// The type specifying how to format comments.</span>
+    <span class="kw">type</span> <span class="ident">CommentStyle</span>: <span class="ident">CommentStyle</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// The rule type that can format a [SyntaxNode] of this language</span>
+    <span class="kw">type</span> <span class="ident">FormatRule</span>: <span class="ident">FormatRule</span><span class="op">&lt;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>, <span class="ident">Context</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Default</span>;
+
+    <span class="doccomment">/// Customizes how comments are formatted</span>
+    <span class="kw">fn</span> <span class="ident">comment_style</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::CommentStyle</span>;
+
+    <span class="doccomment">/// Performs an optional pre-processing of the tree. This can be useful to remove nodes</span>
+    <span class="doccomment">/// that otherwise complicate formatting.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Return [None] if the tree shouldn&#39;t be processed. Return [Some] with the transformed</span>
+    <span class="doccomment">/// tree and the source map otherwise.</span>
+    <span class="kw">fn</span> <span class="ident">transform</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>, <span class="ident">TransformSourceMap</span>)<span class="op">&gt;</span> {
+        <span class="prelude-val">None</span>
+    }
+
+    <span class="doccomment">/// This is used to select appropriate &quot;root nodes&quot; for the</span>
+    <span class="doccomment">/// range formatting process: for instance in JavaScript the function returns</span>
+    <span class="doccomment">/// true for statement and declaration nodes, to ensure the entire statement</span>
+    <span class="doccomment">/// gets formatted instead of the smallest sub-expression that fits the range</span>
+    <span class="kw">fn</span> <span class="ident">is_range_formatting_node</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_node</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
+        <span class="bool-val">true</span>
+    }
+
+    <span class="doccomment">/// Returns the formatting options</span>
+    <span class="kw">fn</span> <span class="ident">options</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span> <span class="kw">as</span> <span class="ident">FormatContext</span><span class="op">&gt;</span><span class="ident">::Options</span>;
+
+    <span class="doccomment">/// Creates the [FormatContext] with the given `source map` and `comments`</span>
+    <span class="kw">fn</span> <span class="ident">create_context</span>(
+        <span class="self">self</span>,
+        <span class="ident">comments</span>: <span class="ident">Comments</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>,
+        <span class="ident">source_map</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransformSourceMap</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident"><span class="self">Self</span>::Context</span>;
 }
 
 <span class="doccomment">/// Formats a syntax node file based on its features.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// It returns a [Formatted] result, which the user can use to override a file.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_node</span><span class="op">&lt;</span>
-    <span class="ident">Context</span>: <span class="ident">CstFormatContext</span>,
-    <span class="ident">N</span>: <span class="ident">FormatWithRule</span><span class="op">&lt;</span><span class="ident">Context</span>, <span class="ident">Item</span> <span class="op">=</span> <span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">Context::Language</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-<span class="op">&gt;</span>(
-    <span class="ident">context</span>: <span class="ident">Context</span>,
-    <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">N</span>,
-) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Formatted</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_node</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">FormatLanguage</span><span class="op">&gt;</span>(
+    <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L::SyntaxLanguage</span><span class="op">&gt;</span>,
+    <span class="ident">language</span>: <span class="ident">L</span>,
+) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Formatted</span><span class="op">&lt;</span><span class="ident">L::Context</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="macro">tracing::trace_span!</span>(<span class="string">&quot;format_node&quot;</span>).<span class="ident">in_scope</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">suppressions</span> <span class="op">=</span> <span class="ident">Comments::from_node</span>(<span class="ident">root</span>.<span class="ident">item</span>(), <span class="kw-2">&amp;</span><span class="ident">context</span>);
-        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">with_comments</span>(<span class="ident">Rc::new</span>(<span class="ident">suppressions</span>));
+        <span class="kw">let</span> (<span class="ident">root</span>, <span class="ident">source_map</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">language</span>.<span class="ident">transform</span>(<span class="ident">root</span>) {
+            <span class="prelude-val">Some</span>((<span class="ident">root</span>, <span class="ident">source_map</span>)) =&gt; (<span class="ident">root</span>, <span class="prelude-val">Some</span>(<span class="ident">source_map</span>)),
+            <span class="prelude-val">None</span> =&gt; (<span class="ident">root</span>.<span class="ident">clone</span>(), <span class="prelude-val">None</span>),
+        };
 
+        <span class="kw">let</span> <span class="ident">comments</span> <span class="op">=</span> <span class="ident">Comments::from_node</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>, <span class="kw-2">&amp;</span><span class="ident">language</span>);
+        <span class="kw">let</span> <span class="ident">format_node</span> <span class="op">=</span> <span class="ident">FormatRefWithRule::new</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>, <span class="ident">L::FormatRule::default</span>());
+
+        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">language</span>.<span class="ident">create_context</span>(<span class="ident">comments</span>, <span class="ident">source_map</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">FormatState::new</span>(<span class="ident">context</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">VecBuffer::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>);
 
-        <span class="macro">write!</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>, [<span class="ident">root</span>])<span class="question-mark">?</span>;
+        <span class="macro">write!</span>(<span class="ident">buffer</span>, [<span class="ident">format_node</span>])<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">document</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">into_element</span>();
 
-        <span class="ident">state</span>.<span class="ident">assert_formatted_all_tokens</span>(<span class="ident">root</span>.<span class="ident">item</span>());
+        <span class="ident">state</span>.<span class="ident">assert_formatted_all_tokens</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>);
         <span class="ident">state</span>
             .<span class="ident">context</span>()
             .<span class="ident">comments</span>()
-            .<span class="ident">assert_checked_all_suppressions</span>(<span class="ident">root</span>.<span class="ident">item</span>());
+            .<span class="ident">assert_checked_all_suppressions</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>);
 
         <span class="prelude-val">Ok</span>(<span class="ident">Formatted::new</span>(<span class="ident">document</span>, <span class="ident">state</span>.<span class="ident">into_context</span>()))
     })
@@ -2284,12 +2456,6 @@
 
 <span class="doccomment">/// Formats a range within a file, supported by Rome</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Because this function is language-agnostic, it must be provided with a</span>
-<span class="doccomment">/// `predicate` function that&#39;s used to select appropriate &quot;root nodes&quot; for the</span>
-<span class="doccomment">/// range formatting process: for instance in JavaScript the predicate returns</span>
-<span class="doccomment">/// true for statement and declaration nodes, to ensure the entire statement</span>
-<span class="doccomment">/// gets formatted instead of the smallest sub-expression that fits the range</span>
-<span class="doccomment">///</span>
 <span class="doccomment">/// This runs a simple heuristic to determine the initial indentation</span>
 <span class="doccomment">/// level of the node based on the provided [FormatContext], which</span>
 <span class="doccomment">/// must match currently the current initial of the file. Additionally,</span>
@@ -2299,17 +2465,11 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// It returns a [Formatted] result with a range corresponding to the</span>
 <span class="doccomment">/// range of the input that was effectively overwritten by the formatter</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_range</span><span class="op">&lt;</span><span class="ident">Context</span>, <span class="ident">R</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-    <span class="ident">context</span>: <span class="ident">Context</span>,
-    <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">Context::Language</span><span class="op">&gt;</span>,
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_range</span><span class="op">&lt;</span><span class="ident">Language</span>: <span class="ident">FormatLanguage</span><span class="op">&gt;</span>(
+    <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">Language::SyntaxLanguage</span><span class="op">&gt;</span>,
     <span class="kw-2">mut</span> <span class="ident">range</span>: <span class="ident">TextRange</span>,
-    <span class="kw-2">mut</span> <span class="ident">predicate</span>: <span class="ident">P</span>,
-) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Printed</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Context</span>: <span class="ident">CstFormatContext</span>,
-    <span class="ident">R</span>: <span class="ident">FormatRule</span><span class="op">&lt;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">Context::Language</span><span class="op">&gt;</span>, <span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Default</span>,
-    <span class="ident">P</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">Context::Language</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span>,
-{
+    <span class="ident">language</span>: <span class="ident">Language</span>,
+) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Printed</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">range</span>.<span class="ident">is_empty</span>() {
         <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Printed::new</span>(
             <span class="ident">String::new</span>(),
@@ -2400,11 +2560,11 @@
     <span class="comment">// the language implementation) in the ancestors of the start and end tokens</span>
     <span class="kw">let</span> <span class="ident">start_node</span> <span class="op">=</span> <span class="ident">start_token</span>
         .<span class="ident">ancestors</span>()
-        .<span class="ident">find</span>(<span class="kw-2">&amp;mut</span> <span class="ident">predicate</span>)
+        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> <span class="ident">language</span>.<span class="ident">is_range_formatting_node</span>(<span class="ident">node</span>))
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">root</span>.<span class="ident">clone</span>());
     <span class="kw">let</span> <span class="ident">end_node</span> <span class="op">=</span> <span class="ident">end_token</span>
         .<span class="ident">ancestors</span>()
-        .<span class="ident">find</span>(<span class="ident">predicate</span>)
+        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> <span class="ident">language</span>.<span class="ident">is_range_formatting_node</span>(<span class="ident">node</span>))
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">root</span>.<span class="ident">clone</span>());
 
     <span class="kw">let</span> <span class="ident">common_root</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">start_node</span> <span class="op">==</span> <span class="ident">end_node</span> {
@@ -2457,10 +2617,7 @@
 
     <span class="comment">// Perform the actual formatting of the root node with</span>
     <span class="comment">// an appropriate indentation level</span>
-    <span class="kw">let</span> <span class="ident">formatted</span> <span class="op">=</span> <span class="ident">format_sub_tree</span>(
-        <span class="ident">context</span>,
-        <span class="kw-2">&amp;</span><span class="ident">FormatRefWithRule</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">R</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">common_root</span>, <span class="ident">R::default</span>()),
-    )<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">printed</span> <span class="op">=</span> <span class="ident">format_sub_tree</span>(<span class="ident">common_root</span>, <span class="ident">language</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// This finds the closest marker to the beginning of the source</span>
     <span class="comment">// starting before or at said starting point, and the closest</span>
@@ -2469,8 +2626,8 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">range_start</span> <span class="op">=</span> <span class="prelude-val">None</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">range_end</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
-    <span class="kw">let</span> <span class="ident">sourcemap</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">formatted</span>.<span class="ident">sourcemap</span>());
-    <span class="kw">for</span> <span class="ident">marker</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">sourcemap</span> {
+    <span class="kw">let</span> <span class="ident">sourcemap</span> <span class="op">=</span> <span class="ident">printed</span>.<span class="ident">sourcemap</span>();
+    <span class="kw">for</span> <span class="ident">marker</span> <span class="kw">in</span> <span class="ident">sourcemap</span> {
         <span class="comment">// marker.source &lt;= range.start()</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start_dist</span>) <span class="op">=</span> <span class="ident">range</span>.<span class="ident">start</span>().<span class="ident">checked_sub</span>(<span class="ident">marker</span>.<span class="ident">source</span>) {
             <span class="ident">range_start</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">range_start</span> {
@@ -2512,15 +2669,15 @@
         <span class="prelude-val">Some</span>((<span class="ident">end_marker</span>, <span class="kw">_</span>)) =&gt; (<span class="ident">end_marker</span>.<span class="ident">source</span>, <span class="ident">end_marker</span>.<span class="ident">dest</span>),
         <span class="prelude-val">None</span> =&gt; (
             <span class="ident">common_root</span>.<span class="ident">text_range</span>().<span class="ident">end</span>(),
-            <span class="ident">TextSize::try_from</span>(<span class="ident">formatted</span>.<span class="ident">as_code</span>().<span class="ident">len</span>()).<span class="ident">expect</span>(<span class="string">&quot;code length out of bounds&quot;</span>),
+            <span class="ident">TextSize::try_from</span>(<span class="ident">printed</span>.<span class="ident">as_code</span>().<span class="ident">len</span>()).<span class="ident">expect</span>(<span class="string">&quot;code length out of bounds&quot;</span>),
         ),
     };
 
     <span class="kw">let</span> <span class="ident">input_range</span> <span class="op">=</span> <span class="ident">TextRange::new</span>(<span class="ident">start_source</span>, <span class="ident">end_source</span>);
     <span class="kw">let</span> <span class="ident">output_range</span> <span class="op">=</span> <span class="ident">TextRange::new</span>(<span class="ident">start_dest</span>, <span class="ident">end_dest</span>);
-    <span class="kw">let</span> <span class="ident">sourcemap</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">formatted</span>.<span class="ident">sourcemap</span>());
-    <span class="kw">let</span> <span class="ident">verbatim_ranges</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">formatted</span>.<span class="ident">verbatim_ranges</span>());
-    <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">formatted</span>.<span class="ident">into_code</span>()[<span class="ident">output_range</span>];
+    <span class="kw">let</span> <span class="ident">sourcemap</span> <span class="op">=</span> <span class="ident">printed</span>.<span class="ident">take_sourcemap</span>();
+    <span class="kw">let</span> <span class="ident">verbatim_ranges</span> <span class="op">=</span> <span class="ident">printed</span>.<span class="ident">take_verbatim_ranges</span>();
+    <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">printed</span>.<span class="ident">into_code</span>()[<span class="ident">output_range</span>];
     <span class="prelude-val">Ok</span>(<span class="ident">Printed::new</span>(
         <span class="ident">code</span>.<span class="ident">into</span>(),
         <span class="prelude-val">Some</span>(<span class="ident">input_range</span>),
@@ -2539,17 +2696,13 @@
 <span class="doccomment">/// even if it&#39;s a mismatch from the rest of the block the selection is in</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// It returns a [Formatted] result</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_sub_tree</span><span class="op">&lt;</span>
-    <span class="ident">C</span>: <span class="ident">CstFormatContext</span>,
-    <span class="ident">N</span>: <span class="ident">FormatWithRule</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">Item</span> <span class="op">=</span> <span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">C::Language</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-<span class="op">&gt;</span>(
-    <span class="ident">context</span>: <span class="ident">C</span>,
-    <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">N</span>,
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_sub_tree</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">FormatLanguage</span><span class="op">&gt;</span>(
+    <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L::SyntaxLanguage</span><span class="op">&gt;</span>,
+    <span class="ident">language</span>: <span class="ident">L</span>,
 ) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Printed</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">syntax</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">item</span>();
     <span class="comment">// Determine the initial indentation level for the printer by inspecting the trivia pieces</span>
     <span class="comment">// of each token from the first token of the common root towards the start of the file</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">std::iter::successors</span>(<span class="ident">syntax</span>.<span class="ident">first_token</span>(), <span class="op">|</span><span class="ident">token</span><span class="op">|</span> <span class="ident">token</span>.<span class="ident">prev_token</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">std::iter::successors</span>(<span class="ident">root</span>.<span class="ident">first_token</span>(), <span class="op">|</span><span class="ident">token</span><span class="op">|</span> <span class="ident">token</span>.<span class="ident">prev_token</span>());
 
     <span class="comment">// From the iterator of tokens, build an iterator of trivia pieces (once again the iterator is</span>
     <span class="comment">// reversed, starting from the last trailing trivia towards the first leading trivia).</span>
@@ -2585,7 +2738,7 @@
             <span class="comment">// of indentation type detection yet. Unfortunately this</span>
             <span class="comment">// may not actually match the current content of the file</span>
             <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">trivia</span>.<span class="ident">text</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u16</span>;
-            <span class="kw">match</span> <span class="ident">context</span>.<span class="ident">indent_style</span>() {
+            <span class="kw">match</span> <span class="ident">language</span>.<span class="ident">options</span>().<span class="ident">indent_style</span>() {
                 <span class="ident">IndentStyle::Tab</span> =&gt; <span class="ident">length</span>,
                 <span class="ident">IndentStyle::Space</span>(<span class="ident">width</span>) =&gt; <span class="ident">length</span> <span class="op">/</span> <span class="ident">u16::from</span>(<span class="ident">width</span>),
             }
@@ -2595,13 +2748,14 @@
         <span class="prelude-val">None</span> =&gt; <span class="number">0</span>,
     };
 
-    <span class="kw">let</span> <span class="ident">formatted</span> <span class="op">=</span> <span class="ident">format_node</span>(<span class="ident">context</span>, <span class="ident">root</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">printed</span> <span class="op">=</span> <span class="ident">formatted</span>.<span class="ident">print_with_indent</span>(<span class="ident">initial_indent</span>);
-    <span class="kw">let</span> <span class="ident">sourcemap</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">printed</span>.<span class="ident">sourcemap</span>());
-    <span class="kw">let</span> <span class="ident">verbatim_ranges</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">printed</span>.<span class="ident">verbatim_ranges</span>());
+    <span class="kw">let</span> <span class="ident">formatted</span> <span class="op">=</span> <span class="ident">format_node</span>(<span class="ident">root</span>, <span class="ident">language</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">printed</span> <span class="op">=</span> <span class="ident">formatted</span>.<span class="ident">print_with_indent</span>(<span class="ident">initial_indent</span>);
+    <span class="kw">let</span> <span class="ident">sourcemap</span> <span class="op">=</span> <span class="ident">printed</span>.<span class="ident">take_sourcemap</span>();
+    <span class="kw">let</span> <span class="ident">verbatim_ranges</span> <span class="op">=</span> <span class="ident">printed</span>.<span class="ident">take_verbatim_ranges</span>();
+
     <span class="prelude-val">Ok</span>(<span class="ident">Printed::new</span>(
         <span class="ident">printed</span>.<span class="ident">into_code</span>(),
-        <span class="prelude-val">Some</span>(<span class="ident">syntax</span>.<span class="ident">text_range</span>()),
+        <span class="prelude-val">Some</span>(<span class="ident">root</span>.<span class="ident">text_range</span>()),
         <span class="ident">sourcemap</span>,
         <span class="ident">verbatim_ranges</span>,
     ))
@@ -2627,9 +2781,9 @@
 <span class="doccomment">/// This structure is different from [crate::Formatter] in that the formatting infrastructure</span>
 <span class="doccomment">/// creates a new [crate::Formatter] for every [crate::write!] call, whereas this structure stays alive</span>
 <span class="doccomment">/// for the whole process of formatting a root with [crate::format!].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span> {
     <span class="ident">context</span>: <span class="ident">Context</span>,
+
     <span class="ident">group_id_builder</span>: <span class="ident">UniqueGroupIdBuilder</span>,
 
     <span class="doccomment">/// `true` if the last formatted output is an inline comment that may need a space between the next token or comment.</span>

@@ -128,7 +128,95 @@
 <span id="122">122</span>
 <span id="123">123</span>
 <span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AstNode</span>, <span class="ident">Language</span>};
+
+<span class="doccomment">/// Matches a `SyntaxNode` against an `ast` type.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Example:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use rome_rowan::{match_ast, AstNode};</span>
+<span class="doccomment">/// use rome_rowan::raw_language::{LiteralExpression, RawLanguageRoot, RawLanguageKind, RawSyntaxTreeBuilder};</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let mut builder = RawSyntaxTreeBuilder::new();</span>
+<span class="doccomment">/// builder.start_node(RawLanguageKind::ROOT);</span>
+<span class="doccomment">/// builder.start_node(RawLanguageKind::LITERAL_EXPRESSION);</span>
+<span class="doccomment">/// builder.token(RawLanguageKind::NUMBER_TOKEN, &quot;5&quot;);</span>
+<span class="doccomment">/// builder.finish_node();</span>
+<span class="doccomment">/// builder.finish_node();</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let root = builder.finish();</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let text = match_ast! {</span>
+<span class="doccomment">///     match &amp;root {</span>
+<span class="doccomment">///         RawLanguageRoot(root) =&gt; { format!(&quot;root: {}&quot;, root.text()) },</span>
+<span class="doccomment">///         LiteralExpression(literal) =&gt; { format!(&quot;literal: {}&quot;, literal.text()) },</span>
+<span class="doccomment">///         _ =&gt; {</span>
+<span class="doccomment">///             root.text().to_string()</span>
+<span class="doccomment">///         }</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">/// };</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// assert_eq!(text, &quot;root: 5&quot;);</span>
+<span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules!</span> <span class="ident">match_ast</span> {
+    <span class="comment">// Necessary because expressions aren&#39;t allowed in front of `{`</span>
+    (<span class="kw">match</span> <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">node</span>:<span class="ident">ident</span> { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>:<span class="ident">tt</span>)<span class="op">*</span> }) =&gt; { <span class="macro">match_ast!</span>(<span class="kw">match</span> (<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">node</span>) { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>)<span class="op">*</span> }) };
+    (<span class="kw">match</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">node</span>:<span class="ident">ident</span> { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>:<span class="ident">tt</span>)<span class="op">*</span> }) =&gt; { <span class="macro">match_ast!</span>(<span class="kw">match</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">node</span>) { $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>)<span class="op">*</span> }) };
+
+    (<span class="kw">match</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">node</span>:<span class="ident">expr</span>) {
+        $( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>:<span class="ident">ident</span> )::<span class="op">+</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">it</span>:<span class="ident">pat</span>) =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">res</span>:<span class="ident">expr</span>, )<span class="op">*</span>
+        <span class="kw">_</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">catch_all</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>
+    }) =&gt; {{
+        $( <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">it</span>) <span class="op">=</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>::)<span class="op">+</span><span class="ident">cast_ref</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">node</span>) { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">res</span> } <span class="kw">else</span> )<span class="op">*</span>
+        { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">catch_all</span> }
+    }};
+}
 
 <span class="doccomment">/// Declares a custom union AstNode type with an ungram-like syntax</span>
 <span class="doccomment">///</span>

@@ -656,17 +656,6 @@
 <span id="650">650</span>
 <span id="651">651</span>
 <span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
-<span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">write</span>, <span class="ident">Arguments</span>, <span class="ident">FormatElement</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::format_element</span>::{<span class="ident">LabelId</span>, <span class="ident">List</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Format</span>, <span class="ident">FormatResult</span>, <span class="ident">FormatState</span>};
@@ -1120,13 +1109,7 @@ Make sure that you take and restore the snapshot in order and that this snapshot
     <span class="doccomment">/// use rome_formatter::{format, format_args, write, LineWidth};</span>
     <span class="doccomment">/// use rome_formatter::prelude::*;</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// let context = SimpleFormatContext {</span>
-    <span class="doccomment">///     line_width: LineWidth::try_from(20).unwrap(),</span>
-    <span class="doccomment">///     ..SimpleFormatContext::default()</span>
-    <span class="doccomment">/// };</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let formatted = format!(context, [format_with(|f| {</span>
+    <span class="doccomment">/// let formatted = format!(SimpleFormatContext::default(), [format_with(|f| {</span>
     <span class="doccomment">///</span>
     <span class="doccomment">///     let element = format_with(|f| {</span>
     <span class="doccomment">///         write!(f, [</span>
@@ -1177,13 +1160,8 @@ Make sure that you take and restore the snapshot in order and that this snapshot
     <span class="doccomment">///</span>
     <span class="doccomment">/// enum SomeLabelId {}</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// let context = SimpleFormatContext {</span>
-    <span class="doccomment">///     line_width: LineWidth::try_from(20).unwrap(),</span>
-    <span class="doccomment">///     ..SimpleFormatContext::default()</span>
-    <span class="doccomment">/// };</span>
-    <span class="doccomment">///</span>
     <span class="doccomment">/// let formatted = format!(</span>
-    <span class="doccomment">///     context,</span>
+    <span class="doccomment">///     SimpleFormatContext::default(),</span>
     <span class="doccomment">///     [format_with(|f| {</span>
     <span class="doccomment">///         let mut buffer = f.inspect_is_labelled::&lt;SomeLabelId&gt;();</span>
     <span class="doccomment">///</span>

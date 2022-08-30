@@ -759,6 +759,43 @@
 <span id="753">753</span>
 <span id="754">754</span>
 <span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Rome&#39;s official JavaScript formatter.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Implement the formatter</span>
@@ -1009,19 +1046,34 @@
 <span class="kw">mod</span> <span class="ident">ts</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">utils</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">check_reformat</span>;
+<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+<span class="kw">mod</span> <span class="ident">generated</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">builders</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">comments</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">context</span>;
+<span class="kw">mod</span> <span class="ident">parentheses</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">separated</span>;
+<span class="kw">mod</span> <span class="ident">syntax_rewriter</span>;
+
 <span class="kw">use</span> <span class="ident">rome_formatter::prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">write</span>, <span class="ident">CstFormatContext</span>};
+<span class="kw">use</span> <span class="ident">rome_formatter</span>::{
+    <span class="ident">write</span>, <span class="ident">Comments</span>, <span class="ident">CstFormatContext</span>, <span class="ident">Format</span>, <span class="ident">FormatLanguage</span>, <span class="ident">TransformSourceMap</span>,
+};
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">Buffer</span>, <span class="ident">FormatOwnedWithRule</span>, <span class="ident">FormatRefWithRule</span>, <span class="ident">Formatted</span>, <span class="ident">Printed</span>};
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{
     <span class="ident">JsAnyDeclaration</span>, <span class="ident">JsAnyStatement</span>, <span class="ident">JsLanguage</span>, <span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxNode</span>, <span class="ident">JsSyntaxToken</span>,
 };
-<span class="kw">use</span> <span class="ident">rome_rowan::AstNode</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan::SyntaxResult</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan::TextRange</span>;
+<span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">AstNode</span>, <span class="ident">SyntaxNode</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builders</span>::{<span class="ident">format_parenthesize</span>, <span class="ident">format_suppressed_node</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::JsFormatContext</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::comments::JsCommentStyle</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context</span>::{<span class="ident">JsFormatContext</span>, <span class="ident">JsFormatOptions</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cst::FormatJsSyntaxNode</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax_rewriter::transform</span>;
 <span class="kw">use</span> <span class="ident">std::iter::FusedIterator</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
@@ -1234,6 +1286,61 @@
     }
 }
 
+<span class="kw">struct</span> <span class="ident">JsFormatLanguage</span> {
+    <span class="ident">options</span>: <span class="ident">JsFormatOptions</span>,
+}
+<span class="kw">impl</span> <span class="ident">JsFormatLanguage</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">options</span>: <span class="ident">JsFormatOptions</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">options</span> }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">FormatLanguage</span> <span class="kw">for</span> <span class="ident">JsFormatLanguage</span> {
+    <span class="kw">type</span> <span class="ident">SyntaxLanguage</span> <span class="op">=</span> <span class="ident">JsLanguage</span>;
+    <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">JsFormatContext</span>;
+    <span class="kw">type</span> <span class="ident">CommentStyle</span> <span class="op">=</span> <span class="ident">JsCommentStyle</span>;
+    <span class="kw">type</span> <span class="ident">FormatRule</span> <span class="op">=</span> <span class="ident">FormatJsSyntaxNode</span>;
+
+    <span class="kw">fn</span> <span class="ident">comment_style</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::CommentStyle</span> {
+        <span class="ident">JsCommentStyle</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">transform</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>, <span class="ident">TransformSourceMap</span>)<span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">transform</span>(<span class="ident">root</span>.<span class="ident">clone</span>()))
+    }
+
+    <span class="kw">fn</span> <span class="ident">is_range_formatting_node</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
+        <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">kind</span>();
+
+        <span class="comment">// Do not format variable declaration nodes, format the whole statement instead</span>
+        <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">kind</span>, <span class="ident">JsSyntaxKind::JS_VARIABLE_DECLARATION</span>) {
+            <span class="kw">return</span> <span class="bool-val">false</span>;
+        }
+
+        <span class="ident">JsAnyStatement::can_cast</span>(<span class="ident">kind</span>)
+            <span class="op">|</span><span class="op">|</span> <span class="ident">JsAnyDeclaration::can_cast</span>(<span class="ident">kind</span>)
+            <span class="op">|</span><span class="op">|</span> <span class="macro">matches!</span>(
+                <span class="ident">kind</span>,
+                <span class="ident">JsSyntaxKind::JS_DIRECTIVE</span> <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_EXPORT</span> <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_IMPORT</span>
+            )
+    }
+
+    <span class="kw">fn</span> <span class="ident">options</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">JsFormatOptions</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">options</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">create_context</span>(
+        <span class="self">self</span>,
+        <span class="ident">comments</span>: <span class="ident">Comments</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SyntaxLanguage</span><span class="op">&gt;</span>,
+        <span class="ident">source_map</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransformSourceMap</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident"><span class="self">Self</span>::Context</span> {
+        <span class="ident">JsFormatContext::new</span>(<span class="self">self</span>.<span class="ident">options</span>, <span class="ident">comments</span>).<span class="ident">with_source_map</span>(<span class="ident">source_map</span>)
+    }
+}
+
 <span class="doccomment">/// Formats a range within a file, supported by Rome</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This runs a simple heuristic to determine the initial indentation</span>
@@ -1246,42 +1353,21 @@
 <span class="doccomment">/// It returns a [Formatted] result with a range corresponding to the</span>
 <span class="doccomment">/// range of the input that was effectively overwritten by the formatter</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_range</span>(
-    <span class="ident">context</span>: <span class="ident">JsFormatContext</span>,
+    <span class="ident">options</span>: <span class="ident">JsFormatOptions</span>,
     <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>,
     <span class="ident">range</span>: <span class="ident">TextRange</span>,
 ) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Printed</span><span class="op">&gt;</span> {
-    <span class="ident">rome_formatter::format_range</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">FormatJsSyntaxNode</span>, <span class="kw">_</span><span class="op">&gt;</span>(
-        <span class="ident">context</span>,
-        <span class="ident">root</span>,
-        <span class="ident">range</span>,
-        <span class="ident">is_range_formatting_root</span>,
-    )
-}
-
-<span class="kw">fn</span> <span class="ident">is_range_formatting_root</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">kind</span>();
-
-    <span class="comment">// Do not format variable declaration nodes, format the whole statement instead</span>
-    <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">kind</span>, <span class="ident">JsSyntaxKind::JS_VARIABLE_DECLARATION</span>) {
-        <span class="kw">return</span> <span class="bool-val">false</span>;
-    }
-
-    <span class="ident">JsAnyStatement::can_cast</span>(<span class="ident">kind</span>)
-        <span class="op">|</span><span class="op">|</span> <span class="ident">JsAnyDeclaration::can_cast</span>(<span class="ident">kind</span>)
-        <span class="op">|</span><span class="op">|</span> <span class="macro">matches!</span>(
-            <span class="ident">kind</span>,
-            <span class="ident">JsSyntaxKind::JS_DIRECTIVE</span> <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_EXPORT</span> <span class="op">|</span> <span class="ident">JsSyntaxKind::JS_IMPORT</span>
-        )
+    <span class="ident">rome_formatter::format_range</span>(<span class="ident">root</span>, <span class="ident">range</span>, <span class="ident">JsFormatLanguage::new</span>(<span class="ident">options</span>))
 }
 
 <span class="doccomment">/// Formats a JavaScript (and its super languages) file based on its features.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// It returns a [Formatted] result, which the user can use to override a file.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_node</span>(
-    <span class="ident">context</span>: <span class="ident">JsFormatContext</span>,
+    <span class="ident">options</span>: <span class="ident">JsFormatOptions</span>,
     <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>,
 ) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Formatted</span><span class="op">&lt;</span><span class="ident">JsFormatContext</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="ident">rome_formatter::format_node</span>(<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="ident">root</span>.<span class="ident">format</span>())
+    <span class="ident">rome_formatter::format_node</span>(<span class="ident">root</span>, <span class="ident">JsFormatLanguage::new</span>(<span class="ident">options</span>))
 }
 
 <span class="doccomment">/// Formats a single node within a file, supported by Rome.</span>
@@ -1294,19 +1380,22 @@
 <span class="doccomment">/// even if it&#39;s a mismatch from the rest of the block the selection is in</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// It returns a [Formatted] result</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_sub_tree</span>(<span class="ident">context</span>: <span class="ident">JsFormatContext</span>, <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Printed</span><span class="op">&gt;</span> {
-    <span class="ident">rome_formatter::format_sub_tree</span>(<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="ident">root</span>.<span class="ident">format</span>())
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_sub_tree</span>(<span class="ident">options</span>: <span class="ident">JsFormatOptions</span>, <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span><span class="ident">Printed</span><span class="op">&gt;</span> {
+    <span class="ident">rome_formatter::format_sub_tree</span>(<span class="ident">root</span>, <span class="ident">JsFormatLanguage::new</span>(<span class="ident">options</span>))
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::format_range</span>;
+    <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">format_node</span>, <span class="ident">format_range</span>};
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::JsFormatContext</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::JsFormatOptions</span>;
     <span class="kw">use</span> <span class="ident">rome_formatter::IndentStyle</span>;
-    <span class="kw">use</span> <span class="ident">rome_js_parser::parse_script</span>;
+    <span class="kw">use</span> <span class="ident">rome_js_parser</span>::{<span class="ident">parse</span>, <span class="ident">parse_script</span>};
+    <span class="kw">use</span> <span class="ident">rome_js_syntax::SourceType</span>;
     <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
+
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::check_reformat</span>::{<span class="ident">check_reformat</span>, <span class="ident">CheckReformatParams</span>};
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_range_formatting</span>() {
@@ -1340,7 +1429,7 @@ while(
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatContext::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1372,7 +1461,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatContext::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1403,7 +1492,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatContext::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1422,7 +1511,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatContext::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1444,7 +1533,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatContext::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1453,36 +1542,21 @@ function() {
         <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">as_code</span>(), <span class="string">&quot;&quot;</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">range</span>(), <span class="prelude-val">Some</span>(<span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>)));
     }
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">check_reformat</span>;
-<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-<span class="kw">mod</span> <span class="ident">generated</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">builders</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">context</span>;
-<span class="kw">mod</span> <span class="ident">parentheses</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">separated</span>;
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::check_reformat</span>::{<span class="ident">check_reformat</span>, <span class="ident">CheckReformatParams</span>};
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">format_node</span>, <span class="ident">format_range</span>, <span class="ident">JsFormatContext</span>};
-    <span class="kw">use</span> <span class="ident">rome_js_parser::parse</span>;
-    <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">SourceType</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 
     <span class="attribute">#[<span class="ident">ignore</span>]</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="comment">// use this test check if your snippet prints as you wish, without using a snapshot</span>
     <span class="kw">fn</span> <span class="ident">quick_test</span>() {
         <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="string">r#&quot;
-test.expect(t =&gt; {
-	t.true(a);
-}, false);
+const getIconEngagementTypeFrom = (engagementTypes: Array&lt;EngagementType&gt;) =&gt;
+	(iconEngagementType) =&gt;
+		engagementTypes.includes(iconEngagementType);
 &quot;#</span>;
         <span class="kw">let</span> <span class="ident">syntax</span> <span class="op">=</span> <span class="ident">SourceType::tsx</span>();
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse</span>(<span class="ident">src</span>, <span class="number">0</span>, <span class="ident">syntax</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_node</span>(<span class="ident">JsFormatContext::default</span>(), <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>())
+        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">JsFormatOptions::default</span>();
+
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_node</span>(<span class="ident">options</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>())
             .<span class="ident">unwrap</span>()
             .<span class="ident">print</span>();
         <span class="ident">check_reformat</span>(<span class="ident">CheckReformatParams</span> {
@@ -1490,7 +1564,7 @@ test.expect(t =&gt; {
             <span class="ident">text</span>: <span class="ident">result</span>.<span class="ident">as_code</span>(),
             <span class="ident">source_type</span>: <span class="ident">syntax</span>,
             <span class="ident">file_name</span>: <span class="string">&quot;quick_test&quot;</span>,
-            <span class="ident">format_context</span>: <span class="ident">JsFormatContext::default</span>(),
+            <span class="ident">options</span>,
         });
         <span class="macro">assert_eq!</span>(
             <span class="ident">result</span>.<span class="ident">as_code</span>(),
@@ -1506,7 +1580,7 @@ test.expect(t =&gt; {
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse</span>(<span class="ident">src</span>, <span class="number">0</span>, <span class="ident">syntax</span>);
 
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatContext::default</span>(),
+            <span class="ident">JsFormatOptions::default</span>(),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">TextSize::from</span>(<span class="number">0</span>), <span class="ident">TextSize::of</span>(<span class="ident">src</span>) <span class="op">+</span> <span class="ident">TextSize::from</span>(<span class="number">5</span>)),
         );

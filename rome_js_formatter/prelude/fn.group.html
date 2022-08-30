@@ -38,13 +38,13 @@ emitting line breaks for all line break kinds.</p>
 );</code></pre></div>
 <p>The printer breaks the <code>Group</code> over multiple lines if its content doesn’t fit on a single line</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format</span>, <span class="ident">format_args</span>, <span class="ident">LineWidth</span>};
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format</span>, <span class="ident">format_args</span>, <span class="ident">LineWidth</span>, <span class="ident">SimpleFormatOptions</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter::prelude</span>::<span class="kw-2">*</span>;
 
-<span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SimpleFormatContext</span> {
+<span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SimpleFormatContext::new</span>(<span class="ident">SimpleFormatOptions</span> {
     <span class="ident">line_width</span>: <span class="ident">LineWidth::try_from</span>(<span class="number">20</span>).<span class="ident">unwrap</span>(),
-    ..<span class="ident">SimpleFormatContext::default</span>()
-};
+    ..<span class="ident">SimpleFormatOptions::default</span>()
+});
 
 <span class="kw">let</span> <span class="ident">elements</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="ident">context</span>, [
     <span class="ident">group</span>(<span class="kw-2">&amp;</span><span class="macro">format_args!</span>[

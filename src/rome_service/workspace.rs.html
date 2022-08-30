@@ -423,7 +423,6 @@
 <span id="417">417</span>
 <span id="418">418</span>
 <span id="419">419</span>
-<span id="420">420</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The [Workspace] is the main entry point for high-level clients (the Rome</span>
 <span class="doccomment">//! CLI and Language Server) into the various language-specific services of the</span>
 <span class="doccomment">//! Rome toolchain (parser, formatter, analyzer ...)</span>
@@ -477,8 +476,7 @@
 <span class="doccomment">//! document does not implement the required capability: for instance trying to</span>
 <span class="doccomment">//! format a file with a language that does not have a formatter</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::settings::WorkspaceSettings</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::RomeError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Configuration</span>, <span class="ident">RomeError</span>};
 <span class="kw">use</span> <span class="ident">rome_analyze::ActionCategory</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">rome_analyze::RuleCategories</span>;
 <span class="kw">use</span> <span class="ident">rome_diagnostics</span>::{<span class="ident">CodeSuggestion</span>, <span class="ident">Diagnostic</span>};
@@ -512,7 +510,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">serde::Serialize</span>, <span class="ident">serde::Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;schemars&quot;</span>, <span class="ident">derive</span>(<span class="ident">schemars::JsonSchema</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UpdateSettingsParams</span> {
-    <span class="kw">pub</span> <span class="ident">settings</span>: <span class="ident">WorkspaceSettings</span>,
+    <span class="kw">pub</span> <span class="ident">configuration</span>: <span class="ident">Configuration</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">serde::Serialize</span>, <span class="ident">serde::Deserialize</span>)]</span>

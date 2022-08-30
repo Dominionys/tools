@@ -80,28 +80,15 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
-<span id="77">77</span>
-<span id="78">78</span>
-<span id="79">79</span>
-<span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
-<span id="87">87</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{
-    <span class="ident">unary_like_expression_needs_parentheses</span>, <span class="ident">ExpressionNode</span>, <span class="ident">NeedsParentheses</span>,
-};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{<span class="ident">unary_like_expression_needs_parentheses</span>, <span class="ident">NeedsParentheses</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="ident">rome_formatter::write</span>;
+<span class="kw">use</span> <span class="ident">rome_js_syntax::JsPreUpdateExpressionFields</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{
-    <span class="ident">JsAnyExpression</span>, <span class="ident">JsPreUpdateExpression</span>, <span class="ident">JsPreUpdateOperator</span>, <span class="ident">JsSyntaxNode</span>, <span class="ident">JsUnaryExpression</span>,
-    <span class="ident">JsUnaryOperator</span>,
+    <span class="ident">JsPreUpdateExpression</span>, <span class="ident">JsPreUpdateOperator</span>, <span class="ident">JsSyntaxNode</span>, <span class="ident">JsUnaryExpression</span>, <span class="ident">JsUnaryOperator</span>,
 };
-<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsPreUpdateExpressionFields</span>, <span class="ident">JsSyntaxKind</span>};
+<span class="kw">use</span> <span class="ident">rome_rowan::match_ast</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FormatJsPreUpdateExpression</span>;
@@ -123,31 +110,22 @@
 
 <span class="kw">impl</span> <span class="ident">NeedsParentheses</span> <span class="kw">for</span> <span class="ident">JsPreUpdateExpression</span> {
     <span class="kw">fn</span> <span class="ident">needs_parentheses_with_parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="ident">parent</span>.<span class="ident">kind</span>() {
-            <span class="ident">JsSyntaxKind::JS_UNARY_EXPRESSION</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">unary</span> <span class="op">=</span> <span class="ident">JsUnaryExpression::unwrap_cast</span>(<span class="ident">parent</span>.<span class="ident">clone</span>());
-                <span class="kw">let</span> <span class="ident">parent_operator</span> <span class="op">=</span> <span class="ident">unary</span>.<span class="ident">operator</span>();
-                <span class="kw">let</span> <span class="ident">operator</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">operator</span>();
+        <span class="macro">match_ast!</span> {
+            <span class="kw">match</span> <span class="ident">parent</span> {
+                <span class="ident">JsUnaryExpression</span>(<span class="ident">unary</span>) =&gt; {
+                    <span class="kw">let</span> <span class="ident">parent_operator</span> <span class="op">=</span> <span class="ident">unary</span>.<span class="ident">operator</span>();
+                    <span class="kw">let</span> <span class="ident">operator</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">operator</span>();
 
-                (<span class="ident">parent_operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsUnaryOperator::Plus</span>)
-                    <span class="op">&amp;&amp;</span> <span class="ident">operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsPreUpdateOperator::Increment</span>))
-                    <span class="op">|</span><span class="op">|</span> (<span class="ident">parent_operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsUnaryOperator::Minus</span>)
-                        <span class="op">&amp;&amp;</span> <span class="ident">operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsPreUpdateOperator::Decrement</span>))
+                    (<span class="ident">parent_operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsUnaryOperator::Plus</span>)
+                        <span class="op">&amp;&amp;</span> <span class="ident">operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsPreUpdateOperator::Increment</span>))
+                        <span class="op">|</span><span class="op">|</span> (<span class="ident">parent_operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsUnaryOperator::Minus</span>)
+                            <span class="op">&amp;&amp;</span> <span class="ident">operator</span> <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">JsPreUpdateOperator::Decrement</span>))
+                },
+                <span class="kw">_</span> =&gt; {
+                    <span class="ident">unary_like_expression_needs_parentheses</span>(<span class="self">self</span>.<span class="ident">syntax</span>(), <span class="ident">parent</span>)
+                }
             }
-            <span class="kw">_</span> =&gt; <span class="ident">unary_like_expression_needs_parentheses</span>(<span class="self">self</span>.<span class="ident">syntax</span>(), <span class="ident">parent</span>),
         }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ExpressionNode</span> <span class="kw">for</span> <span class="ident">JsPreUpdateExpression</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">into</span>()
     }
 }
 

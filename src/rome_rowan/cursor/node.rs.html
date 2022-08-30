@@ -980,13 +980,13 @@
     <span class="ident">Direction</span>, <span class="ident">GreenNode</span>, <span class="ident">GreenNodeData</span>, <span class="ident">NodeOrToken</span>, <span class="ident">RawSyntaxKind</span>, <span class="ident">SyntaxNodeText</span>, <span class="ident">TokenAtOffset</span>,
     <span class="ident">WalkEvent</span>,
 };
+<span class="kw">use</span> <span class="ident">rome_text_size</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 <span class="kw">use</span> <span class="ident">std::hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
 <span class="kw">use</span> <span class="ident">std::iter::FusedIterator</span>;
 <span class="kw">use</span> <span class="ident">std::ops</span>;
 <span class="kw">use</span> <span class="ident">std::ptr::NonNull</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">iter</span>};
-<span class="kw">use</span> <span class="ident">text_size</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">GreenElement</span>, <span class="ident">NodeKind</span>, <span class="ident">WeakGreenElement</span>};
 

@@ -418,6 +418,10 @@
 <span id="412">412</span>
 <span id="413">413</span>
 <span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::green</span>::{<span class="ident">GreenToken</span>, <span class="ident">GreenTrivia</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::element::SyntaxElementKey</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::SyntaxTrivia</span>;
@@ -426,9 +430,9 @@
     <span class="ident">cursor</span>, <span class="ident">Direction</span>, <span class="ident">Language</span>, <span class="ident">NodeOrToken</span>, <span class="ident">SyntaxElement</span>, <span class="ident">SyntaxKind</span>, <span class="ident">SyntaxNode</span>,
     <span class="ident">SyntaxTriviaPiece</span>, <span class="ident">TriviaPiece</span>, <span class="ident">TriviaPieceKind</span>,
 };
+<span class="kw">use</span> <span class="ident">rome_text_size</span>::{<span class="ident">TextLen</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">text_size</span>::{<span class="ident">TextLen</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SyntaxToken</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Language</span><span class="op">&gt;</span> {
@@ -730,7 +734,9 @@
         }
     }
 
-    <span class="doccomment">/// Returns the token leading trivia.</span>
+    <span class="doccomment">/// Returns the token&#39;s leading trivia.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Looking backward in the text, a token owns all of its preceding trivia up to and including the first newline character.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use rome_rowan::raw_language::{RawLanguage, RawLanguageKind, RawSyntaxTreeBuilder};</span>
@@ -752,7 +758,9 @@
         <span class="ident">SyntaxTrivia::new</span>(<span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">leading_trivia</span>())
     }
 
-    <span class="doccomment">/// Returns the token trailing trivia.</span>
+    <span class="doccomment">/// Returns the token&#39;s trailing trivia.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// A token owns all of its following trivia up to, but not including, the next newline character.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use rome_rowan::raw_language::{RawLanguage, RawLanguageKind, RawSyntaxTreeBuilder};</span>

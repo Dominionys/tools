@@ -1056,19 +1056,34 @@
 <span id="1050">1050</span>
 <span id="1051">1051</span>
 <span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
 </pre><pre class="rust"><code><span class="doccomment">//! AST definitions for converting untyped syntax nodes into typed AST nodes.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Every field of every AST node is optional, this is to allow the parser to recover</span>
 <span class="doccomment">//! from any error and produce an ast from any source code. If you don&#39;t want to account for</span>
 <span class="doccomment">//! optionals for everything, you can use ...</span>
 
+<span class="kw">use</span> <span class="ident">rome_text_size::TextRange</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">serde::Serialize</span>;
 <span class="kw">use</span> <span class="ident">std::error::Error</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Formatter</span>};
 <span class="kw">use</span> <span class="ident">std::iter::FusedIterator</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">text_size::TextRange</span>;
 
 <span class="kw">mod</span> <span class="ident">batch</span>;
 <span class="kw">mod</span> <span class="ident">mutation</span>;
@@ -1182,6 +1197,20 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>;
 
+    <span class="doccomment">/// Takes a reference of a syntax node and tries to cast it to this AST node.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Only creates a clone of the syntax node if casting the node is possible.</span>
+    <span class="kw">fn</span> <span class="ident">cast_ref</span>(<span class="ident">syntax</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="self">Self</span>: <span class="ident">Sized</span>,
+    {
+        <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::can_cast</span>(<span class="ident">syntax</span>.<span class="ident">kind</span>()) {
+            <span class="ident"><span class="self">Self</span>::cast</span>(<span class="ident">syntax</span>.<span class="ident">clone</span>())
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        }
+    }
+
     <span class="doccomment">/// Tries to cast the passed syntax node to this AST node.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Returns</span>
@@ -1212,7 +1241,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">fn</span> <span class="ident">try_cast</span>(<span class="ident">syntax</span>: <span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::can_cast</span>(<span class="ident">syntax</span>.<span class="ident">kind</span>()) {
-            <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::unwrap_cast</span>(<span class="ident">syntax</span>))
+            <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::cast</span>(<span class="ident">syntax</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected casted node because &#39;can_cast&#39; returned true.&quot;</span>))
         } <span class="kw">else</span> {
             <span class="prelude-val">Err</span>(<span class="ident">syntax</span>)
         }
@@ -1246,7 +1275,8 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">fn</span> <span class="ident">try_cast_node</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AstNode</span><span class="op">&lt;</span><span class="ident">Language</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">node</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::can_cast</span>(<span class="ident">node</span>.<span class="ident">syntax</span>().<span class="ident">kind</span>()) {
-            <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::unwrap_cast</span>(<span class="ident">node</span>.<span class="ident">into_syntax</span>()))
+            <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::cast</span>(<span class="ident">node</span>.<span class="ident">into_syntax</span>())
+                .<span class="ident">expect</span>(<span class="string">&quot;Expected casted node because &#39;can_cast&#39; returned true.&quot;</span>))
         } <span class="kw">else</span> {
             <span class="prelude-val">Err</span>(<span class="ident">node</span>)
         }

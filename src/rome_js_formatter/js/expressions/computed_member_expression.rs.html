@@ -147,22 +147,10 @@
 <span id="141">141</span>
 <span id="142">142</span>
 <span id="143">143</span>
-<span id="144">144</span>
-<span id="145">145</span>
-<span id="146">146</span>
-<span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
-<span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
-<span id="153">153</span>
-<span id="154">154</span>
-<span id="155">155</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::js::expressions::static_member_expression::member_chain_callee_needs_parens</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{<span class="ident">ExpressionNode</span>, <span class="ident">NeedsParentheses</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses::NeedsParentheses</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>};
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{
     <span class="ident">JsAnyExpression</span>, <span class="ident">JsAnyLiteralExpression</span>, <span class="ident">JsComputedMemberAssignment</span>,
@@ -279,18 +267,6 @@
         }
 
         <span class="ident">member_chain_callee_needs_parens</span>(<span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>(), <span class="ident">parent</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ExpressionNode</span> <span class="kw">for</span> <span class="ident">JsComputedMemberExpression</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">into</span>()
     }
 }
 

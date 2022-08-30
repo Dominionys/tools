@@ -294,7 +294,7 @@
                 .<span class="ident">unwrap_or</span>(<span class="ident">comment</span>);
             <span class="bool-val">true</span>
         }
-        <span class="ident">token</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;comment with unknown opening token {token:?}&quot;</span>),
+        <span class="ident">token</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;comment with unknown opening token {token:?}, from {comment}&quot;</span>),
     };
 
     <span class="ident">comment</span>.<span class="ident">lines</span>().<span class="ident">filter_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">line</span><span class="op">|</span> {

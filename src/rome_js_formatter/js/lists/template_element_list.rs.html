@@ -281,7 +281,6 @@
 <span id="275">275</span>
 <span id="276">276</span>
 <span id="277">277</span>
-<span id="278">278</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::js::expressions::template_chunk_element::AnyTemplateChunkElement</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::js::expressions::template_element</span>::{<span class="ident">AnyTemplateElement</span>, <span class="ident">TemplateElementOptions</span>};
 
@@ -352,7 +351,7 @@
                     <span class="kw">let</span> <span class="ident">chunk_token</span> <span class="op">=</span> <span class="ident">chunk</span>.<span class="ident">template_chunk_token</span>()<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">chunk_text</span> <span class="op">=</span> <span class="ident">chunk_token</span>.<span class="ident">text</span>();
 
-                    <span class="kw">let</span> <span class="ident">tab_width</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">context</span>().<span class="ident">tab_width</span>();
+                    <span class="kw">let</span> <span class="ident">tab_width</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">options</span>().<span class="ident">tab_width</span>();
 
                     <span class="ident">indention</span> <span class="op">=</span>
                         <span class="ident">TemplateElementIndention::after_last_new_line</span>(<span class="ident">chunk_text</span>, <span class="ident">tab_width</span>);
@@ -449,7 +448,6 @@
                     <span class="kw">break</span>;
                 }
             }
-            <span class="ident">JsAnyExpression::JsParenthesizedExpression</span>(<span class="ident">expression</span>) =&gt; <span class="ident">expression</span>.<span class="ident">expression</span>()<span class="question-mark">?</span>,
             <span class="ident">JsAnyExpression::JsIdentifierExpression</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">JsAnyExpression::JsThisExpression</span>(<span class="kw">_</span>) =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
             }

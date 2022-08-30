@@ -50,13 +50,13 @@ Meaning that, <code>align &gt; ... &gt; indent</code> results in the same indent
 </ul>
 <h3 id="spaces-indention"><a href="#spaces-indention">Spaces indention</a></h3>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::num::NonZeroU8</span>;
-<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format</span>, <span class="ident">format_args</span>, <span class="ident">IndentStyle</span>};
+<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format</span>, <span class="ident">format_args</span>, <span class="ident">IndentStyle</span>, <span class="ident">SimpleFormatOptions</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter::prelude</span>::<span class="kw-2">*</span>;
 
-<span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SimpleFormatContext</span> {
+<span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SimpleFormatContext::new</span>(<span class="ident">SimpleFormatOptions</span> {
     <span class="ident">indent_style</span>: <span class="ident">IndentStyle::Space</span>(<span class="number">4</span>),
-    ..<span class="ident">SimpleFormatContext::default</span>()
-};
+    ..<span class="ident">SimpleFormatOptions::default</span>()
+});
 
 <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="ident">context</span>, [
     <span class="ident">text</span>(<span class="string">&quot;a&quot;</span>),

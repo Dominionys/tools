@@ -283,12 +283,10 @@
 <span id="277">277</span>
 <span id="278">278</span>
 <span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::TabWidth</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses::NeedsParentheses</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::member_chain::chain_member</span>::{<span class="ident">ChainEntry</span>, <span class="ident">ChainMember</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::member_chain::chain_member::ChainMember</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter::write</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax::JsCallExpression</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan::SyntaxResult</span>;
@@ -319,14 +317,14 @@
     }
 
     <span class="doccomment">/// starts a new group</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flatten_item</span>: <span class="ident">ChainEntry</span>) {
-        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">entries</span>.<span class="ident">is_empty</span>());
-        <span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">flatten_item</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flatten_item</span>: <span class="ident">ChainMember</span>) {
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">members</span>.<span class="ident">is_empty</span>());
+        <span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">members</span>.<span class="ident">push</span>(<span class="ident">flatten_item</span>);
     }
 
     <span class="doccomment">/// continues of starts a new group</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_or_continue_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flatten_item</span>: <span class="ident">ChainEntry</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">entries</span>.<span class="ident">is_empty</span>() {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_or_continue_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flatten_item</span>: <span class="ident">ChainMember</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">members</span>.<span class="ident">is_empty</span>() {
             <span class="self">self</span>.<span class="ident">start_group</span>(<span class="ident">flatten_item</span>);
         } <span class="kw">else</span> {
             <span class="self">self</span>.<span class="ident">continue_group</span>(<span class="ident">flatten_item</span>);
@@ -334,14 +332,14 @@
     }
 
     <span class="doccomment">/// adds the passed element to the current group</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">continue_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flatten_item</span>: <span class="ident">ChainEntry</span>) {
-        <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">entries</span>.<span class="ident">is_empty</span>());
-        <span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">entries</span>.<span class="ident">push</span>(<span class="ident">flatten_item</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">continue_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flatten_item</span>: <span class="ident">ChainMember</span>) {
+        <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">members</span>.<span class="ident">is_empty</span>());
+        <span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">members</span>.<span class="ident">push</span>(<span class="ident">flatten_item</span>);
     }
 
     <span class="doccomment">/// clears the current group, and adds a new group to the groups</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">entries</span>.<span class="ident">is_empty</span>() {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">members</span>.<span class="ident">is_empty</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">elements</span> <span class="op">=</span> <span class="ident">MemberChainGroup::default</span>();
             <span class="ident">std::mem::swap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">elements</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">current_group</span>);
             <span class="self">self</span>.<span class="ident">groups</span>.<span class="ident">push</span>(<span class="ident">elements</span>);
@@ -349,7 +347,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) -&gt; <span class="ident">MemberChainGroups</span> {
-        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">entries</span>().<span class="ident">is_empty</span>());
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">current_group</span>.<span class="ident">members</span>().<span class="ident">is_empty</span>());
 
         <span class="ident">MemberChainGroups</span> {
             <span class="ident">groups</span>: <span class="self">self</span>.<span class="ident">groups</span>,
@@ -385,7 +383,7 @@
         <span class="prelude-val">Ok</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">groups</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span>
             <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">should_not_wrap</span>(<span class="ident">head_group</span>)<span class="question-mark">?</span>
             <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">groups</span>[<span class="number">0</span>]
-                .<span class="ident">entries</span>
+                .<span class="ident">members</span>
                 .<span class="ident">first</span>()
                 .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">has_trailing_comments</span>()))
     }
@@ -394,7 +392,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_comments</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_leading_comments</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
-        <span class="kw">let</span> <span class="ident">flat_groups</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">groups</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">entries</span>.<span class="ident">iter</span>());
+        <span class="kw">let</span> <span class="ident">flat_groups</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">groups</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">members</span>.<span class="ident">iter</span>());
         <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="ident">flat_groups</span> {
             <span class="kw">if</span> <span class="ident">item</span>.<span class="ident">has_leading_comments</span>()<span class="question-mark">?</span> {
                 <span class="ident">has_leading_comments</span> <span class="op">=</span> <span class="bool-val">true</span>;
@@ -405,13 +403,13 @@
         <span class="kw">let</span> <span class="ident">has_trailing_comments</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">groups</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">entries</span>.<span class="ident">iter</span>())
+            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">members</span>.<span class="ident">iter</span>())
             .<span class="ident">any</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">has_trailing_comments</span>());
 
         <span class="kw">let</span> <span class="ident">cutoff_has_leading_comments</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">groups</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">cutoff</span> <span class="kw">as</span> <span class="ident">usize</span> {
             <span class="kw">let</span> <span class="ident">group</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">groups</span>.<span class="ident">get</span>(<span class="self">self</span>.<span class="ident">cutoff</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">group</span>) <span class="op">=</span> <span class="ident">group</span> {
-                <span class="kw">let</span> <span class="ident">first_item</span> <span class="op">=</span> <span class="ident">group</span>.<span class="ident">entries</span>.<span class="ident">first</span>();
+                <span class="kw">let</span> <span class="ident">first_item</span> <span class="op">=</span> <span class="ident">group</span>.<span class="ident">members</span>.<span class="ident">first</span>();
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">first_item</span>) <span class="op">=</span> <span class="ident">first_item</span> {
                     <span class="ident">first_item</span>.<span class="ident">has_leading_comments</span>()<span class="question-mark">?</span>
                 } <span class="kw">else</span> {
@@ -432,9 +430,9 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_call_expressions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">JsCallExpression</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">groups</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">group</span><span class="op">|</span> <span class="ident">group</span>.<span class="ident">entries</span>.<span class="ident">iter</span>())
+            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">group</span><span class="op">|</span> <span class="ident">group</span>.<span class="ident">members</span>.<span class="ident">iter</span>())
             .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ChainMember::CallExpression</span>(<span class="ident">call_expression</span>, ..) <span class="op">=</span> <span class="ident">item</span>.<span class="ident">member</span>() {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ChainMember::CallExpression</span>(<span class="ident">call_expression</span>, ..) <span class="op">=</span> <span class="ident">item</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">call_expression</span>)
                 } <span class="kw">else</span> {
                     <span class="prelude-val">None</span>
@@ -450,16 +448,16 @@
             <span class="comment">// SAFETY: guarded by the previous check</span>
             <span class="kw">let</span> <span class="ident">group</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">groups</span>[<span class="number">0</span>];
             <span class="ident">group</span>
-                .<span class="ident">entries</span>
+                .<span class="ident">members</span>
                 .<span class="ident">first</span>()
-                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">member</span>().<span class="ident">is_computed_expression</span>())
+                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">is_computed_expression</span>())
         } <span class="kw">else</span> {
             <span class="bool-val">false</span>
         };
 
-        <span class="kw">if</span> <span class="ident">first_group</span>.<span class="ident">entries</span>().<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
+        <span class="kw">if</span> <span class="ident">first_group</span>.<span class="ident">members</span>().<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
             <span class="comment">// SAFETY: access is guarded by the previous check</span>
-            <span class="kw">let</span> <span class="ident">first_node</span> <span class="op">=</span> <span class="ident">first_group</span>.<span class="ident">entries</span>().<span class="ident">first</span>().<span class="ident">unwrap</span>().<span class="ident">member</span>();
+            <span class="kw">let</span> <span class="ident">first_node</span> <span class="op">=</span> <span class="ident">first_group</span>.<span class="ident">members</span>().<span class="ident">first</span>().<span class="ident">unwrap</span>();
 
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">first_node</span>.<span class="ident">is_this_expression</span>()
                 <span class="op">|</span><span class="op">|</span> (<span class="ident">first_node</span>.<span class="ident">is_identifier_expression</span>()
@@ -473,11 +471,9 @@
         <span class="kw">let</span> <span class="ident">last_node_is_factory</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">groups</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">group</span><span class="op">|</span> <span class="ident">group</span>.<span class="ident">entries</span>.<span class="ident">iter</span>())
+            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">group</span><span class="op">|</span> <span class="ident">group</span>.<span class="ident">members</span>.<span class="ident">iter</span>())
             .<span class="ident">last</span>()
-            .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">item</span><span class="op">|</span> {
-                <span class="ident">item</span>.<span class="ident">member</span>().<span class="ident">is_factory</span>(<span class="bool-val">false</span>).<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>)
-            });
+            .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">is_factory</span>(<span class="bool-val">false</span>).<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>));
 
         <span class="prelude-val">Ok</span>(<span class="ident">last_node_is_factory</span> <span class="op">|</span><span class="op">|</span> <span class="ident">has_computed_property</span>)
     }
@@ -520,44 +516,44 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">MemberChainGroup</span> {
-    <span class="ident">entries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainEntry</span><span class="op">&gt;</span>,
+    <span class="ident">members</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainMember</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">MemberChainGroup</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">into_entries</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainEntry</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">entries</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">into_members</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainMember</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">members</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">ChainEntry</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>
+    <span class="kw">fn</span> <span class="ident">members</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">ChainMember</span>] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">members</span>
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">expand_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">group</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">ChainEntry</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">extend</span>(<span class="ident">group</span>)
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">expand_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">group</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">ChainMember</span><span class="op">&gt;</span>) {
+        <span class="self">self</span>.<span class="ident">members</span>.<span class="ident">extend</span>(<span class="ident">group</span>)
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">has_comments</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">has_trailing_comments</span>())
+        <span class="self">self</span>.<span class="ident">members</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">has_trailing_comments</span>())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainEntry</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MemberChainGroup</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">entries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainEntry</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">entries</span> }
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainMember</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MemberChainGroup</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">entries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ChainMember</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">members</span>: <span class="ident">entries</span> }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Format</span><span class="op">&lt;</span><span class="ident">JsFormatContext</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MemberChainGroup</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="ident">JsFormatContext</span><span class="op">&gt;</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">last</span>();
+        <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">members</span>.<span class="ident">last</span>();
 
-        <span class="kw">let</span> <span class="ident">needs_parens</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">last</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">last</span>.<span class="ident">member</span>() {
+        <span class="kw">let</span> <span class="ident">needs_parens</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">last</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">last</span> {
             <span class="ident">ChainMember::StaticMember</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">needs_parentheses</span>(),
             <span class="ident">ChainMember::ComputedMember</span>(<span class="ident">member</span>) =&gt; <span class="ident">member</span>.<span class="ident">needs_parentheses</span>(),
             <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
         });
 
-        <span class="kw">let</span> <span class="ident">format_entries</span> <span class="op">=</span> <span class="ident">format_with</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">join</span>().<span class="ident">entries</span>(<span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">iter</span>()).<span class="ident">finish</span>());
+        <span class="kw">let</span> <span class="ident">format_entries</span> <span class="op">=</span> <span class="ident">format_with</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">join</span>().<span class="ident">entries</span>(<span class="self">self</span>.<span class="ident">members</span>.<span class="ident">iter</span>()).<span class="ident">finish</span>());
 
         <span class="kw">if</span> <span class="ident">needs_parens</span> {
             <span class="macro">write!</span>(<span class="ident">f</span>, [<span class="ident">text</span>(<span class="string">&quot;(&quot;</span>), <span class="ident">format_entries</span>, <span class="ident">text</span>(<span class="string">&quot;)&quot;</span>)])

@@ -80,23 +80,11 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
-<span id="77">77</span>
-<span id="78">78</span>
-<span id="79">79</span>
-<span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
-<span id="87">87</span>
-<span id="88">88</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">needs_binary_like_parentheses</span>, <span class="ident">JsAnyBinaryLikeExpression</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{<span class="ident">ExpressionNode</span>, <span class="ident">NeedsParentheses</span>};
-<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsAnyExpression</span>, <span class="ident">JsInstanceofExpression</span>, <span class="ident">JsSyntaxNode</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses::NeedsParentheses</span>;
+<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsInstanceofExpression</span>, <span class="ident">JsSyntaxNode</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FormatJsInstanceofExpression</span>;
@@ -118,18 +106,6 @@
 <span class="kw">impl</span> <span class="ident">NeedsParentheses</span> <span class="kw">for</span> <span class="ident">JsInstanceofExpression</span> {
     <span class="kw">fn</span> <span class="ident">needs_parentheses_with_parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
         <span class="ident">needs_binary_like_parentheses</span>(<span class="kw-2">&amp;</span><span class="ident">JsAnyBinaryLikeExpression::from</span>(<span class="self">self</span>.<span class="ident">clone</span>()), <span class="ident">parent</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ExpressionNode</span> <span class="kw">for</span> <span class="ident">JsInstanceofExpression</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">into</span>()
     }
 }
 

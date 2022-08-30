@@ -557,14 +557,54 @@
 <span id="551">551</span>
 <span id="552">552</span>
 <span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::AsFormat</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter::token</span>::{<span class="ident">FormatInserted</span>, <span class="ident">FormatInsertedCloseParen</span>, <span class="ident">FormatInsertedOpenParen</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{
-    <span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">Argument</span>, <span class="ident">Arguments</span>, <span class="ident">CstFormatContext</span>, <span class="ident">GroupId</span>, <span class="ident">PreambleBuffer</span>, <span class="ident">VecBuffer</span>,
+    <span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">Argument</span>, <span class="ident">Arguments</span>, <span class="ident">CstFormatContext</span>, <span class="ident">FormatContext</span>, <span class="ident">GroupId</span>,
+    <span class="ident">PreambleBuffer</span>, <span class="ident">VecBuffer</span>,
 };
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsLanguage</span>, <span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxNode</span>, <span class="ident">JsSyntaxToken</span>};
-<span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">AstNode</span>, <span class="ident">Direction</span>, <span class="ident">Language</span>, <span class="ident">SyntaxElement</span>, <span class="ident">SyntaxTriviaPiece</span>};
+<span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">AstNode</span>, <span class="ident">Direction</span>, <span class="ident">Language</span>, <span class="ident">SyntaxElement</span>, <span class="ident">SyntaxTriviaPiece</span>, <span class="ident">TextRange</span>};
 
 <span class="doccomment">/// Formats a node using its [`AsFormat`] implementation but falls back to printing the node as</span>
 <span class="doccomment">/// it is in the source document if the formatting returns an [`FormatError`].</span>
@@ -766,11 +806,22 @@
             .<span class="ident">fmt</span>(<span class="ident">f</span>)
         }
 
+        <span class="kw">let</span> <span class="ident">trimmed_source_range</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">context</span>().<span class="ident">source_map</span>().<span class="ident">map_or_else</span>(
+            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">node</span>.<span class="ident">text_trimmed_range</span>(),
+            <span class="op">|</span><span class="ident">source_map</span><span class="op">|</span> <span class="ident">source_map</span>.<span class="ident">trimmed_source_range</span>(<span class="self">self</span>.<span class="ident">node</span>),
+        );
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">VecBuffer::new</span>(<span class="ident">f</span>.<span class="ident">state_mut</span>());
 
         <span class="macro">write!</span>(
             <span class="ident">buffer</span>,
-            [<span class="ident">format_with</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> {
+            [<span class="ident">format_with</span>(<span class="op">|</span><span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">JsFormatter</span><span class="op">|</span> {
+                <span class="kw">fn</span> <span class="ident">source_range</span>(<span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="ident">JsFormatter</span>, <span class="ident">range</span>: <span class="ident">TextRange</span>) -&gt; <span class="ident">TextRange</span> {
+                    <span class="ident">f</span>.<span class="ident">context</span>()
+                        .<span class="ident">source_map</span>()
+                        .<span class="ident">map_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">range</span>, <span class="op">|</span><span class="ident">source_map</span><span class="op">|</span> <span class="ident">source_map</span>.<span class="ident">source_range</span>(<span class="ident">range</span>))
+                }
+
                 <span class="kw">for</span> <span class="ident">leading_trivia</span> <span class="kw">in</span> <span class="self">self</span>
                     .<span class="ident">node</span>
                     .<span class="ident">first_leading_trivia</span>()
@@ -778,26 +829,53 @@
                     .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">trivia</span><span class="op">|</span> <span class="ident">trivia</span>.<span class="ident">pieces</span>())
                     .<span class="ident">skip_while</span>(<span class="ident">skip_whitespace</span>)
                 {
+                    <span class="kw">let</span> <span class="ident">trivia_source_range</span> <span class="op">=</span> <span class="ident">source_range</span>(<span class="ident">f</span>, <span class="ident">leading_trivia</span>.<span class="ident">text_range</span>());
+
+                    <span class="kw">if</span> <span class="ident">trivia_source_range</span>.<span class="ident">start</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">trimmed_source_range</span>.<span class="ident">start</span>() {
+                        <span class="kw">break</span>;
+                    }
+
                     <span class="ident">write_trivia_token</span>(<span class="ident">f</span>, <span class="ident">leading_trivia</span>)<span class="question-mark">?</span>;
                 }
 
+                <span class="kw">let</span> <span class="ident">original_source</span> <span class="op">=</span> <span class="ident">f</span>
+                    .<span class="ident">context</span>()
+                    .<span class="ident">source_map</span>()
+                    .<span class="ident">map_or_else</span>(
+                        <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">node</span>.<span class="ident">text_trimmed</span>(),
+                        <span class="op">|</span><span class="ident">source_map</span><span class="op">|</span> <span class="ident">source_map</span>.<span class="ident">text</span>().<span class="ident">slice</span>(<span class="ident">trimmed_source_range</span>),
+                    )
+                    .<span class="ident">to_string</span>();
+
                 <span class="ident">dynamic_text</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">normalize_newlines</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">node</span>.<span class="ident">text_trimmed</span>().<span class="ident">to_string</span>(), <span class="ident">LINE_TERMINATORS</span>),
+                    <span class="kw-2">&amp;</span><span class="ident">normalize_newlines</span>(<span class="kw-2">&amp;</span><span class="ident">original_source</span>, <span class="ident">LINE_TERMINATORS</span>),
                     <span class="self">self</span>.<span class="ident">node</span>.<span class="ident">text_trimmed_range</span>().<span class="ident">start</span>(),
                 )
                 .<span class="ident">fmt</span>(<span class="ident">f</span>)<span class="question-mark">?</span>;
 
-                <span class="comment">// Clippy false positive: SkipWhile does not implement DoubleEndedIterator</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::needless_collect</span>)]</span>
-                <span class="kw">let</span> <span class="ident">trailing_trivia</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trailing_trivia</span> <span class="op">=</span> <span class="self">self</span>
                     .<span class="ident">node</span>
                     .<span class="ident">last_trailing_trivia</span>()
                     .<span class="ident">into_iter</span>()
-                    .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">trivia</span><span class="op">|</span> <span class="ident">trivia</span>.<span class="ident">pieces</span>().<span class="ident">rev</span>())
-                    .<span class="ident">skip_while</span>(<span class="ident">skip_whitespace</span>)
-                    .<span class="ident">collect</span>();
+                    .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">trivia</span><span class="op">|</span> <span class="ident">trivia</span>.<span class="ident">pieces</span>());
 
-                <span class="kw">for</span> <span class="ident">trailing_trivia</span> <span class="kw">in</span> <span class="ident">trailing_trivia</span>.<span class="ident">into_iter</span>().<span class="ident">rev</span>() {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trailing_back</span> <span class="op">=</span> <span class="ident">trailing_trivia</span>.<span class="ident">by_ref</span>().<span class="ident">rev</span>().<span class="ident">peekable</span>();
+
+                <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">trailing</span>) <span class="op">=</span> <span class="ident">trailing_back</span>.<span class="ident">peek</span>() {
+                    <span class="kw">let</span> <span class="ident">is_whitespace</span> <span class="op">=</span> <span class="ident">skip_whitespace</span>(<span class="ident">trailing</span>);
+
+                    <span class="kw">let</span> <span class="ident">trailing_source_range</span> <span class="op">=</span> <span class="ident">source_range</span>(<span class="ident">f</span>, <span class="ident">trailing</span>.<span class="ident">text_range</span>());
+                    <span class="kw">let</span> <span class="ident">is_in_trimmed_range</span> <span class="op">=</span>
+                        <span class="ident">trailing_source_range</span>.<span class="ident">start</span>() <span class="op">&lt;</span> <span class="ident">trimmed_source_range</span>.<span class="ident">end</span>();
+
+                    <span class="kw">if</span> <span class="ident">is_whitespace</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_in_trimmed_range</span> {
+                        <span class="ident">trailing_back</span>.<span class="ident">next</span>();
+                    } <span class="kw">else</span> {
+                        <span class="kw">break</span>;
+                    }
+                }
+
+                <span class="kw">for</span> <span class="ident">trailing_trivia</span> <span class="kw">in</span> <span class="ident">trailing_trivia</span> {
                     <span class="ident">write_trivia_token</span>(<span class="ident">f</span>, <span class="ident">trailing_trivia</span>)<span class="question-mark">?</span>;
                 }
 

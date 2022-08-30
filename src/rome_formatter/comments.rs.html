@@ -281,14 +281,40 @@
 <span id="275">275</span>
 <span id="276">276</span>
 <span id="277">277</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::CstFormatContext</span>;
-<span class="kw">use</span> <span class="ident">rome_rowan</span>::{
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">rome_rowan</span>::{
     <span class="ident">Direction</span>, <span class="ident">Language</span>, <span class="ident">SyntaxElement</span>, <span class="ident">SyntaxKind</span>, <span class="ident">SyntaxNode</span>, <span class="ident">SyntaxTriviaPieceComments</span>,
     <span class="ident">WalkEvent</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CommentKind</span> {
@@ -422,28 +448,33 @@
 <span class="doccomment">/// * whether a node should be formatted as is because it has a leading suppression comment.</span>
 <span class="doccomment">/// * a node&#39;s leading and trailing comments</span>
 <span class="doccomment">/// * the dangling comments of a token</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Cloning `comments` is cheap as it only involves bumping a reference counter.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Comments</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Language</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Stores the nodes that have at least one leading suppression comment.</span>
-    <span class="ident">suppressed_nodes</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-
-    <span class="doccomment">/// Stores all nodes for which [Comments::is_suppressed] has been called.</span>
-    <span class="doccomment">/// This index of nodes that have been checked if they have a suppression comments is used to</span>
-    <span class="doccomment">/// detect format implementations that manually format a child node without previously checking if</span>
-    <span class="doccomment">/// the child has a suppression comment.</span>
+    <span class="doccomment">/// The use of a [Rc] is necessary to achieve that [Comments] has a lifetime that is independent from the [crate::Formatter].</span>
+    <span class="doccomment">/// Having independent lifetimes is necessary to support the use case where a (formattable object)[crate::Format]</span>
+    <span class="doccomment">/// iterates over all comments, and writes them into the [crate::Formatter] (mutably borrowing the [crate::Formatter] and in turn its context).</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The implementation refrains from snapshotting the checked nodes because a node gets formatted</span>
-    <span class="doccomment">/// as verbatim if its formatting fails which has the same result as formatting it as suppressed node</span>
-    <span class="doccomment">/// (thus, guarantees that the formatting isn&#39;t changed).</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
-    <span class="ident">checked_suppressions</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// ```block</span>
+    <span class="doccomment">/// for leading in f.context().comments().leading_comments(node) {</span>
+    <span class="doccomment">///     ^</span>
+    <span class="doccomment">///     |- Borrows comments</span>
+    <span class="doccomment">///   write!(f, [comment(leading.piece.text())])?;</span>
+    <span class="doccomment">///          ^</span>
+    <span class="doccomment">///          |- Mutably borrows the formatter, state, context, and comments (if comments aren&#39;t cloned)</span>
+    <span class="doccomment">/// }</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Using an `Rc` here allows to cheaply clone [Comments] for these use cases.</span>
+    <span class="ident">data</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">CommentsData</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Language</span><span class="op">&gt;</span> <span class="ident">Comments</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Extracts all the suppressions from `root` and its child nodes.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_node</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>(<span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) -&gt; <span class="self">Self</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_node</span><span class="op">&lt;</span><span class="ident">FormatLanguage</span><span class="op">&gt;</span>(<span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">language</span>: <span class="kw-2">&amp;</span><span class="ident">FormatLanguage</span>) -&gt; <span class="self">Self</span>
     <span class="kw">where</span>
-        <span class="ident">Context</span>: <span class="ident">CstFormatContext</span><span class="op">&lt;</span><span class="ident">Language</span> <span class="op">=</span> <span class="ident">L</span><span class="op">&gt;</span>,
+        <span class="ident">FormatLanguage</span>: <span class="ident"><span class="kw">crate</span>::FormatLanguage</span><span class="op">&lt;</span><span class="ident">SyntaxLanguage</span> <span class="op">=</span> <span class="ident">L</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">suppressed_nodes</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_node</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -473,7 +504,7 @@
                             .<span class="ident">pieces</span>()
                             .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">piece</span><span class="op">|</span> <span class="ident">piece</span>.<span class="ident">as_comments</span>())
                         {
-                            <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">comment_style</span>().<span class="ident">is_suppression</span>(<span class="ident">comment</span>.<span class="ident">text</span>()) {
+                            <span class="kw">if</span> <span class="ident">language</span>.<span class="ident">comment_style</span>().<span class="ident">is_suppression</span>(<span class="ident">comment</span>.<span class="ident">text</span>()) {
                                 <span class="ident">suppressed_nodes</span>.<span class="ident">insert</span>(<span class="ident">current_node</span>);
                                 <span class="kw">break</span>;
                             }
@@ -486,10 +517,14 @@
             }
         }
 
-        <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">CommentsData</span> {
             <span class="ident">suppressed_nodes</span>,
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
             <span class="ident">checked_suppressions</span>: <span class="ident">RefCell::default</span>(),
+        };
+
+        <span class="self">Self</span> {
+            <span class="ident">data</span>: <span class="ident">Rc::new</span>(<span class="ident">data</span>),
         }
     }
 
@@ -509,7 +544,7 @@
     <span class="doccomment">/// call expression is nested inside of the expression statement.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_suppressed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">mark_suppression_checked</span>(<span class="ident">node</span>);
-        <span class="self">self</span>.<span class="ident">suppressed_nodes</span>.<span class="ident">contains</span>(<span class="ident">node</span>)
+        <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">suppressed_nodes</span>.<span class="ident">contains</span>(<span class="ident">node</span>)
     }
 
     <span class="doccomment">/// Marks that it isn&#39;t necessary for the given node to check if it has been suppressed or not.</span>
@@ -517,7 +552,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mark_suppression_checked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>) {
         <span class="macro">cfg_if::cfg_if!</span> {
             <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">checked_nodes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">checked_suppressions</span>.<span class="ident">borrow_mut</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">checked_nodes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">checked_suppressions</span>.<span class="ident">borrow_mut</span>();
                 <span class="ident">checked_nodes</span>.<span class="ident">insert</span>(<span class="ident">node</span>.<span class="ident">clone</span>());
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">node</span>;
@@ -534,7 +569,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">assert_checked_all_suppressions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>) {
         <span class="macro">cfg_if::cfg_if!</span> {
             <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span> {
-                <span class="kw">let</span> <span class="ident">checked_nodes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">checked_suppressions</span>.<span class="ident">borrow</span>();
+                <span class="kw">let</span> <span class="ident">checked_nodes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">checked_suppressions</span>.<span class="ident">borrow</span>();
                 <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">root</span>.<span class="ident">descendants</span>() {
                     <span class="kw">if</span> <span class="ident">node</span>.<span class="ident">kind</span>().<span class="ident">is_list</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">node</span>.<span class="ident">kind</span>().<span class="ident">is_root</span>() {
                         <span class="kw">continue</span>;
@@ -557,6 +592,23 @@ Node:
             }
         }
     }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CommentsData</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Language</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Stores the nodes that have at least one leading suppression comment.</span>
+    <span class="ident">suppressed_nodes</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// Stores all nodes for which [Comments::is_suppressed] has been called.</span>
+    <span class="doccomment">/// This index of nodes that have been checked if they have a suppression comments is used to</span>
+    <span class="doccomment">/// detect format implementations that manually format a child node without previously checking if</span>
+    <span class="doccomment">/// the child has a suppression comment.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The implementation refrains from snapshotting the checked nodes because a node gets formatted</span>
+    <span class="doccomment">/// as verbatim if its formatting fails which has the same result as formatting it as suppressed node</span>
+    <span class="doccomment">/// (thus, guarantees that the formatting isn&#39;t changed).</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
+    <span class="ident">checked_suppressions</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rome_formatter" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>

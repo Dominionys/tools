@@ -58,27 +58,11 @@
 <span id="52">52</span>
 <span id="53">53</span>
 <span id="54">54</span>
-<span id="55">55</span>
-<span id="56">56</span>
-<span id="57">57</span>
-<span id="58">58</span>
-<span id="59">59</span>
-<span id="60">60</span>
-<span id="61">61</span>
-<span id="62">62</span>
-<span id="63">63</span>
-<span id="64">64</span>
-<span id="65">65</span>
-<span id="66">66</span>
-<span id="67">67</span>
-<span id="68">68</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{
-    <span class="ident">is_first_in_statement</span>, <span class="ident">ExpressionNode</span>, <span class="ident">FirstInStatementMode</span>, <span class="ident">NeedsParentheses</span>,
-};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses</span>::{<span class="ident">is_first_in_statement</span>, <span class="ident">FirstInStatementMode</span>, <span class="ident">NeedsParentheses</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::JsObjectLike</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter::write</span>;
-<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsAnyExpression</span>, <span class="ident">JsObjectExpression</span>, <span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxNode</span>};
+<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsObjectExpression</span>, <span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxNode</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FormatJsObjectExpression</span>;
@@ -100,18 +84,6 @@
                 <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
                 <span class="ident">FirstInStatementMode::ExpressionStatementOrArrow</span>,
             )
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ExpressionNode</span> <span class="kw">for</span> <span class="ident">JsObjectExpression</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_resolved</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
-        <span class="self">self</span>.<span class="ident">into</span>()
     }
 }
 

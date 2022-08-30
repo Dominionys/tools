@@ -155,9 +155,9 @@
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arc</span>::{<span class="ident">HeaderSlice</span>, <span class="ident">ThinArc</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TriviaPiece</span>;
 <span class="kw">use</span> <span class="ident">countme::Count</span>;
+<span class="kw">use</span> <span class="ident">rome_text_size::TextSize</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 <span class="kw">use</span> <span class="ident">std::fmt::Formatter</span>;
-<span class="kw">use</span> <span class="ident">text_size::TextSize</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">GreenTriviaHead</span> {
@@ -275,7 +275,7 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::green::trivia</span>::{<span class="ident">GreenTrivia</span>, <span class="ident">GreenTriviaHead</span>};
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::TriviaPieceKind</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TriviaPiece</span>;
-    <span class="kw">use</span> <span class="ident">text_size::TextSize</span>;
+    <span class="kw">use</span> <span class="ident">rome_text_size::TextSize</span>;
 
     <span class="kw">impl</span> <span class="ident">GreenTrivia</span> {
         <span class="doccomment">/// Creates a trivia with a single whitespace piece</span>

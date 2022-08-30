@@ -789,7 +789,7 @@
 <span id="783">783</span>
 <span id="784">784</span>
 <span id="785">785</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context</span>::{<span class="ident">QuoteProperties</span>, <span class="ident">QuoteStyle</span>};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context</span>::{<span class="ident">JsFormatOptions</span>, <span class="ident">QuoteProperties</span>, <span class="ident">QuoteStyle</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::string_utils::CharSignal::AlreadyPrinted</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax::JsSyntaxKind::JS_STRING_LITERAL</span>;
@@ -861,17 +861,17 @@
         <span class="self">self</span>.<span class="ident">token</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clean_text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">JsFormatContext</span>) -&gt; <span class="ident">CleanedStringLiteralText</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clean_text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">JsFormatOptions</span>) -&gt; <span class="ident">CleanedStringLiteralText</span> {
         <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">token</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">token</span>.<span class="ident">kind</span>(), <span class="ident">JS_STRING_LITERAL</span>);
 
-        <span class="kw">let</span> <span class="ident">chosen_quote_style</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">quote_style</span>();
-        <span class="kw">let</span> <span class="ident">chosen_quote_properties</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">quote_properties</span>();
+        <span class="kw">let</span> <span class="ident">chosen_quote_style</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">quote_style</span>();
+        <span class="kw">let</span> <span class="ident">chosen_quote_properties</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">quote_properties</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">string_cleaner</span> <span class="op">=</span>
             <span class="ident">LiteralStringNormaliser::new</span>(<span class="self">self</span>, <span class="ident">chosen_quote_style</span>, <span class="ident">chosen_quote_properties</span>);
 
-        <span class="kw">let</span> <span class="ident">content</span> <span class="op">=</span> <span class="ident">string_cleaner</span>.<span class="ident">normalise_text</span>(<span class="ident">context</span>.<span class="ident">source_type</span>().<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">content</span> <span class="op">=</span> <span class="ident">string_cleaner</span>.<span class="ident">normalise_text</span>(<span class="ident">options</span>.<span class="ident">source_type</span>().<span class="ident">into</span>());
         <span class="kw">let</span> <span class="ident">normalized_text_width</span> <span class="op">=</span> <span class="ident">content</span>.<span class="ident">width</span>();
 
         <span class="ident">CleanedStringLiteralText</span> {
@@ -910,7 +910,7 @@
 
 <span class="kw">impl</span> <span class="ident">Format</span><span class="op">&lt;</span><span class="ident">JsFormatContext</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FormatLiteralStringToken</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">JsFormatter</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cleaned</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clean_text</span>(<span class="ident">f</span>.<span class="ident">context</span>());
+        <span class="kw">let</span> <span class="ident">cleaned</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clean_text</span>(<span class="ident">f</span>.<span class="ident">options</span>());
 
         <span class="ident">cleaned</span>.<span class="ident">fmt</span>(<span class="ident">f</span>)
     }

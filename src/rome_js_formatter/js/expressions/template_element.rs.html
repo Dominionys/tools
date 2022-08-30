@@ -246,17 +246,12 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter::printer</span>::{<span class="ident">PrintWidth</span>, <span class="ident">Printer</span>};
-<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">FormatContext</span>, <span class="ident">FormatRuleWithOptions</span>, <span class="ident">VecBuffer</span>};
+<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">FormatOptions</span>, <span class="ident">FormatRuleWithOptions</span>, <span class="ident">VecBuffer</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::TabWidth</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::js::lists::template_element_list</span>::{<span class="ident">TemplateElementIndention</span>, <span class="ident">TemplateElementLayout</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses::ExpressionNode</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{
     <span class="ident">JsAnyExpression</span>, <span class="ident">JsSyntaxNode</span>, <span class="ident">JsSyntaxToken</span>, <span class="ident">JsTemplateElement</span>, <span class="ident">TsTemplateElement</span>,
 };
@@ -343,7 +338,7 @@
                 <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">into_element</span>();
 
                 <span class="kw">let</span> <span class="ident">print_options</span> <span class="op">=</span> <span class="ident">f</span>
-                    .<span class="ident">context</span>()
+                    .<span class="ident">options</span>()
                     .<span class="ident">as_print_options</span>()
                     .<span class="ident">with_print_width</span>(<span class="ident">PrintWidth::infinite</span>());
                 <span class="kw">let</span> <span class="ident">printed</span> <span class="op">=</span> <span class="ident">Printer::new</span>(<span class="ident">print_options</span>).<span class="ident">print</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>);
@@ -359,10 +354,7 @@
             <span class="ident">TemplateElementLayout::Fit</span> =&gt; {
                 <span class="kw">use</span> <span class="ident">JsAnyExpression</span>::<span class="kw-2">*</span>;
 
-                <span class="kw">let</span> <span class="ident">expression</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">element</span>
-                    .<span class="ident">expression</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">expression</span><span class="op">|</span> <span class="ident">expression</span>.<span class="ident">resolve</span>());
+                <span class="kw">let</span> <span class="ident">expression</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">element</span>.<span class="ident">expression</span>();
 
                 <span class="comment">// It&#39;s preferred to break after/before `${` and `}` rather than breaking in the</span>
                 <span class="comment">// middle of some expressions.</span>
@@ -397,7 +389,7 @@
                 <span class="ident">write_with_indention</span>(
                     <span class="kw-2">&amp;</span><span class="ident">format_inner</span>,
                     <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">indention</span>,
-                    <span class="ident">f</span>.<span class="ident">context</span>().<span class="ident">tab_width</span>(),
+                    <span class="ident">f</span>.<span class="ident">options</span>().<span class="ident">tab_width</span>(),
                     <span class="ident">f</span>,
                 )
             }

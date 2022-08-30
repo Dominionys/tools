@@ -804,6 +804,7 @@
     <span class="ident">cursor</span>, <span class="ident">Direction</span>, <span class="ident">GreenNode</span>, <span class="ident">Language</span>, <span class="ident">NodeOrToken</span>, <span class="ident">SyntaxKind</span>, <span class="ident">SyntaxList</span>, <span class="ident">SyntaxNodeText</span>,
     <span class="ident">SyntaxToken</span>, <span class="ident">TokenAtOffset</span>, <span class="ident">WalkEvent</span>,
 };
+<span class="kw">use</span> <span class="ident">rome_text_size</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">serde::Serialize</span>;
 <span class="kw">use</span> <span class="ident">std::any::TypeId</span>;
@@ -811,7 +812,6 @@
 <span class="kw">use</span> <span class="ident">std::iter::FusedIterator</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">ops</span>};
-<span class="kw">use</span> <span class="ident">text_size</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Language</span><span class="op">&gt;</span> {
