@@ -291,8 +291,6 @@
 <span id="285">285</span>
 <span id="286">286</span>
 <span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::comments</span>::{<span class="ident">FormatJsLeadingComment</span>, <span class="ident">JsCommentStyle</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter::printer::PrinterOptions</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{
@@ -305,7 +303,7 @@
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">JsFormatContext</span> {
     <span class="ident">options</span>: <span class="ident">JsFormatOptions</span>,
 
@@ -320,7 +318,7 @@
         <span class="self">Self</span> {
             <span class="ident">options</span>,
             <span class="ident">comments</span>: <span class="ident">Rc::new</span>(<span class="ident">comments</span>),
-            ..<span class="ident">JsFormatContext::default</span>()
+            <span class="ident">source_map</span>: <span class="prelude-val">None</span>,
         }
     }
 
@@ -371,7 +369,7 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">JsFormatOptions</span> {
     <span class="doccomment">/// The indent style.</span>
     <span class="ident">indent_style</span>: <span class="ident">IndentStyle</span>,
@@ -393,7 +391,10 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source_type</span>: <span class="ident">SourceType</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">source_type</span>,
-            ..<span class="ident">JsFormatOptions::default</span>()
+            <span class="ident">indent_style</span>: <span class="ident">IndentStyle::default</span>(),
+            <span class="ident">line_width</span>: <span class="ident">LineWidth::default</span>(),
+            <span class="ident">quote_style</span>: <span class="ident">QuoteStyle::default</span>(),
+            <span class="ident">quote_properties</span>: <span class="ident">QuoteProperties::default</span>(),
         }
     }
 
@@ -414,11 +415,6 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_quote_properties</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">quote_properties</span>: <span class="ident">QuoteProperties</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">quote_properties</span> <span class="op">=</span> <span class="ident">quote_properties</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_source_type</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">source_type</span>: <span class="ident">SourceType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">source_type</span> <span class="op">=</span> <span class="ident">source_type</span>;
         <span class="self">self</span>
     }
 

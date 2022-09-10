@@ -144,8 +144,22 @@
 <span id="138">138</span>
 <span id="139">139</span>
 <span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">rome_formatter::IndentStyle</span>;
-<span class="kw">use</span> <span class="ident">rome_service</span>::{<span class="ident">load_config</span>, <span class="ident">settings::WorkspaceSettings</span>, <span class="ident">workspace::UpdateSettingsParams</span>};
+<span class="kw">use</span> <span class="ident">rome_service::configuration</span>::{
+    <span class="ident">FormatterConfiguration</span>, <span class="ident">JavascriptConfiguration</span>, <span class="ident">JavascriptFormatter</span>, <span class="ident">PlainIndentStyle</span>,
+};
+<span class="kw">use</span> <span class="ident">rome_service</span>::{<span class="ident">load_config</span>, <span class="ident">workspace::UpdateSettingsParams</span>, <span class="ident">Configuration</span>};
 <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::execute::ReportMode</span>;
@@ -154,16 +168,12 @@
 <span class="doccomment">/// Handler for the &quot;format&quot; command of the Rome CLI</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">format</span>(<span class="kw-2">mut</span> <span class="ident">session</span>: <span class="ident">CliSession</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Termination</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">configuration</span> <span class="op">=</span> <span class="ident">load_config</span>(<span class="kw-2">&amp;</span><span class="ident">session</span>.<span class="ident">app</span>.<span class="ident">fs</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">workspace_settings</span> <span class="op">=</span> <span class="ident">WorkspaceSettings::default</span>();
+    <span class="kw">let</span> <span class="ident">configuration</span> <span class="op">=</span> <span class="ident">apply_format_settings_from_cli</span>(<span class="kw-2">&amp;mut</span> <span class="ident">session</span>, <span class="ident">configuration</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">configuration</span>) <span class="op">=</span> <span class="ident">configuration</span> {
-        <span class="ident">session</span>
-            .<span class="ident">app</span>
-            .<span class="ident">workspace</span>
-            .<span class="ident">update_settings</span>(<span class="ident">UpdateSettingsParams</span> { <span class="ident">configuration</span> })<span class="question-mark">?</span>;
-    }
-
-    <span class="ident">apply_format_settings_from_cli</span>(<span class="kw-2">&amp;mut</span> <span class="ident">session</span>, <span class="kw-2">&amp;mut</span> <span class="ident">workspace_settings</span>)<span class="question-mark">?</span>;
+    <span class="ident">session</span>
+        .<span class="ident">app</span>
+        .<span class="ident">workspace</span>
+        .<span class="ident">update_settings</span>(<span class="ident">UpdateSettingsParams</span> { <span class="ident">configuration</span> })<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">is_write</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">args</span>.<span class="ident">contains</span>(<span class="string">&quot;--write&quot;</span>);
     <span class="kw">let</span> <span class="ident">ignore_errors</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">args</span>.<span class="ident">contains</span>(<span class="string">&quot;--skip-errors&quot;</span>);
@@ -213,8 +223,17 @@
 <span class="doccomment">/// into the workspace settings</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">apply_format_settings_from_cli</span>(
     <span class="ident">session</span>: <span class="kw-2">&amp;mut</span> <span class="ident">CliSession</span>,
-    <span class="ident">workspace_settings</span>: <span class="kw-2">&amp;mut</span> <span class="ident">WorkspaceSettings</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Termination</span><span class="op">&gt;</span> {
+    <span class="ident">configuration</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Configuration</span><span class="op">&gt;</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Configuration</span>, <span class="ident">Termination</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">configuration</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">configuration</span>) <span class="op">=</span> <span class="ident">configuration</span> {
+        <span class="ident">configuration</span>
+    } <span class="kw">else</span> {
+        <span class="ident">Configuration::default</span>()
+    };
+    <span class="kw">let</span> <span class="ident">formatter</span> <span class="op">=</span> <span class="ident">configuration</span>
+        .<span class="ident">formatter</span>
+        .<span class="ident">get_or_insert_with</span>(<span class="ident">FormatterConfiguration::default</span>);
+
     <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">session</span>
         .<span class="ident">args</span>
         .<span class="ident">opt_value_from_str</span>(<span class="string">&quot;--indent-size&quot;</span>)
@@ -231,27 +250,27 @@
             <span class="ident">source</span>,
         })<span class="question-mark">?</span>;
 
+    <span class="kw">let</span> <span class="ident">line_width</span> <span class="op">=</span> <span class="ident">session</span>
+        .<span class="ident">args</span>
+        .<span class="ident">opt_value_from_str</span>(<span class="string">&quot;--line-width&quot;</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> <span class="ident">Termination::ParseError</span> {
+            <span class="ident">argument</span>: <span class="string">&quot;--line-width&quot;</span>,
+            <span class="ident">source</span>,
+        })<span class="question-mark">?</span>;
+
     <span class="kw">match</span> <span class="ident">indent_style</span> {
         <span class="prelude-val">Some</span>(<span class="ident">IndentStyle::Tab</span>) =&gt; {
-            <span class="ident">workspace_settings</span>.<span class="ident">format</span>.<span class="ident">indent_style</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">IndentStyle::Tab</span>);
+            <span class="ident">formatter</span>.<span class="ident">indent_style</span> <span class="op">=</span> <span class="ident">PlainIndentStyle::Tab</span>;
         }
         <span class="prelude-val">Some</span>(<span class="ident">IndentStyle::Space</span>(<span class="ident">default_size</span>)) =&gt; {
-            <span class="ident">workspace_settings</span>.<span class="ident">format</span>.<span class="ident">indent_style</span> <span class="op">=</span>
-                <span class="prelude-val">Some</span>(<span class="ident">IndentStyle::Space</span>(<span class="ident">size</span>.<span class="ident">unwrap_or</span>(<span class="ident">default_size</span>)));
+            <span class="ident">formatter</span>.<span class="ident">indent_style</span> <span class="op">=</span> <span class="ident">PlainIndentStyle::Space</span>;
+            <span class="ident">formatter</span>.<span class="ident">indent_size</span> <span class="op">=</span> <span class="ident">size</span>.<span class="ident">unwrap_or</span>(<span class="ident">default_size</span>);
         }
         <span class="prelude-val">None</span> =&gt; {}
     }
 
-    <span class="kw">let</span> <span class="ident">quote_style</span> <span class="op">=</span> <span class="ident">session</span>
-        .<span class="ident">args</span>
-        .<span class="ident">opt_value_from_str</span>(<span class="string">&quot;--quote-style&quot;</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> <span class="ident">Termination::ParseError</span> {
-            <span class="ident">argument</span>: <span class="string">&quot;--quote-style&quot;</span>,
-            <span class="ident">source</span>,
-        })<span class="question-mark">?</span>;
-
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">quote_style</span>) <span class="op">=</span> <span class="ident">quote_style</span> {
-        <span class="ident">workspace_settings</span>.<span class="ident">languages</span>.<span class="ident">javascript</span>.<span class="ident">format</span>.<span class="ident">quote_style</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">quote_style</span>);
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">line_width</span>) <span class="op">=</span> <span class="ident">line_width</span> {
+        <span class="ident">formatter</span>.<span class="ident">line_width</span> <span class="op">=</span> <span class="ident">line_width</span>;
     }
 
     <span class="kw">let</span> <span class="ident">quote_properties</span> <span class="op">=</span> <span class="ident">session</span>
@@ -262,27 +281,30 @@
             <span class="ident">source</span>,
         })<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">quote_properties</span>) <span class="op">=</span> <span class="ident">quote_properties</span> {
-        <span class="ident">workspace_settings</span>
-            .<span class="ident">languages</span>
-            .<span class="ident">javascript</span>
-            .<span class="ident">format</span>
-            .<span class="ident">quote_properties</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">quote_properties</span>);
-    }
-
-    <span class="kw">let</span> <span class="ident">line_width</span> <span class="op">=</span> <span class="ident">session</span>
+    <span class="kw">let</span> <span class="ident">quote_style</span> <span class="op">=</span> <span class="ident">session</span>
         .<span class="ident">args</span>
-        .<span class="ident">opt_value_from_str</span>(<span class="string">&quot;--line-width&quot;</span>)
+        .<span class="ident">opt_value_from_str</span>(<span class="string">&quot;--quote-style&quot;</span>)
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> <span class="ident">Termination::ParseError</span> {
-            <span class="ident">argument</span>: <span class="string">&quot;--line-width&quot;</span>,
+            <span class="ident">argument</span>: <span class="string">&quot;--quote-style&quot;</span>,
             <span class="ident">source</span>,
         })<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">line_width</span>) <span class="op">=</span> <span class="ident">line_width</span> {
-        <span class="ident">workspace_settings</span>.<span class="ident">format</span>.<span class="ident">line_width</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">line_width</span>);
+    <span class="kw">let</span> <span class="ident">javascript</span> <span class="op">=</span> <span class="ident">configuration</span>
+        .<span class="ident">javascript</span>
+        .<span class="ident">get_or_insert_with</span>(<span class="ident">JavascriptConfiguration::default</span>);
+    <span class="kw">let</span> <span class="ident">javascript_formatter</span> <span class="op">=</span> <span class="ident">javascript</span>
+        .<span class="ident">formatter</span>
+        .<span class="ident">get_or_insert_with</span>(<span class="ident">JavascriptFormatter::default</span>);
+
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">quote_properties</span>) <span class="op">=</span> <span class="ident">quote_properties</span> {
+        <span class="ident">javascript_formatter</span>.<span class="ident">quote_properties</span> <span class="op">=</span> <span class="ident">quote_properties</span>;
     }
 
-    <span class="prelude-val">Ok</span>(())
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">quote_style</span>) <span class="op">=</span> <span class="ident">quote_style</span> {
+        <span class="ident">javascript_formatter</span>.<span class="ident">quote_style</span> <span class="op">=</span> <span class="ident">quote_style</span>;
+    }
+
+    <span class="prelude-val">Ok</span>(<span class="ident">configuration</span>)
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rome_cli" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>

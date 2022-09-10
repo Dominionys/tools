@@ -164,12 +164,13 @@
 <span id="158">158</span>
 <span id="159">159</span>
 <span id="160">160</span>
+<span id="161">161</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::traversal::traverse</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">CliSession</span>, <span class="ident">Termination</span>};
 <span class="kw">use</span> <span class="ident">rome_console</span>::{<span class="ident">markup</span>, <span class="ident">ConsoleExt</span>};
 <span class="kw">use</span> <span class="ident">rome_fs::RomePath</span>;
 <span class="kw">use</span> <span class="ident">rome_service::workspace</span>::{
-    <span class="ident">FeatureName</span>, <span class="ident">FixFileMode</span>, <span class="ident">FormatFileParams</span>, <span class="ident">OpenFileParams</span>, <span class="ident">SupportsFeatureParams</span>,
+    <span class="ident">FeatureName</span>, <span class="ident">FixFileMode</span>, <span class="ident">FormatFileParams</span>, <span class="ident">Language</span>, <span class="ident">OpenFileParams</span>, <span class="ident">SupportsFeatureParams</span>,
 };
 <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 
@@ -297,12 +298,13 @@
             <span class="kw">let</span> <span class="ident">can_format</span> <span class="op">=</span> <span class="ident">workspace</span>.<span class="ident">supports_feature</span>(<span class="ident">SupportsFeatureParams</span> {
                 <span class="ident">path</span>: <span class="ident">rome_path</span>.<span class="ident">clone</span>(),
                 <span class="ident">feature</span>: <span class="ident">FeatureName::Format</span>,
-            });
+            })<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="ident">can_format</span> {
                 <span class="ident">workspace</span>.<span class="ident">open_file</span>(<span class="ident">OpenFileParams</span> {
                     <span class="ident">path</span>: <span class="ident">rome_path</span>.<span class="ident">clone</span>(),
                     <span class="ident">version</span>: <span class="number">0</span>,
                     <span class="ident">content</span>: <span class="ident">content</span>.<span class="ident">into</span>(),
+                    <span class="ident">language_hint</span>: <span class="ident">Language::default</span>(),
                 })<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">printed</span> <span class="op">=</span> <span class="ident">workspace</span>.<span class="ident">format_file</span>(<span class="ident">FormatFileParams</span> { <span class="ident">path</span>: <span class="ident">rome_path</span> })<span class="question-mark">?</span>;
 

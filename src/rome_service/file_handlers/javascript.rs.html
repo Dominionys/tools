@@ -475,6 +475,11 @@
 <span id="469">469</span>
 <span id="470">470</span>
 <span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">rome_analyze</span>::{<span class="ident">AnalysisFilter</span>, <span class="ident">ControlFlow</span>, <span class="ident">Never</span>, <span class="ident">QueryMatch</span>, <span class="ident">RuleCategories</span>, <span class="ident">RuleFilter</span>};
 <span class="kw">use</span> <span class="ident">rome_diagnostics</span>::{<span class="ident">Applicability</span>, <span class="ident">CodeSuggestion</span>, <span class="ident">Diagnostic</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">FormatError</span>, <span class="ident">Printed</span>};
@@ -503,7 +508,7 @@
     <span class="ident">AnalyzerCapabilities</span>, <span class="ident">DebugCapabilities</span>, <span class="ident">ExtensionHandler</span>, <span class="ident">FormatterCapabilities</span>, <span class="ident">Mime</span>,
     <span class="ident">ParserCapabilities</span>,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::file_handlers::FixAllParams</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::file_handlers</span>::{<span class="ident">FixAllParams</span>, <span class="ident">Language</span> <span class="kw">as</span> <span class="ident">LanguageId</span>};
 <span class="kw">use</span> <span class="ident">indexmap::IndexSet</span>;
 <span class="kw">use</span> <span class="ident">rome_console::codespan::Severity</span>;
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
@@ -583,11 +588,16 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">rome_path</span>: <span class="kw-2">&amp;</span><span class="ident">RomePath</span>, <span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AnyParse</span> {
+<span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">rome_path</span>: <span class="kw-2">&amp;</span><span class="ident">RomePath</span>, <span class="ident">language_hint</span>: <span class="ident">LanguageId</span>, <span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AnyParse</span> {
     <span class="kw">let</span> <span class="ident">file_id</span> <span class="op">=</span> <span class="ident">rome_path</span>.<span class="ident">file_id</span>();
 
     <span class="kw">let</span> <span class="ident">source_type</span> <span class="op">=</span>
-        <span class="ident">SourceType::try_from</span>(<span class="ident">rome_path</span>.<span class="ident">as_path</span>()).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">SourceType::js_module</span>());
+        <span class="ident">SourceType::try_from</span>(<span class="ident">rome_path</span>.<span class="ident">as_path</span>()).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">language_hint</span> {
+            <span class="ident">LanguageId::JavaScriptReact</span> =&gt; <span class="ident">SourceType::jsx</span>(),
+            <span class="ident">LanguageId::TypeScript</span> =&gt; <span class="ident">SourceType::ts</span>(),
+            <span class="ident">LanguageId::TypeScriptReact</span> =&gt; <span class="ident">SourceType::tsx</span>(),
+            <span class="kw">_</span> =&gt; <span class="ident">SourceType::js_module</span>(),
+        });
 
     <span class="kw">let</span> <span class="ident">parse</span> <span class="op">=</span> <span class="ident">rome_js_parser::parse</span>(<span class="ident">text</span>, <span class="ident">file_id</span>, <span class="ident">source_type</span>);
     <span class="ident">AnyParse::from</span>(<span class="ident">parse</span>)

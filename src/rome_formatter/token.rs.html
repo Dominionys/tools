@@ -841,6 +841,19 @@
 <span id="835">835</span>
 <span id="836">836</span>
 <span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::comments::CommentStyle</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1171,7 +1184,7 @@
     <span class="comment">// If this isn&#39;t the first token than format all comments that are before the first skipped token</span>
     <span class="comment">// trivia or line break as the trailing trivia of the previous token (which these comments will</span>
     <span class="comment">// become if the document gets formatted a second time).</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">last_token</span>) <span class="op">=</span> <span class="ident">last_token</span> {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">last_token</span>) <span class="op">=</span> <span class="ident">last_token</span>.<span class="ident">as_ref</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trailing_comments</span> <span class="op">=</span> <span class="macro">vec!</span>[];
 
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">piece</span>) <span class="op">=</span> <span class="ident">pieces</span>.<span class="ident">peek</span>() {
@@ -1186,10 +1199,12 @@
             <span class="ident">pieces</span>.<span class="ident">next</span>();
         }
 
-        <span class="ident">FormatTrailingTrivia::new</span>(<span class="ident">trailing_comments</span>.<span class="ident">into_iter</span>(), <span class="ident">last_token</span>).<span class="ident">fmt</span>(<span class="ident">f</span>)<span class="question-mark">?</span>;
+        <span class="ident">FormatTrailingTrivia::new</span>(<span class="ident">trailing_comments</span>.<span class="ident">into_iter</span>(), <span class="kw-2">*</span><span class="ident">last_token</span>).<span class="ident">fmt</span>(<span class="ident">f</span>)<span class="question-mark">?</span>;
     }
 
-    <span class="ident">write_leading_trivia</span>(<span class="ident">pieces</span>, <span class="ident">token</span>, <span class="ident">TriviaPrintMode::Full</span>, <span class="ident">f</span>)<span class="question-mark">?</span>;
+    <span class="ident">write_leading_trivia</span>(<span class="ident">pieces</span>, <span class="ident">token</span>, <span class="ident">TriviaPrintMode::Full</span>, <span class="ident">f</span>, <span class="op">|</span><span class="op">|</span> {
+        <span class="ident">token</span>.<span class="ident">prev_token</span>()
+    })<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
 }
@@ -1356,22 +1371,23 @@
             <span class="self">self</span>.<span class="ident">token</span>,
             <span class="self">self</span>.<span class="ident">trim_mode</span>,
             <span class="ident">f</span>,
-        )<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
+            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">token</span>.<span class="ident">prev_token</span>(),
+        )
     }
 }
 
-<span class="kw">fn</span> <span class="ident">write_leading_trivia</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">L</span>, <span class="ident">C</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">write_leading_trivia</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">L</span>, <span class="ident">C</span>, <span class="ident">F</span><span class="op">&gt;</span>(
     <span class="ident">pieces</span>: <span class="ident">I</span>,
     <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">SyntaxToken</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>,
     <span class="ident">trim_mode</span>: <span class="ident">TriviaPrintMode</span>,
     <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
+    <span class="ident">previous_token</span>: <span class="ident">F</span>,
 ) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">SyntaxTriviaPiece</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">L</span>: <span class="ident">Language</span>,
     <span class="ident">C</span>: <span class="ident">CstFormatContext</span><span class="op">&lt;</span><span class="ident">Language</span> <span class="op">=</span> <span class="ident">L</span><span class="op">&gt;</span>,
+    <span class="ident">F</span>: <span class="ident">FnOnce</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SyntaxToken</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lines_before</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">comments</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -1411,6 +1427,16 @@
                 <span class="ident">lines_before_token</span>: <span class="ident">lines_before</span>,
             }
             .<span class="ident">fmt</span>(<span class="ident">f</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">let</span> <span class="ident">has_preceding_whitespace</span> <span class="op">=</span> <span class="ident">previous_token</span>()
+                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">token</span><span class="op">|</span> <span class="ident">token</span>.<span class="ident">trailing_trivia</span>().<span class="ident">pieces</span>().<span class="ident">last</span>())
+                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">piece</span><span class="op">|</span> <span class="ident">piece</span>.<span class="ident">is_newline</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">piece</span>.<span class="ident">is_whitespace</span>());
+
+            <span class="comment">// Maintain a leading whitespace in front of the skipped token trivia</span>
+            <span class="comment">// if the previous token has a trailing whitespace (and there&#39;s no comment between the two tokens).</span>
+            <span class="kw">if</span> <span class="ident">comments</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="ident">has_preceding_whitespace</span> {
+                <span class="macro">write!</span>(<span class="ident">f</span>, [<span class="ident">space</span>()])<span class="question-mark">?</span>;
+            }
 
             <span class="ident">comments</span>.<span class="ident">clear</span>();
             <span class="ident">lines_before</span> <span class="op">=</span> <span class="number">0</span>;

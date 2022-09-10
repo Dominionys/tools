@@ -105,7 +105,24 @@
 <span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This is where the main CLI session starts. The module is responsible</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">doc</span> <span class="op">=</span> <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Module</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This is where the main CLI session starts. The module is responsible</span>
 <span class="doccomment">//! to parse commands and arguments, redirect the execution of the commands and</span>
 <span class="doccomment">//! execute the traversal of directory and files, based on the command that were passed.</span>
 
@@ -120,6 +137,7 @@
 <span class="kw">mod</span> <span class="ident">metrics</span>;
 <span class="kw">mod</span> <span class="ident">panic</span>;
 <span class="kw">mod</span> <span class="ident">reports</span>;
+<span class="kw">mod</span> <span class="ident">service</span>;
 <span class="kw">mod</span> <span class="ident">termination</span>;
 <span class="kw">mod</span> <span class="ident">traversal</span>;
 
@@ -129,6 +147,7 @@
     <span class="ident">formatter</span>::{<span class="ident">FormatterReport</span>, <span class="ident">FormatterReportFileDetail</span>, <span class="ident">FormatterReportSummary</span>},
     <span class="ident">Report</span>, <span class="ident">ReportDiagnostic</span>, <span class="ident">ReportDiff</span>, <span class="ident">ReportErrorKind</span>, <span class="ident">ReportKind</span>,
 };
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">service</span>::{<span class="ident">open_transport</span>, <span class="ident">SocketTransport</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">termination::Termination</span>;
 
 <span class="doccomment">/// Global context for an execution of the CLI</span>
@@ -182,6 +201,13 @@
             <span class="prelude-val">Some</span>(<span class="string">&quot;check&quot;</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">is_empty</span> =&gt; <span class="ident"><span class="kw">crate</span>::commands::check::check</span>(<span class="self">self</span>),
             <span class="prelude-val">Some</span>(<span class="string">&quot;ci&quot;</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">is_empty</span> =&gt; <span class="ident"><span class="kw">crate</span>::commands::ci::ci</span>(<span class="self">self</span>),
             <span class="prelude-val">Some</span>(<span class="string">&quot;format&quot;</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">is_empty</span> =&gt; <span class="ident"><span class="kw">crate</span>::commands::format::format</span>(<span class="self">self</span>),
+
+            <span class="prelude-val">Some</span>(<span class="string">&quot;start&quot;</span>) =&gt; <span class="ident"><span class="kw">crate</span>::commands::daemon::start</span>(<span class="self">self</span>),
+            <span class="prelude-val">Some</span>(<span class="string">&quot;stop&quot;</span>) =&gt; <span class="ident"><span class="kw">crate</span>::commands::daemon::stop</span>(<span class="self">self</span>),
+
+            <span class="comment">// Internal commands</span>
+            <span class="prelude-val">Some</span>(<span class="string">&quot;__run_server&quot;</span>) =&gt; <span class="ident"><span class="kw">crate</span>::commands::daemon::run_server</span>(),
+            <span class="prelude-val">Some</span>(<span class="string">&quot;__print_socket&quot;</span>) =&gt; <span class="ident"><span class="kw">crate</span>::commands::daemon::print_socket</span>(),
 
             <span class="comment">// Print the help for known commands called without any arguments, and exit with an error</span>
             <span class="prelude-val">Some</span>(<span class="ident">cmd</span> @ (<span class="string">&quot;check&quot;</span> <span class="op">|</span> <span class="string">&quot;ci&quot;</span> <span class="op">|</span> <span class="string">&quot;format&quot;</span>)) =&gt; {

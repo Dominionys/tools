@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["TransportHeader",""]],"fn":[["open_transport","Tries to open a connection to a running daemon instance, returning a [WorkspaceTransport] instance if the socket is currently active"]],"mod":[["unix",""]],"struct":[["SocketTransport","Implementation of [WorkspaceTransport] for types implementing [AsyncRead] and [AsyncWrite]"]]};

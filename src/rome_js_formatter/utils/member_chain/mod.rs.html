@@ -425,10 +425,6 @@
 <span id="419">419</span>
 <span id="420">420</span>
 <span id="421">421</span>
-<span id="422">422</span>
-<span id="423">423</span>
-<span id="424">424</span>
-<span id="425">425</span>
 </pre><pre class="rust"><code><span class="doccomment">///! Utility function that applies some heuristic to format chain member expressions and call expressions</span>
 <span class="doccomment">///!</span>
 <span class="doccomment">///! We want to transform code that looks like this:</span>
@@ -543,7 +539,7 @@
     <span class="ident">MemberChainGroup</span>, <span class="ident">MemberChainGroups</span>, <span class="ident">MemberChainGroupsBuilder</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::member_chain::simple_argument::SimpleArgument</span>;
-<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">Buffer</span>, <span class="ident">Comments</span>, <span class="ident">CstFormatContext</span>, <span class="ident">PreambleBuffer</span>};
+<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">Buffer</span>, <span class="ident">Comments</span>, <span class="ident">CstFormatContext</span>};
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsAnyExpression</span>, <span class="ident">JsCallExpression</span>, <span class="ident">JsExpressionStatement</span>, <span class="ident">JsLanguage</span>};
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">AstNode</span>, <span class="ident">SyntaxResult</span>};
 
@@ -610,11 +606,7 @@
                 ))]
             )
         } <span class="kw">else</span> {
-            <span class="comment">// TODO This line suffix boundary shouldn&#39;t be needed but currently is because comments</span>
-            <span class="comment">// can move over node boundaries. Follow up when re-working member chain formatting</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">PreambleBuffer::new</span>(<span class="ident">f</span>, <span class="ident">line_suffix_boundary</span>());
-
-            <span class="macro">write!</span>(<span class="ident">buffer</span>, [<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tail</span>])
+            <span class="macro">write!</span>(<span class="ident">f</span>, [<span class="self">self</span>.<span class="ident">tail</span>])
         }
     }
 }

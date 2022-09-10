@@ -796,6 +796,9 @@
 <span id="790">790</span>
 <span id="791">791</span>
 <span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Rome&#39;s official JavaScript formatter.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Implement the formatter</span>
@@ -1429,7 +1432,7 @@ while(
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::new</span>(<span class="ident">SourceType::js_script</span>()).<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1461,7 +1464,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::new</span>(<span class="ident">SourceType::js_script</span>()).<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1492,7 +1495,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::new</span>(<span class="ident">SourceType::js_script</span>()).<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1511,7 +1514,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::new</span>(<span class="ident">SourceType::js_script</span>()).<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1533,7 +1536,7 @@ function() {
 
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_script</span>(<span class="ident">input</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatOptions::default</span>().<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
+            <span class="ident">JsFormatOptions::new</span>(<span class="ident">SourceType::js_script</span>()).<span class="ident">with_indent_style</span>(<span class="ident">IndentStyle::Space</span>(<span class="number">4</span>)),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">range_start</span>, <span class="ident">range_end</span>),
         );
@@ -1548,13 +1551,16 @@ function() {
     <span class="comment">// use this test check if your snippet prints as you wish, without using a snapshot</span>
     <span class="kw">fn</span> <span class="ident">quick_test</span>() {
         <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="string">r#&quot;
-const getIconEngagementTypeFrom = (engagementTypes: Array&lt;EngagementType&gt;) =&gt;
-	(iconEngagementType) =&gt;
-		engagementTypes.includes(iconEngagementType);
+type Example = {
+  [A in B]: T;
+} &amp; {
+  [A in B]: T;
+};
+
 &quot;#</span>;
         <span class="kw">let</span> <span class="ident">syntax</span> <span class="op">=</span> <span class="ident">SourceType::tsx</span>();
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse</span>(<span class="ident">src</span>, <span class="number">0</span>, <span class="ident">syntax</span>);
-        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">JsFormatOptions::default</span>();
+        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">JsFormatOptions::new</span>(<span class="ident">syntax</span>);
 
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_node</span>(<span class="ident">options</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>())
             .<span class="ident">unwrap</span>()
@@ -1568,7 +1574,7 @@ const getIconEngagementTypeFrom = (engagementTypes: Array&lt;EngagementType&gt;)
         });
         <span class="macro">assert_eq!</span>(
             <span class="ident">result</span>.<span class="ident">as_code</span>(),
-            <span class="string">&quot;type B8 = /*1*/ (C);\ntype B9 = (/*1*/ C);\ntype B10 = /*1*/ /*2*/ C;\n&quot;</span>
+            <span class="string">&quot;type Example = {\n\t[A in B]: T;\n} &amp; {\n\t[A in B]: T;\n};\n&quot;</span>
         );
     }
 
@@ -1580,7 +1586,7 @@ const getIconEngagementTypeFrom = (engagementTypes: Array&lt;EngagementType&gt;)
         <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse</span>(<span class="ident">src</span>, <span class="number">0</span>, <span class="ident">syntax</span>);
 
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">format_range</span>(
-            <span class="ident">JsFormatOptions::default</span>(),
+            <span class="ident">JsFormatOptions::new</span>(<span class="ident">syntax</span>),
             <span class="kw-2">&amp;</span><span class="ident">tree</span>.<span class="ident">syntax</span>(),
             <span class="ident">TextRange::new</span>(<span class="ident">TextSize::from</span>(<span class="number">0</span>), <span class="ident">TextSize::of</span>(<span class="ident">src</span>) <span class="op">+</span> <span class="ident">TextSize::from</span>(<span class="number">5</span>)),
         );

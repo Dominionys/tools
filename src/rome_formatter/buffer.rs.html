@@ -562,102 +562,8 @@
 <span id="556">556</span>
 <span id="557">557</span>
 <span id="558">558</span>
-<span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
-<span id="589">589</span>
-<span id="590">590</span>
-<span id="591">591</span>
-<span id="592">592</span>
-<span id="593">593</span>
-<span id="594">594</span>
-<span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
-<span id="598">598</span>
-<span id="599">599</span>
-<span id="600">600</span>
-<span id="601">601</span>
-<span id="602">602</span>
-<span id="603">603</span>
-<span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
-<span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
-<span id="612">612</span>
-<span id="613">613</span>
-<span id="614">614</span>
-<span id="615">615</span>
-<span id="616">616</span>
-<span id="617">617</span>
-<span id="618">618</span>
-<span id="619">619</span>
-<span id="620">620</span>
-<span id="621">621</span>
-<span id="622">622</span>
-<span id="623">623</span>
-<span id="624">624</span>
-<span id="625">625</span>
-<span id="626">626</span>
-<span id="627">627</span>
-<span id="628">628</span>
-<span id="629">629</span>
-<span id="630">630</span>
-<span id="631">631</span>
-<span id="632">632</span>
-<span id="633">633</span>
-<span id="634">634</span>
-<span id="635">635</span>
-<span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">write</span>, <span class="ident">Arguments</span>, <span class="ident">FormatElement</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::format_element</span>::{<span class="ident">LabelId</span>, <span class="ident">List</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::format_element::List</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Format</span>, <span class="ident">FormatResult</span>, <span class="ident">FormatState</span>};
 <span class="kw">use</span> <span class="ident">std::any</span>::{<span class="ident">Any</span>, <span class="ident">TypeId</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
@@ -687,6 +593,12 @@
     <span class="doccomment">/// ```</span>
     <span class="doccomment">///</span>
     <span class="kw">fn</span> <span class="ident">write_element</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">element</span>: <span class="ident">FormatElement</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Returns a slice containing all elements written into this buffer.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Prefer using [BufferExtensions::start_recording] over accessing [Buffer::elements] directly.</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">elements</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">FormatElement</span>];
 
     <span class="doccomment">/// Glue for usage of the [`write!`] macro with implementors of this trait.</span>
     <span class="doccomment">///</span>
@@ -790,6 +702,10 @@
         (<span class="kw-2">*</span><span class="kw-2">*</span><span class="self">self</span>).<span class="ident">write_element</span>(<span class="ident">element</span>)
     }
 
+    <span class="kw">fn</span> <span class="ident">elements</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">FormatElement</span>] {
+        (<span class="kw-2">*</span><span class="kw-2">*</span><span class="self">self</span>).<span class="ident">elements</span>()
+    }
+
     <span class="kw">fn</span> <span class="ident">write_fmt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">args</span>: <span class="ident">Arguments</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         (<span class="kw-2">*</span><span class="kw-2">*</span><span class="self">self</span>).<span class="ident">write_fmt</span>(<span class="ident">args</span>)
     }
@@ -822,10 +738,11 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Context</span><span class="op">&gt;</span> <span class="ident">VecBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Context</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">state</span>,
-            <span class="ident">elements</span>: <span class="macro">vec!</span>[],
-        }
+        <span class="ident"><span class="self">Self</span>::new_with_vec</span>(<span class="ident">state</span>, <span class="ident">Vec::new</span>())
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_with_vec</span>(<span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>, <span class="ident">elements</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FormatElement</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">state</span>, <span class="ident">elements</span> }
     }
 
     <span class="doccomment">/// Creates a buffer with the specified capacity</span>
@@ -881,6 +798,10 @@
         }
 
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn</span> <span class="ident">elements</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">FormatElement</span>] {
+        <span class="self">self</span>
     }
 
     <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
@@ -1006,6 +927,10 @@ Make sure that you take and restore the snapshot in order and that this snapshot
         }
     }
 
+    <span class="kw">fn</span> <span class="ident">elements</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">FormatElement</span>] {
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">elements</span>()
+    }
+
     <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>()
     }
@@ -1057,6 +982,10 @@ Make sure that you take and restore the snapshot in order and that this snapshot
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write_element</span>(<span class="ident">element</span>)
     }
 
+    <span class="kw">fn</span> <span class="ident">elements</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">FormatElement</span>] {
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">elements</span>()
+    }
+
     <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>()
     }
@@ -1084,6 +1013,46 @@ Make sure that you take and restore the snapshot in order and that this snapshot
         <span class="ident">Inspect::new</span>(<span class="self">self</span>, <span class="ident">inspector</span>)
     }
 
+    <span class="doccomment">/// Starts a recording that gives you access to all elements that have been written between the start</span>
+    <span class="doccomment">/// and end of the recording</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// #Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use std::ops::Deref;</span>
+    <span class="doccomment">/// use rome_formatter::prelude::*;</span>
+    <span class="doccomment">/// use rome_formatter::{write, format, SimpleFormatContext};</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let formatted = format!(SimpleFormatContext::default(), [format_with(|f| {</span>
+    <span class="doccomment">///     let mut recording = f.start_recording();</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///     write!(recording, [text(&quot;A&quot;)])?;</span>
+    <span class="doccomment">///     write!(recording, [text(&quot;B&quot;)])?;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///     write!(recording, [format_with(|f| write!(f, [text(&quot;C&quot;), text(&quot;D&quot;)]))])?;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///     let recorded = recording.stop();</span>
+    <span class="doccomment">///     assert_eq!(</span>
+    <span class="doccomment">///         recorded.deref(),</span>
+    <span class="doccomment">///         &amp;[</span>
+    <span class="doccomment">///             FormatElement::Text(Text::Static{ text: &quot;A&quot; }),</span>
+    <span class="doccomment">///             FormatElement::Text(Text::Static{ text: &quot;B&quot; }),</span>
+    <span class="doccomment">///             FormatElement::Text(Text::Static{ text: &quot;C&quot; }),</span>
+    <span class="doccomment">///             FormatElement::Text(Text::Static{ text: &quot;D&quot; })</span>
+    <span class="doccomment">///         ]</span>
+    <span class="doccomment">///     );</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///     Ok(())</span>
+    <span class="doccomment">/// })]).unwrap();</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert_eq!(formatted.print().as_code(), &quot;ABCD&quot;);</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">fn</span> <span class="ident">start_recording</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Recording</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="ident">Recording::new</span>(<span class="self">self</span>)
+    }
+
     <span class="doccomment">/// Writes a sequence of elements into this buffer.</span>
     <span class="kw">fn</span> <span class="ident">write_elements</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">elements</span>: <span class="ident">I</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
@@ -1095,218 +1064,61 @@ Make sure that you take and restore the snapshot in order and that this snapshot
 
         <span class="prelude-val">Ok</span>(())
     }
-
-    <span class="doccomment">/// It emits a custom buffer called [WillBreakBuffer], which tracks</span>
-    <span class="doccomment">/// it he last element written in the main buffer breaks, it does so by</span>
-    <span class="doccomment">/// checking if their IR emits an [element](FormatElement) that breaks.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This functionality can be used only one element and only after the element</span>
-    <span class="doccomment">/// is written in the buffer.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use rome_formatter::{format, format_args, write, LineWidth};</span>
-    <span class="doccomment">/// use rome_formatter::prelude::*;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let formatted = format!(SimpleFormatContext::default(), [format_with(|f| {</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///     let element = format_with(|f| {</span>
-    <span class="doccomment">///         write!(f, [</span>
-    <span class="doccomment">///             text(&quot;hello&quot;),</span>
-    <span class="doccomment">///             hard_line_break(),</span>
-    <span class="doccomment">///             text(&quot;world!&quot;)</span>
-    <span class="doccomment">///         ])</span>
-    <span class="doccomment">///     });</span>
-    <span class="doccomment">///     let mut buffer = f.inspect_will_break();</span>
-    <span class="doccomment">///     write!(buffer, [element])?;</span>
-    <span class="doccomment">///     let does_element_break = buffer.will_break();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///     if does_element_break {</span>
-    <span class="doccomment">///         write!(f, [hard_line_break(), text(&quot;break&quot;)])</span>
-    <span class="doccomment">///     } else {</span>
-    <span class="doccomment">///         write!(f, [text(&quot;did not break&quot;)])</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// })]).unwrap();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(</span>
-    <span class="doccomment">///     &quot;hello\nworld!\nbreak&quot;,</span>
-    <span class="doccomment">///     formatted.print().as_code()</span>
-    <span class="doccomment">/// );</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Alternatives</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Use `Memoized.inspect(f)?.will_break()` if you need to know if some content breaks that should</span>
-    <span class="doccomment">/// only be written later.</span>
-    <span class="kw">fn</span> <span class="ident">inspect_will_break</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">WillBreakBuffer</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
-        <span class="ident">WillBreakBuffer::new</span>(<span class="self">self</span>)
-    }
-
-    <span class="doccomment">/// Wraps the current buffer in a [HasLabelBuffer], which tracks</span>
-    <span class="doccomment">/// labelled elements written in the main buffer, it does so by</span>
-    <span class="doccomment">/// checking if [element](FormatElement) is a [label](FormatElement::Label)</span>
-    <span class="doccomment">/// with the expected [label_id](LabelId).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This functionality can be used only on one element and only after the element</span>
-    <span class="doccomment">/// is written in the buffer.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```rust</span>
-    <span class="doccomment">/// use rome_formatter::prelude::*;</span>
-    <span class="doccomment">/// use rome_formatter::{format, write, LineWidth};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// enum SomeLabelId {}</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let formatted = format!(</span>
-    <span class="doccomment">///     SimpleFormatContext::default(),</span>
-    <span class="doccomment">///     [format_with(|f| {</span>
-    <span class="doccomment">///         let mut buffer = f.inspect_is_labelled::&lt;SomeLabelId&gt;();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///         write!(buffer, [</span>
-    <span class="doccomment">///             labelled(</span>
-    <span class="doccomment">///                 LabelId::of::&lt;SomeLabelId&gt;(),</span>
-    <span class="doccomment">///                 &amp;text(&quot;&#39;I have a label&#39;&quot;)</span>
-    <span class="doccomment">///             )</span>
-    <span class="doccomment">///         ])?;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///         let is_labelled = buffer.has_label();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///         if is_labelled {</span>
-    <span class="doccomment">///             write!(f, [text(&quot; has label SomeLabelId&quot;)])</span>
-    <span class="doccomment">///         } else {</span>
-    <span class="doccomment">///             write!(f, [text(&quot; doesn&#39;t have label SomeLabelId&quot;)])</span>
-    <span class="doccomment">///         }</span>
-    <span class="doccomment">///     })]</span>
-    <span class="doccomment">/// )</span>
-    <span class="doccomment">/// .unwrap();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(&quot;&#39;I have a label&#39; has label SomeLabelId&quot;, formatted.print().as_code());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// /// ## Alternatives</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Use `Memoized.inspect(f)?.has_label(LabelId::of::&lt;SomeLabelId&gt;()` if you need to know if some content breaks that should</span>
-    <span class="doccomment">/// only be written later.</span>
-    <span class="kw">fn</span> <span class="ident">inspect_is_labelled</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">HasLabelBuffer</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">label_id</span> <span class="op">=</span> <span class="ident">LabelId::of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
-        <span class="ident">HasLabelBuffer::new</span>(<span class="self">self</span>, <span class="ident">label_id</span>)
-    }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">BufferExtensions</span> <span class="kw">for</span> <span class="ident">T</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">Buffer</span> {}
 
-<span class="attribute">#[<span class="ident">must_use</span> <span class="op">=</span> <span class="string">&quot;must eventually call `is_labelled()` to retrieve the information&quot;</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HasLabelBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;buffer</span>, <span class="ident">Context</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;buffer</span> <span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&gt;</span>,
-    <span class="ident">label_id</span>: <span class="ident">LabelId</span>,
-    <span class="ident">has_label</span>: <span class="ident">bool</span>,
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Recording</span><span class="op">&lt;</span><span class="lifetime">&#39;buf</span>, <span class="ident">Buffer</span><span class="op">&gt;</span> {
+    <span class="ident">start</span>: <span class="ident">usize</span>,
+    <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;buf</span> <span class="kw-2">mut</span> <span class="ident">Buffer</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;buffer</span>, <span class="ident">Context</span><span class="op">&gt;</span> <span class="ident">HasLabelBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;buffer</span>, <span class="ident">Context</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;buffer</span> <span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&gt;</span>, <span class="ident">label_id</span>: <span class="ident">LabelId</span>) -&gt; <span class="self">Self</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;buf</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Recording</span><span class="op">&lt;</span><span class="lifetime">&#39;buf</span>, <span class="ident">B</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">B</span>: <span class="ident">Buffer</span>,
+{
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;buf</span> <span class="kw-2">mut</span> <span class="ident">B</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">buffer</span>,
-            <span class="ident">label_id</span>,
-            <span class="ident">has_label</span>: <span class="bool-val">false</span>,
+            <span class="ident">start</span>: <span class="ident">buffer</span>.<span class="ident">elements</span>().<span class="ident">len</span>(),
+            <span class="ident">buffer</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_label</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">has_label</span>
+    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_fmt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">arguments</span>: <span class="ident">Arguments</span><span class="op">&lt;</span><span class="ident">B::Context</span><span class="op">&gt;</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">write_fmt</span>(<span class="ident">arguments</span>)
+    }
+
+    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_element</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">element</span>: <span class="ident">FormatElement</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">write_element</span>(<span class="ident">element</span>)
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stop</span>(<span class="self">self</span>) -&gt; <span class="ident">Recorded</span><span class="op">&lt;</span><span class="lifetime">&#39;buf</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;buf</span> <span class="ident">B</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer</span>;
+        <span class="kw">let</span> <span class="ident">elements</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">elements</span>();
+
+        <span class="kw">let</span> <span class="ident">recorded</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">start</span> <span class="op">&gt;</span> <span class="ident">elements</span>.<span class="ident">len</span>() {
+            <span class="comment">// May happen if buffer was rewinded.</span>
+            <span class="kw-2">&amp;</span>[]
+        } <span class="kw">else</span> {
+            <span class="kw-2">&amp;</span><span class="ident">elements</span>[<span class="self">self</span>.<span class="ident">start</span>..]
+        };
+
+        <span class="ident">Recorded</span>(<span class="ident">recorded</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span> <span class="ident">Buffer</span> <span class="kw">for</span> <span class="ident">HasLabelBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Context</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span>;
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Recorded</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">FormatElement</span>]);
 
-    <span class="kw">fn</span> <span class="ident">write_element</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">element</span>: <span class="ident">FormatElement</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">has_label</span> <span class="op">|</span><span class="op">=</span> <span class="ident">element</span>.<span class="ident">has_label</span>(<span class="self">self</span>.<span class="ident">label_id</span>);
+<span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Recorded</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> [<span class="ident">FormatElement</span>];
 
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write_element</span>(<span class="ident">element</span>)
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
+        <span class="self">self</span>.<span class="number">0</span>
     }
-
-    <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">state_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state_mut</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">snapshot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BufferSnapshot</span> {
-        <span class="ident">BufferSnapshot::Any</span>(<span class="ident">Box::new</span>(<span class="ident">HasLabelledSnapshot</span> {
-            <span class="ident">inner</span>: <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">snapshot</span>(),
-            <span class="ident">has_label</span>: <span class="self">self</span>.<span class="ident">has_label</span>,
-        }))
-    }
-
-    <span class="kw">fn</span> <span class="ident">restore_snapshot</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">snapshot</span>: <span class="ident">BufferSnapshot</span>) {
-        <span class="kw">let</span> <span class="ident">snapshot</span> <span class="op">=</span> <span class="ident">snapshot</span>.<span class="ident">unwrap_any</span>::<span class="op">&lt;</span><span class="ident">HasLabelledSnapshot</span><span class="op">&gt;</span>();
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">restore_snapshot</span>(<span class="ident">snapshot</span>.<span class="ident">inner</span>);
-        <span class="self">self</span>.<span class="ident">has_label</span> <span class="op">=</span> <span class="ident">snapshot</span>.<span class="ident">has_label</span>;
-    }
-}
-
-<span class="kw">struct</span> <span class="ident">HasLabelledSnapshot</span> {
-    <span class="ident">inner</span>: <span class="ident">BufferSnapshot</span>,
-    <span class="ident">has_label</span>: <span class="ident">bool</span>,
-}
-
-<span class="attribute">#[<span class="ident">must_use</span> <span class="op">=</span> <span class="string">&quot;must eventually call `will_break()` to retrieve the information&quot;</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WillBreakBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;buffer</span>, <span class="ident">Context</span><span class="op">&gt;</span> {
-    <span class="ident">breaks</span>: <span class="ident">bool</span>,
-    <span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;buffer</span> <span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&gt;</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;buffer</span>, <span class="ident">Context</span><span class="op">&gt;</span> <span class="ident">WillBreakBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;buffer</span>, <span class="ident">Context</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;buffer</span> <span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">breaks</span>: <span class="bool-val">false</span>,
-            <span class="ident">inner</span>: <span class="ident">buffer</span>,
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">will_break</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">breaks</span>
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span> <span class="ident">Buffer</span> <span class="kw">for</span> <span class="ident">WillBreakBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Context</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span>;
-
-    <span class="kw">fn</span> <span class="ident">write_element</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">element</span>: <span class="ident">FormatElement</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">breaks</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">breaks</span> <span class="op">|</span><span class="op">|</span> <span class="ident">element</span>.<span class="ident">will_break</span>();
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write_element</span>(<span class="ident">element</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">state_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">FormatState</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state_mut</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">snapshot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BufferSnapshot</span> {
-        <span class="ident">BufferSnapshot::Any</span>(<span class="ident">Box::new</span>(<span class="ident">WillBreakSnapshot</span> {
-            <span class="ident">inner</span>: <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">snapshot</span>(),
-            <span class="ident">breaks</span>: <span class="self">self</span>.<span class="ident">breaks</span>,
-        }))
-    }
-
-    <span class="kw">fn</span> <span class="ident">restore_snapshot</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">snapshot</span>: <span class="ident">BufferSnapshot</span>) {
-        <span class="kw">let</span> <span class="ident">snapshot</span> <span class="op">=</span> <span class="ident">snapshot</span>.<span class="ident">unwrap_any</span>::<span class="op">&lt;</span><span class="ident">WillBreakSnapshot</span><span class="op">&gt;</span>();
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">restore_snapshot</span>(<span class="ident">snapshot</span>.<span class="ident">inner</span>);
-        <span class="self">self</span>.<span class="ident">breaks</span> <span class="op">=</span> <span class="ident">snapshot</span>.<span class="ident">breaks</span>;
-    }
-}
-
-<span class="kw">struct</span> <span class="ident">WillBreakSnapshot</span> {
-    <span class="ident">inner</span>: <span class="ident">BufferSnapshot</span>,
-    <span class="ident">breaks</span>: <span class="ident">bool</span>,
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rome_formatter" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>

@@ -232,6 +232,28 @@
 <span id="226">226</span>
 <span id="227">227</span>
 <span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::semantic_services::Semantic</span>;
 <span class="kw">use</span> <span class="ident">rome_analyze</span>::{<span class="ident">context::RuleContext</span>, <span class="ident">declare_rule</span>, <span class="ident">Rule</span>, <span class="ident">RuleCategory</span>, <span class="ident">RuleDiagnostic</span>};
 <span class="kw">use</span> <span class="ident">rome_console::markup</span>;
@@ -245,6 +267,17 @@
 
 <span class="macro">declare_rule!</span> {
     <span class="doccomment">/// Disallow unused variables.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// There are two exceptions to this rule:</span>
+    <span class="doccomment">/// 1. variables that starts with underscore, ex: `let _something;`</span>
+    <span class="doccomment">/// 2. the `React` variable;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The pattern of having an underscore as prefix of a name of variable is a very diffuse</span>
+    <span class="doccomment">/// pattern among programmers, and Rome decided to follow it.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Importing the `React` variable was a mandatory pattern until some time ago:</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// For the time being this rule will ignore it, but this **might change in the future releases**.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// ## Examples</span>
     <span class="doccomment">///</span>
@@ -310,6 +343,15 @@
     <span class="doccomment">/// };</span>
     <span class="doccomment">/// foo();</span>
     <span class="doccomment">/// ```</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```ts</span>
+    <span class="doccomment">/// function used_overloaded(): number;</span>
+    <span class="doccomment">/// function used_overloaded(s: string): string;</span>
+    <span class="doccomment">/// function used_overloaded(s?: string) {</span>
+    <span class="doccomment">///     return s;</span>
+    <span class="doccomment">/// }</span>
+    <span class="doccomment">/// used_overloaded();</span>
+    <span class="doccomment">/// ```</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">NoUnusedVariables</span> {
         <span class="ident">version</span>: <span class="string">&quot;0.9.0&quot;</span>,
         <span class="ident">name</span>: <span class="string">&quot;noUnusedVariables&quot;</span>,
@@ -330,7 +372,8 @@
                         <span class="ident">JsSyntaxKind::TS_METHOD_SIGNATURE_CLASS_MEMBER</span>
                         <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_CALL_SIGNATURE_TYPE_MEMBER</span>
                         <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_METHOD_SIGNATURE_TYPE_MEMBER</span>
-                        <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_FUNCTION_TYPE</span> =&gt; <span class="prelude-val">Some</span>(()),
+                        <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_FUNCTION_TYPE</span>
+                        <span class="op">|</span> <span class="ident">JsSyntaxKind::TS_DECLARE_FUNCTION_DECLARATION</span> =&gt; <span class="prelude-val">Some</span>(()),
                         <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
                     }
                 }
@@ -349,6 +392,7 @@
             }
         }
         <span class="ident">JsSyntaxKind::TS_INDEX_SIGNATURE_PARAMETER</span> =&gt; <span class="prelude-val">Some</span>(()),
+        <span class="ident">JsSyntaxKind::TS_DECLARE_FUNCTION_DECLARATION</span> =&gt; <span class="prelude-val">Some</span>(()),
         <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }

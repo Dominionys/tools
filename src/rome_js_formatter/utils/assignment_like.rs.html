@@ -2147,7 +2147,7 @@
             <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout</span>(<span class="ident">is_left_short</span>, <span class="ident">f</span>)<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">format_once</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">write_element</span>(<span class="ident">formatted_left</span>));
-            <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">format_with</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">write_right</span>(<span class="ident">f</span>, <span class="ident">layout</span>)).<span class="ident">memoized</span>();
+            <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">format_with</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">write_right</span>(<span class="ident">f</span>, <span class="ident">layout</span>));
 
             <span class="kw">let</span> <span class="ident">inner_content</span> <span class="op">=</span> <span class="ident">format_with</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> {
                 <span class="kw">if</span> <span class="macro">matches!</span>(

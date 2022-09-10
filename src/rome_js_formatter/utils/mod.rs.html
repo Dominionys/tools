@@ -267,8 +267,6 @@
 <span id="261">261</span>
 <span id="262">262</span>
 <span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
 </pre><pre class="rust"><code><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">array</span>;
 <span class="kw">mod</span> <span class="ident">assignment_like</span>;
 <span class="kw">mod</span> <span class="ident">binary_like_expression</span>;
@@ -294,11 +292,11 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">binary_like_expression</span>::{
     <span class="ident">needs_binary_like_parentheses</span>, <span class="ident">JsAnyBinaryLikeExpression</span>, <span class="ident">JsAnyBinaryLikeLeftExpression</span>,
 };
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">conditional::JsAnyConditional</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">conditional</span>::{<span class="ident">ConditionalJsxChain</span>, <span class="ident">JsAnyConditional</span>};
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">member_chain::get_member_chain</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">object_like::JsObjectLike</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">object_pattern_like::JsObjectPatternLike</span>;
-<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">Buffer</span>, <span class="ident">CommentStyle</span>, <span class="ident">VecBuffer</span>};
+<span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">Buffer</span>, <span class="ident">CommentStyle</span>};
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsAnyExpression</span>, <span class="ident">JsAnyStatement</span>, <span class="ident">JsInitializerClause</span>, <span class="ident">JsLanguage</span>, <span class="ident">Modifiers</span>};
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxNode</span>, <span class="ident">JsSyntaxToken</span>};
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">AstNode</span>, <span class="ident">AstNodeList</span>};
@@ -462,18 +460,16 @@
 
 <span class="kw">impl</span> <span class="ident">Format</span><span class="op">&lt;</span><span class="ident">JsFormatContext</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FormatWithSemicolon</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">JsFormatter</span>) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">VecBuffer::new</span>(<span class="ident">f</span>.<span class="ident">state_mut</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">recording</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">start_recording</span>();
+        <span class="macro">write!</span>(<span class="ident">recording</span>, [<span class="self">self</span>.<span class="ident">content</span>])<span class="question-mark">?</span>;
 
-        <span class="macro">write!</span>(<span class="ident">buffer</span>, [<span class="self">self</span>.<span class="ident">content</span>])<span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">content</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">into_element</span>();
-
-        <span class="kw">let</span> <span class="ident">is_unknown</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">content</span>.<span class="ident">last_element</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">FormatElement::Verbatim</span>(<span class="ident">elem</span>)) =&gt; <span class="ident">elem</span>.<span class="ident">is_unknown</span>(),
-            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
-        };
-
-        <span class="ident">f</span>.<span class="ident">write_element</span>(<span class="ident">content</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">is_unknown</span> <span class="op">=</span> <span class="ident">recording</span>
+            .<span class="ident">stop</span>()
+            .<span class="ident">last</span>()
+            .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">last</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">last</span>.<span class="ident">last_element</span>() {
+                <span class="prelude-val">Some</span>(<span class="ident">FormatElement::Verbatim</span>(<span class="ident">elem</span>)) =&gt; <span class="ident">elem</span>.<span class="ident">is_unknown</span>(),
+                <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+            });
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">semicolon</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">semicolon</span> {
             <span class="macro">write!</span>(<span class="ident">f</span>, [<span class="ident">semicolon</span>.<span class="ident">format</span>()])<span class="question-mark">?</span>;

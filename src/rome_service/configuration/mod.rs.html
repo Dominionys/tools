@@ -198,14 +198,18 @@
 <span id="192">192</span>
 <span id="193">193</span>
 <span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module contains the configuration of `rome.json`</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The configuration is divided by &quot;tool&quot;, and then it&#39;s possible to further customise it</span>
 <span class="doccomment">//! by language. The language might further options divided by tool.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::configuration::formatter::FormatterConfiguration</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::configuration::javascript::JavascriptConfiguration</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::configuration::linter::LinterConfiguration</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">DynRef</span>, <span class="ident">RomeError</span>};
 <span class="kw">use</span> <span class="ident">rome_fs</span>::{<span class="ident">FileSystem</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -218,8 +222,9 @@
 <span class="kw">mod</span> <span class="ident">javascript</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">linter</span>;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">javascript</span>::{<span class="ident">deserialize_globals</span>, <span class="ident">serialize_globals</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">linter</span>::{<span class="ident">RuleConfiguration</span>, <span class="ident">Rules</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">formatter</span>::{<span class="ident">FormatterConfiguration</span>, <span class="ident">PlainIndentStyle</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">javascript</span>::{<span class="ident">JavascriptConfiguration</span>, <span class="ident">JavascriptFormatter</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">linter</span>::{<span class="ident">LinterConfiguration</span>, <span class="ident">RuleConfiguration</span>, <span class="ident">Rules</span>};
 
 <span class="doccomment">/// The configuration that is contained inside the file `rome.json`</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
@@ -276,6 +281,9 @@
     <span class="doccomment">/// - incorrect fields</span>
     <span class="doccomment">/// - incorrect values</span>
     <span class="ident">DeserializationError</span>(<span class="ident">String</span>),
+
+    <span class="doccomment">/// Thrown when an unknown rule is found</span>
+    <span class="ident">UnknownRule</span>(<span class="ident">String</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">ConfigurationError</span> {
@@ -283,8 +291,8 @@
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">ConfigurationError::SerializationError</span> =&gt; <span class="ident">std::fmt::Display::fmt</span>(<span class="self">self</span>, <span class="ident">f</span>),
             <span class="ident">ConfigurationError::DeserializationError</span>(<span class="kw">_</span>) =&gt; <span class="ident">std::fmt::Display::fmt</span>(<span class="self">self</span>, <span class="ident">f</span>),
-
             <span class="ident">ConfigurationError::ConfigAlreadyExists</span> =&gt; <span class="ident">std::fmt::Display::fmt</span>(<span class="self">self</span>, <span class="ident">f</span>),
+            <span class="ident">ConfigurationError::UnknownRule</span>(<span class="kw">_</span>) =&gt; <span class="ident">std::fmt::Display::fmt</span>(<span class="self">self</span>, <span class="ident">f</span>),
         }
     }
 }
@@ -307,6 +315,10 @@
             }
             <span class="ident">ConfigurationError::ConfigAlreadyExists</span> =&gt; {
                 <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;it seems that a configuration file already exists&quot;</span>)
+            }
+
+            <span class="ident">ConfigurationError::UnknownRule</span>(<span class="ident">rule</span>) =&gt; {
+                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;invalid rule name `{rule}`&quot;</span>)
             }
         }
     }
@@ -338,6 +350,8 @@
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RomeError::CantReadFile</span>(<span class="ident">configuration_path</span>))<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">configuration</span>: <span class="ident">Configuration</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="macro">dbg!</span>(<span class="kw-2">&amp;</span><span class="ident">err</span>);
+
                 <span class="ident">RomeError::Configuration</span>(<span class="ident">ConfigurationError::DeserializationError</span>(<span class="ident">err</span>.<span class="ident">to_string</span>()))
             })<span class="question-mark">?</span>;
 

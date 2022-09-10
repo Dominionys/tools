@@ -1503,9 +1503,6 @@
 <span id="1497">1497</span>
 <span id="1498">1498</span>
 <span id="1499">1499</span>
-<span id="1500">1500</span>
-<span id="1501">1501</span>
-<span id="1502">1502</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Infrastructure for code formatting</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module defines [FormatElement], an IR to format code documents and provides a mean to print</span>
@@ -1555,10 +1552,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::printed_tokens::PrintedTokens</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::printer</span>::{<span class="ident">Printer</span>, <span class="ident">PrinterOptions</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">arguments</span>::{<span class="ident">Argument</span>, <span class="ident">Arguments</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">buffer</span>::{
-    <span class="ident">Buffer</span>, <span class="ident">BufferExtensions</span>, <span class="ident">BufferSnapshot</span>, <span class="ident">HasLabelBuffer</span>, <span class="ident">Inspect</span>, <span class="ident">PreambleBuffer</span>, <span class="ident">VecBuffer</span>,
-    <span class="ident">WillBreakBuffer</span>,
-};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">buffer</span>::{<span class="ident">Buffer</span>, <span class="ident">BufferExtensions</span>, <span class="ident">BufferSnapshot</span>, <span class="ident">Inspect</span>, <span class="ident">PreambleBuffer</span>, <span class="ident">VecBuffer</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">builders</span>::{
     <span class="ident">block_indent</span>, <span class="ident">comment</span>, <span class="ident">empty_line</span>, <span class="ident">get_lines_before</span>, <span class="ident">group</span>, <span class="ident">hard_line_break</span>, <span class="ident">if_group_breaks</span>,
     <span class="ident">if_group_fits_on_line</span>, <span class="ident">indent</span>, <span class="ident">labelled</span>, <span class="ident">line_suffix</span>, <span class="ident">soft_block_indent</span>, <span class="ident">soft_line_break</span>,

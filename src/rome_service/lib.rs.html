@@ -273,6 +273,13 @@
 <span id="267">267</span>
 <span id="268">268</span>
 <span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">rome_console</span>::{<span class="ident">Console</span>, <span class="ident">EnvConsole</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter::FormatError</span>;
 <span class="kw">use</span> <span class="ident">rome_fs</span>::{<span class="ident">FileSystem</span>, <span class="ident">OsFileSystem</span>, <span class="ident">RomePath</span>};
@@ -280,6 +287,7 @@
 <span class="kw">use</span> <span class="ident">rome_js_analyze::RuleError</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std::error::Error</span>;
+<span class="kw">use</span> <span class="ident">std::ffi::OsStr</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Formatter</span>};
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
 <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
@@ -296,6 +304,7 @@
     <span class="ident">create_config</span>, <span class="ident">load_config</span>, <span class="ident">Configuration</span>, <span class="ident">ConfigurationError</span>, <span class="ident">RuleConfiguration</span>, <span class="ident">Rules</span>,
 };
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::file_handlers::JsFormatSettings</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::file_handlers::Language</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::workspace::Workspace</span>;
 
 <span class="doccomment">/// This is the main entrypoint of the application.</span>
@@ -316,9 +325,9 @@
     <span class="ident">DirtyWorkspace</span>,
     <span class="doccomment">/// The file does not exist in the [Workspace]</span>
     <span class="ident">NotFound</span>,
-    <span class="doccomment">/// A file is not supported. It contains the extension of the file</span>
+    <span class="doccomment">/// A file is not supported. It contains the language and path of the file</span>
     <span class="doccomment">/// Use this error if Rome is trying to process a file that Rome can&#39;t understand</span>
-    <span class="ident">SourceFileNotSupported</span>(<span class="ident">RomePath</span>),
+    <span class="ident">SourceFileNotSupported</span>(<span class="ident">Language</span>, <span class="ident">RomePath</span>),
     <span class="doccomment">/// The formatter encountered an error while formatting the file</span>
     <span class="ident">FormatError</span>(<span class="ident">FormatError</span>),
     <span class="doccomment">/// The file could not be formatted since it has syntax errors and `format_with_errors` is disabled</span>
@@ -346,15 +355,21 @@
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">RomeError</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">RomeError::SourceFileNotSupported</span>(<span class="ident">path</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">ext</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">extension</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">ext</span><span class="op">|</span> <span class="ident">ext</span>.<span class="ident">to_str</span>());
-
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ext</span>) <span class="op">=</span> <span class="ident">ext</span> {
-                    <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Rome doesn&#39;t support the file extension {ext:?} yet&quot;</span>)
+            <span class="ident">RomeError::SourceFileNotSupported</span>(<span class="ident">language</span>, <span class="ident">path</span>) =&gt; {
+                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">language</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Language::Unknown</span> {
+                    <span class="macro">write!</span>(
+                        <span class="ident">f</span>,
+                        <span class="string">&quot;Rome doesn&#39;t support this feature for the language {language:?}&quot;</span>
+                    )
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ext</span>) <span class="op">=</span> <span class="ident">path</span>.<span class="ident">extension</span>().<span class="ident">and_then</span>(<span class="ident">OsStr::to_str</span>) {
+                    <span class="macro">write!</span>(
+                        <span class="ident">f</span>,
+                        <span class="string">&quot;Rome could not determine the language for the file extension {ext:?}&quot;</span>
+                    )
                 } <span class="kw">else</span> {
                     <span class="macro">write!</span>(
                         <span class="ident">f</span>,
-                        <span class="string">&quot;Rome can&#39;t process the file because it doesn&#39;t have a clear extension&quot;</span>
+                        <span class="string">&quot;Rome could not determine the language for the file {path:?} because it doesn&#39;t have a clear extension&quot;</span>
                     )
                 }
             }
@@ -441,6 +456,8 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransportError</span> {
     <span class="doccomment">/// Error emitted by the transport layer if the connection was lost due to an I/O error</span>
     <span class="ident">ChannelClosed</span>,
+    <span class="doccomment">/// Error emitted by the transport layer if a request timed out</span>
+    <span class="ident">Timeout</span>,
     <span class="doccomment">/// Error caused by a serialization or deserialization issue</span>
     <span class="ident">SerdeError</span>(<span class="ident">String</span>),
     <span class="doccomment">/// Generic error type for RPC errors that can&#39;t be deserialized into RomeError</span>
@@ -456,14 +473,11 @@
             <span class="ident">TransportError::ChannelClosed</span> =&gt; <span class="ident">fmt</span>.<span class="ident">write_str</span>(
                 <span class="string">&quot;a request to the remote workspace failed because the connection was interrupted&quot;</span>,
             ),
+            <span class="ident">TransportError::Timeout</span> =&gt; {
+                <span class="ident">fmt</span>.<span class="ident">write_str</span>(<span class="string">&quot;the request to the remote workspace timed out&quot;</span>)
+            }
             <span class="ident">TransportError::RPCError</span>(<span class="ident">err</span>) =&gt; <span class="ident">fmt</span>.<span class="ident">write_str</span>(<span class="ident">err</span>),
         }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">serde_json::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TransportError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">serde_json::Error</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">TransportError::SerdeError</span>(<span class="ident">err</span>.<span class="ident">to_string</span>())
     }
 }
 

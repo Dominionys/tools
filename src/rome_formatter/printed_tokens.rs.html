@@ -62,6 +62,7 @@
 <span id="56">56</span>
 <span id="57">57</span>
 <span id="58">58</span>
+<span id="59">59</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">Direction</span>, <span class="ident">Language</span>, <span class="ident">SyntaxNode</span>, <span class="ident">SyntaxToken</span>, <span class="ident">TextSize</span>};
 <span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 
@@ -102,7 +103,8 @@
                     <span class="ident">descendant_offset</span> <span class="kw">if</span> <span class="ident">descendant_offset</span> <span class="op">&lt;</span> <span class="kw-2">*</span><span class="ident">offset</span> =&gt; {
                         <span class="macro">panic!</span>(<span class="string">&quot;token has not been seen by the formatter: {descendant:#?}.\
                         \nUse `format_replaced` if you want to replace a token from the formatted output.\
-                        \nUse `format_removed` if you to remove a token from the formatted output&quot;</span>)
+                        \nUse `format_removed` if you want to remove a token from the formatted output.\n\
+                        parent: {:#?}&quot;</span>, <span class="ident">descendant</span>.<span class="ident">parent</span>())
                     }
                     <span class="ident">descendant_offset</span> <span class="kw">if</span> <span class="ident">descendant_offset</span> <span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">offset</span> =&gt; {
                         <span class="macro">panic!</span>(<span class="string">&quot;tracked offset {offset:?} doesn&#39;t match any token of {root:#?}. Have you passed a token from another tree?&quot;</span>);

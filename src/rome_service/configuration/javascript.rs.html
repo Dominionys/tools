@@ -121,6 +121,15 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">indexmap::IndexSet</span>;
 <span class="kw">use</span> <span class="ident">rome_js_formatter::context</span>::{<span class="ident">QuoteProperties</span>, <span class="ident">QuoteStyle</span>};
 <span class="kw">use</span> <span class="ident">serde::de</span>::{<span class="ident">SeqAccess</span>, <span class="ident">Visitor</span>};
@@ -144,6 +153,15 @@
         <span class="ident">serialize_with</span> <span class="op">=</span> <span class="string">&quot;serialize_globals&quot;</span>
     )]</span>
     <span class="kw">pub</span> <span class="ident">globals</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IndexSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">JavascriptConfiguration</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_formatter</span>() -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">formatter</span>: <span class="prelude-val">Some</span>(<span class="ident">JavascriptFormatter::default</span>()),
+            ..<span class="ident">JavascriptConfiguration::default</span>()
+        }
+    }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">deserialize_globals</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(

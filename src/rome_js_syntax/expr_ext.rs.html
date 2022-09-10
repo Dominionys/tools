@@ -560,19 +560,55 @@
 <span id="554">554</span>
 <span id="555">555</span>
 <span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Extensions for things which are not easily generated in ast expr nodes</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::numbers::parse_js_number</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">JsAnyExpression</span>, <span class="ident">JsAnyLiteralExpression</span>, <span class="ident">JsArrayExpression</span>, <span class="ident">JsArrayHole</span>,
     <span class="ident">JsAssignmentExpression</span>, <span class="ident">JsBinaryExpression</span>, <span class="ident">JsCallExpression</span>, <span class="ident">JsComputedMemberExpression</span>,
     <span class="ident">JsLiteralMemberName</span>, <span class="ident">JsLogicalExpression</span>, <span class="ident">JsNumberLiteralExpression</span>, <span class="ident">JsObjectExpression</span>,
-    <span class="ident">JsRegexLiteralExpression</span>, <span class="ident">JsStaticMemberExpression</span>, <span class="ident">JsStringLiteralExpression</span>, <span class="ident">JsSyntaxKind</span>,
-    <span class="ident">JsSyntaxToken</span>, <span class="ident">JsTemplate</span>, <span class="ident">JsUnaryExpression</span>, <span class="ident">OperatorPrecedence</span>, <span class="ident">T</span>,
+    <span class="ident">JsReferenceIdentifier</span>, <span class="ident">JsRegexLiteralExpression</span>, <span class="ident">JsStaticMemberExpression</span>,
+    <span class="ident">JsStringLiteralExpression</span>, <span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxToken</span>, <span class="ident">JsTemplate</span>, <span class="ident">JsUnaryExpression</span>,
+    <span class="ident">OperatorPrecedence</span>, <span class="ident">T</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">JsPreUpdateExpression</span>, <span class="ident">JsSyntaxKind</span>::<span class="kw-2">*</span>};
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{
     <span class="ident">AstNode</span>, <span class="ident">AstSeparatedList</span>, <span class="ident">NodeOrToken</span>, <span class="ident">SyntaxNodeText</span>, <span class="ident">SyntaxResult</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>,
 };
+
+<span class="kw">impl</span> <span class="ident">JsReferenceIdentifier</span> {
+    <span class="doccomment">/// Returns `true` if this identifier refers to the `undefined` symbol.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ## Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use rome_js_factory::make::{js_reference_identifier, ident};</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert!(js_reference_identifier(ident(&quot;undefined&quot;)).is_undefined());</span>
+    <span class="doccomment">/// assert!(!js_reference_identifier(ident(&quot;x&quot;)).is_undefined());</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_undefined</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">value_token</span>()
+            .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">name</span><span class="op">|</span> <span class="ident">name</span>.<span class="ident">text_trimmed</span>() <span class="op">==</span> <span class="string">&quot;undefined&quot;</span>)
+    }
+}
 
 <span class="kw">impl</span> <span class="ident">JsLiteralMemberName</span> {
     <span class="doccomment">/// Returns the name of the member as a syntax text</span>
