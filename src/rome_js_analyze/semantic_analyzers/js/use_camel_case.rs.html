@@ -169,6 +169,28 @@
 <span id="163">163</span>
 <span id="164">164</span>
 <span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">semantic_services::Semantic</span>,
     <span class="ident">utils</span>::{<span class="ident">rename::RenameSymbolExtensions</span>, <span class="ident">ToCamelCase</span>},
@@ -183,7 +205,7 @@
     <span class="ident">JsFormalParameter</span>, <span class="ident">JsFunctionDeclaration</span>, <span class="ident">JsFunctionExportDefaultDeclaration</span>,
     <span class="ident">JsGetterClassMember</span>, <span class="ident">JsIdentifierBinding</span>, <span class="ident">JsLiteralMemberName</span>, <span class="ident">JsMethodClassMember</span>,
     <span class="ident">JsPrivateClassMemberName</span>, <span class="ident">JsPropertyClassMember</span>, <span class="ident">JsSetterClassMember</span>, <span class="ident">JsSyntaxKind</span>,
-    <span class="ident">JsVariableDeclarator</span>,
+    <span class="ident">JsVariableDeclaration</span>, <span class="ident">JsVariableDeclarator</span>, <span class="ident">JsVariableDeclaratorList</span>,
 };
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">declare_node_union</span>, <span class="ident">AstNode</span>, <span class="ident">BatchMutationExt</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">iter::once</span>};
@@ -230,6 +252,21 @@
     }
 }
 
+<span class="comment">// It is OK to be non camel case when:</span>
+<span class="comment">// 1. it&#39;s a const variable (eg: const THIS_IS_OK)</span>
+<span class="kw">fn</span> <span class="ident">is_non_camel_ok</span>(<span class="ident">binding</span>: <span class="kw-2">&amp;</span><span class="ident">JsIdentifierBinding</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">use</span> <span class="ident">JsSyntaxKind</span>::<span class="kw-2">*</span>;
+    <span class="kw">let</span> <span class="ident">declarator</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsVariableDeclarator</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">is_ok</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">declarator</span>.<span class="ident">syntax</span>().<span class="ident">parent</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">parent</span><span class="op">|</span> <span class="ident">parent</span>.<span class="ident">kind</span>()) {
+        <span class="prelude-val">Some</span>(<span class="ident">JS_VARIABLE_DECLARATOR_LIST</span>) =&gt; <span class="ident">declarator</span>
+            .<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsVariableDeclaratorList</span><span class="op">&gt;</span>()<span class="question-mark">?</span>
+            .<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsVariableDeclaration</span><span class="op">&gt;</span>()<span class="question-mark">?</span>
+            .<span class="ident">is_const</span>(),
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+    };
+    <span class="prelude-val">Some</span>(<span class="ident">is_ok</span>)
+}
+
 <span class="kw">impl</span> <span class="ident">Rule</span> <span class="kw">for</span> <span class="ident">UseCamelCase</span> {
     <span class="kw">const</span> <span class="ident">CATEGORY</span>: <span class="ident">RuleCategory</span> <span class="op">=</span> <span class="ident">RuleCategory::Lint</span>;
 
@@ -242,17 +279,24 @@
 
         <span class="kw">match</span> <span class="ident">name</span> {
             <span class="ident">JsAnyCamelCaseName::JsIdentifierBinding</span>(<span class="ident">binding</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">is_variable</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsVariableDeclarator</span><span class="op">&gt;</span>().<span class="ident">is_some</span>();
-                <span class="kw">let</span> <span class="ident">is_parameter</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsFormalParameter</span><span class="op">&gt;</span>().<span class="ident">is_some</span>();
-                <span class="kw">let</span> <span class="ident">is_function</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsFunctionDeclaration</span><span class="op">&gt;</span>().<span class="ident">is_some</span>();
-                <span class="kw">let</span> <span class="ident">is_exported_function</span> <span class="op">=</span> <span class="ident">binding</span>
-                    .<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsFunctionExportDefaultDeclaration</span><span class="op">&gt;</span>()
-                    .<span class="ident">is_some</span>();
-                <span class="kw">if</span> <span class="ident">is_variable</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_parameter</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_function</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_exported_function</span> {
-                    <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">name_token</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                    <span class="ident">check_is_camel</span>(<span class="ident">name</span>.<span class="ident">text_trimmed</span>())
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
+                <span class="kw">let</span> <span class="ident">is_non_camel_ok</span> <span class="op">=</span> <span class="ident">is_non_camel_ok</span>(<span class="ident">binding</span>);
+                <span class="kw">match</span> <span class="ident">is_non_camel_ok</span> {
+                    <span class="prelude-val">Some</span>(<span class="bool-val">false</span>) <span class="op">|</span> <span class="prelude-val">None</span> =&gt; {
+                        <span class="kw">let</span> <span class="ident">is_variable</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsVariableDeclarator</span><span class="op">&gt;</span>().<span class="ident">is_some</span>();
+                        <span class="kw">let</span> <span class="ident">is_parameter</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsFormalParameter</span><span class="op">&gt;</span>().<span class="ident">is_some</span>();
+                        <span class="kw">let</span> <span class="ident">is_function</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsFunctionDeclaration</span><span class="op">&gt;</span>().<span class="ident">is_some</span>();
+                        <span class="kw">let</span> <span class="ident">is_exported_function</span> <span class="op">=</span> <span class="ident">binding</span>
+                            .<span class="ident">parent</span>::<span class="op">&lt;</span><span class="ident">JsFunctionExportDefaultDeclaration</span><span class="op">&gt;</span>()
+                            .<span class="ident">is_some</span>();
+
+                        <span class="kw">if</span> <span class="ident">is_variable</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_parameter</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_function</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_exported_function</span> {
+                            <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">name_token</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
+                            <span class="ident">check_is_camel</span>(<span class="ident">name</span>.<span class="ident">text_trimmed</span>())
+                        } <span class="kw">else</span> {
+                            <span class="prelude-val">None</span>
+                        }
+                    }
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
                 }
             }
             <span class="ident">JsAnyCamelCaseName::JsLiteralMemberName</span>(<span class="ident">name</span>) =&gt; {

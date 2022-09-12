@@ -376,6 +376,7 @@
 <span id="370">370</span>
 <span id="371">371</span>
 <span id="372">372</span>
+<span id="373">373</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A crate for generated Syntax node definitions and utility macros.</span>
 <span class="doccomment">//! Both rome_js_lexer and rome_js_parser rely on these definitions, therefore</span>
 <span class="doccomment">//! they are wrapped in this crate to prevent cyclic dependencies</span>
@@ -672,6 +673,7 @@
     <span class="ident">LeftHandSide</span> <span class="op">=</span> <span class="number">18</span>,
     <span class="ident">Member</span> <span class="op">=</span> <span class="number">19</span>,
     <span class="ident">Primary</span> <span class="op">=</span> <span class="number">20</span>,
+    <span class="ident">Group</span> <span class="op">=</span> <span class="number">21</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">OperatorPrecedence</span> {

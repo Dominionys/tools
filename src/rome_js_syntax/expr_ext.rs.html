@@ -578,17 +578,157 @@
 <span id="572">572</span>
 <span id="573">573</span>
 <span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Extensions for things which are not easily generated in ast expr nodes</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::numbers::parse_js_number</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">JsAnyExpression</span>, <span class="ident">JsAnyLiteralExpression</span>, <span class="ident">JsArrayExpression</span>, <span class="ident">JsArrayHole</span>,
     <span class="ident">JsAssignmentExpression</span>, <span class="ident">JsBinaryExpression</span>, <span class="ident">JsCallExpression</span>, <span class="ident">JsComputedMemberExpression</span>,
-    <span class="ident">JsLiteralMemberName</span>, <span class="ident">JsLogicalExpression</span>, <span class="ident">JsNumberLiteralExpression</span>, <span class="ident">JsObjectExpression</span>,
-    <span class="ident">JsReferenceIdentifier</span>, <span class="ident">JsRegexLiteralExpression</span>, <span class="ident">JsStaticMemberExpression</span>,
+    <span class="ident">JsIdentifierExpression</span>, <span class="ident">JsLiteralMemberName</span>, <span class="ident">JsLogicalExpression</span>, <span class="ident">JsNumberLiteralExpression</span>,
+    <span class="ident">JsObjectExpression</span>, <span class="ident">JsReferenceIdentifier</span>, <span class="ident">JsRegexLiteralExpression</span>, <span class="ident">JsStaticMemberExpression</span>,
     <span class="ident">JsStringLiteralExpression</span>, <span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxToken</span>, <span class="ident">JsTemplate</span>, <span class="ident">JsUnaryExpression</span>,
     <span class="ident">OperatorPrecedence</span>, <span class="ident">T</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">JsPreUpdateExpression</span>, <span class="ident">JsSyntaxKind</span>::<span class="kw-2">*</span>};
+<span class="kw">use</span> <span class="ident">core::iter</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{
     <span class="ident">AstNode</span>, <span class="ident">AstSeparatedList</span>, <span class="ident">NodeOrToken</span>, <span class="ident">SyntaxNodeText</span>, <span class="ident">SyntaxResult</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>,
 };
@@ -792,6 +932,43 @@
             <span class="prelude-val">Ok</span>(<span class="macro">T!</span>[<span class="op">&gt;</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">&lt;</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">&gt;</span><span class="op">=</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">&lt;</span><span class="op">=</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">==</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">==</span><span class="op">=</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">!</span><span class="op">=</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">!</span><span class="op">==</span>])
         )
     }
+
+    <span class="doccomment">/// Whether this is a comparison operation similar to the optional chain</span>
+    <span class="doccomment">/// ```js</span>
+    <span class="doccomment">/// foo === undefined;</span>
+    <span class="doccomment">/// foo == undefined;</span>
+    <span class="doccomment">/// foo === null;</span>
+    <span class="doccomment">/// foo == null;</span>
+    <span class="doccomment">///```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_optional_chain_like</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="macro">matches!</span>(
+            <span class="self">self</span>.<span class="ident">operator</span>(),
+            <span class="prelude-val">Ok</span>(<span class="ident">JsBinaryOperator::StrictInequality</span> <span class="op">|</span> <span class="ident">JsBinaryOperator::Inequality</span>)
+        ) {
+            <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">right</span>()<span class="question-mark">?</span>;
+
+            <span class="kw">let</span> <span class="ident">is_right_null_expression</span> <span class="op">=</span> <span class="ident">right</span>
+                .<span class="ident">as_js_any_literal_expression</span>()
+                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">expression</span><span class="op">|</span> {
+                    <span class="ident">expression</span>.<span class="ident">as_js_null_literal_expression</span>().<span class="ident">is_some</span>()
+                });
+
+            <span class="kw">if</span> <span class="ident">is_right_null_expression</span> {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
+            }
+
+            <span class="kw">let</span> <span class="ident">is_right_undefined_expression</span> <span class="op">=</span> <span class="ident">right</span>
+                .<span class="ident">as_js_identifier_expression</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">expression</span><span class="op">|</span> <span class="ident">expression</span>.<span class="ident">is_undefined</span>())
+                .<span class="ident">transpose</span>()<span class="question-mark">?</span>
+                .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>);
+
+            <span class="kw">if</span> <span class="ident">is_right_undefined_expression</span> {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
+            }
+        }
+        <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
+    }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>)]</span>
@@ -977,6 +1154,10 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_trailing_comma</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">members</span>().<span class="ident">trailing_separator</span>().<span class="ident">is_some</span>()
     }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">members</span>().<span class="ident">is_empty</span>()
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">JsNumberLiteralExpression</span> {
@@ -1041,6 +1222,103 @@
         <span class="kw">let</span> <span class="ident">end_slash_pos</span> <span class="op">=</span> <span class="ident">text_trimmed</span>.<span class="ident">rfind</span>(<span class="string">&#39;/&#39;</span>).<span class="ident">unwrap</span>();
 
         <span class="prelude-val">Ok</span>(<span class="ident">String::from</span>(<span class="kw-2">&amp;</span><span class="ident">text_trimmed</span>[<span class="number">1</span>..<span class="ident">end_slash_pos</span>]))
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">JsAnyExpression</span> {
+    <span class="doccomment">/// Try to extract non `JsParenthesizedExpression` from `JsAnyExpression`</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">omit_parentheses</span>(<span class="self">self</span>) -&gt; <span class="ident">JsAnyExpression</span> {
+        <span class="kw">let</span> <span class="ident">first</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">as_js_parenthesized_expression</span>()
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">expression</span><span class="op">|</span> <span class="ident">expression</span>.<span class="ident">expression</span>().<span class="ident">ok</span>());
+
+        <span class="ident">iter::successors</span>(<span class="ident">first</span>, <span class="op">|</span><span class="ident">expression</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">parenthesized</span> <span class="op">=</span> <span class="ident">expression</span>.<span class="ident">as_js_parenthesized_expression</span>()<span class="question-mark">?</span>;
+            <span class="ident">parenthesized</span>.<span class="ident">expression</span>().<span class="ident">ok</span>()
+        })
+        .<span class="ident">last</span>()
+        .<span class="ident">unwrap_or</span>(<span class="self">self</span>)
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">precedence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">OperatorPrecedence</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">precedence</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">JsAnyExpression::JsSequenceExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Comma</span>,
+            <span class="ident">JsAnyExpression::JsYieldExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Yield</span>,
+            <span class="ident">JsAnyExpression::JsConditionalExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Conditional</span>,
+            <span class="ident">JsAnyExpression::JsAssignmentExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Assignment</span>,
+            <span class="ident">JsAnyExpression::JsInExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsInstanceofExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::TsAsExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Relational</span>,
+            <span class="ident">JsAnyExpression::JsLogicalExpression</span>(<span class="ident">expression</span>) =&gt; <span class="ident">expression</span>.<span class="ident">operator</span>()<span class="question-mark">?</span>.<span class="ident">precedence</span>(),
+            <span class="ident">JsAnyExpression::JsBinaryExpression</span>(<span class="ident">expression</span>) =&gt; <span class="ident">expression</span>.<span class="ident">operator</span>()<span class="question-mark">?</span>.<span class="ident">precedence</span>(),
+            <span class="ident">JsAnyExpression::TsTypeAssertionExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::TsNonNullAssertionExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsUnaryExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsAwaitExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Unary</span>,
+            <span class="ident">JsAnyExpression::JsPostUpdateExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsPreUpdateExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Update</span>,
+            <span class="ident">JsAnyExpression::JsCallExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsNewExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsImportCallExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsSuperExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::LeftHandSide</span>,
+
+            <span class="ident">JsAnyExpression::JsComputedMemberExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsStaticMemberExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::ImportMeta</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::NewTarget</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Member</span>,
+
+            <span class="ident">JsAnyExpression::JsThisExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsAnyLiteralExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsArrayExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsArrowFunctionExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsClassExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsFunctionExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsIdentifierExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsObjectExpression</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">JsAnyExpression::JsxTagExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::Primary</span>,
+
+            <span class="ident">JsAnyExpression::JsTemplate</span>(<span class="ident">template</span>) =&gt; {
+                <span class="kw">if</span> <span class="ident">template</span>.<span class="ident">tag</span>().<span class="ident">is_some</span>() {
+                    <span class="ident">OperatorPrecedence::Member</span>
+                } <span class="kw">else</span> {
+                    <span class="ident">OperatorPrecedence::Primary</span>
+                }
+            }
+
+            <span class="ident">JsAnyExpression::JsUnknownExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::lowest</span>(),
+            <span class="ident">JsAnyExpression::JsParenthesizedExpression</span>(<span class="kw">_</span>) =&gt; <span class="ident">OperatorPrecedence::highest</span>(),
+        };
+
+        <span class="prelude-val">Ok</span>(<span class="ident">precedence</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">JsIdentifierExpression</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_undefined</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">name</span>()<span class="question-mark">?</span>.<span class="ident">value_token</span>()<span class="question-mark">?</span>.<span class="ident">text_trimmed</span>() <span class="op">==</span> <span class="string">&quot;undefined&quot;</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">JsAnyLiteralExpression</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_token</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SyntaxResult</span><span class="op">&lt;</span><span class="ident">JsSyntaxToken</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">JsAnyLiteralExpression::JsBigIntLiteralExpression</span>(<span class="ident">expression</span>) =&gt; {
+                <span class="ident">expression</span>.<span class="ident">value_token</span>()
+            }
+            <span class="ident">JsAnyLiteralExpression::JsBooleanLiteralExpression</span>(<span class="ident">expression</span>) =&gt; {
+                <span class="ident">expression</span>.<span class="ident">value_token</span>()
+            }
+            <span class="ident">JsAnyLiteralExpression::JsNullLiteralExpression</span>(<span class="ident">expression</span>) =&gt; <span class="ident">expression</span>.<span class="ident">value_token</span>(),
+            <span class="ident">JsAnyLiteralExpression::JsNumberLiteralExpression</span>(<span class="ident">expression</span>) =&gt; {
+                <span class="ident">expression</span>.<span class="ident">value_token</span>()
+            }
+            <span class="ident">JsAnyLiteralExpression::JsRegexLiteralExpression</span>(<span class="ident">expression</span>) =&gt; {
+                <span class="ident">expression</span>.<span class="ident">value_token</span>()
+            }
+            <span class="ident">JsAnyLiteralExpression::JsStringLiteralExpression</span>(<span class="ident">expression</span>) =&gt; {
+                <span class="ident">expression</span>.<span class="ident">value_token</span>()
+            }
+        }
     }
 }
 
