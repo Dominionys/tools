@@ -874,6 +874,13 @@
 <span id="868">868</span>
 <span id="869">869</span>
 <span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses::JsAnyParenthesized</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TextRange</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">TransformSourceMap</span>, <span class="ident">TransformSourceMapBuilder</span>};
@@ -883,28 +890,23 @@
 };
 <span class="kw">use</span> <span class="ident">rome_rowan::syntax::SyntaxTrivia</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{
-    <span class="ident">AstNode</span>, <span class="ident">SyntaxKind</span>, <span class="ident">SyntaxRewriter</span>, <span class="ident">SyntaxTriviaPiece</span>, <span class="ident">SyntaxTriviaPieceComments</span>,
+    <span class="ident">AstNode</span>, <span class="ident">SyntaxKind</span>, <span class="ident">SyntaxRewriter</span>, <span class="ident">SyntaxToken</span>, <span class="ident">SyntaxTriviaPiece</span>, <span class="ident">SyntaxTriviaPieceComments</span>,
     <span class="ident">VisitNodeSignal</span>,
 };
 <span class="kw">use</span> <span class="ident">std::iter::FusedIterator</span>;
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">transform</span>(<span class="ident">root</span>: <span class="ident">JsSyntaxNode</span>) -&gt; (<span class="ident">JsSyntaxNode</span>, <span class="ident">TransformSourceMap</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewriter</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::new</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewriter</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::default</span>();
     <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">rewriter</span>.<span class="ident">transform</span>(<span class="ident">root</span>);
     (<span class="ident">transformed</span>, <span class="ident">rewriter</span>.<span class="ident">finish</span>())
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">struct</span> <span class="ident">JsFormatSyntaxRewriter</span> {
     <span class="ident">source_map</span>: <span class="ident">TransformSourceMapBuilder</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">JsFormatSyntaxRewriter</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">source_map</span>: <span class="ident">TransformSourceMapBuilder::new</span>(<span class="ident">root</span>),
-        }
-    }
-
     <span class="doccomment">/// Replaces parenthesized expression that:</span>
     <span class="doccomment">/// * have no syntax error: has no missing required child or no skipped token trivia attached to the left or right paren</span>
     <span class="doccomment">/// * inner expression isn&#39;t an unknown node</span>
@@ -1012,6 +1014,8 @@
             }
         };
 
+        <span class="self">self</span>.<span class="ident">source_map</span>.<span class="ident">push_source_text</span>(<span class="ident">l_paren</span>.<span class="ident">text</span>());
+
         <span class="kw">let</span> <span class="ident">inner_trimmed_range</span> <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">text_trimmed_range</span>();
         <span class="comment">// Store away the inner offset because the new returned inner might be a detached node</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner_offset</span> <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">text_range</span>().<span class="ident">start</span>();
@@ -1038,6 +1042,8 @@
                         <span class="ident">ty</span>.<span class="ident">with_ty</span>(<span class="ident">TsType::unwrap_cast</span>(<span class="ident">inner</span>)).<span class="ident">into_syntax</span>()
                     }
                 };
+
+                <span class="self">self</span>.<span class="ident">source_map</span>.<span class="ident">push_source_text</span>(<span class="ident">r_paren</span>.<span class="ident">text</span>());
 
                 <span class="ident">VisitNodeSignal::Replace</span>(<span class="ident">updated</span>)
             }
@@ -1112,6 +1118,8 @@
 
                 <span class="self">self</span>.<span class="ident">source_map</span>
                     .<span class="ident">add_deleted_range</span>(<span class="ident">r_paren</span>.<span class="ident">text_trimmed_range</span>());
+
+                <span class="self">self</span>.<span class="ident">source_map</span>.<span class="ident">push_source_text</span>(<span class="ident">r_paren</span>.<span class="ident">text</span>());
 
                 <span class="comment">// SAFETY: Calling `unwrap` is safe because we know that `last_token` is part of the `updated` subtree.</span>
                 <span class="ident">VisitNodeSignal::Replace</span>(
@@ -1237,6 +1245,11 @@
             }
             <span class="kw">_</span> =&gt; <span class="ident">VisitNodeSignal::Traverse</span>(<span class="ident">node</span>),
         }
+    }
+
+    <span class="kw">fn</span> <span class="ident">visit_token</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">token</span>: <span class="ident">SyntaxToken</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span>) -&gt; <span class="ident">SyntaxToken</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Language</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">source_map</span>.<span class="ident">push_source_text</span>(<span class="ident">token</span>.<span class="ident">text</span>());
+        <span class="ident">token</span>
     }
 }
 
@@ -1370,6 +1383,7 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::JsFormatSyntaxRewriter</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">format_node</span>, <span class="ident">JsFormatOptions</span>};
+    <span class="kw">use</span> <span class="ident">rome_diagnostics::file::FileId</span>;
     <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">SourceMarker</span>, <span class="ident">TransformSourceMap</span>};
     <span class="kw">use</span> <span class="ident">rome_js_parser::parse_module</span>;
     <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{
@@ -1381,9 +1395,9 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">rebalances_logical_expressions</span>() {
-        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; (b &amp;&amp; c)&quot;</span>, <span class="number">0</span>).<span class="ident">syntax</span>();
+        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; (b &amp;&amp; c)&quot;</span>, <span class="ident">FileId::zero</span>()).<span class="ident">syntax</span>();
 
-        <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::new</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>).<span class="ident">transform</span>(<span class="ident">root</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::default</span>().<span class="ident">transform</span>(<span class="ident">root</span>.<span class="ident">clone</span>());
 
         <span class="comment">// Changed the root tree</span>
         <span class="macro">assert_ne!</span>(<span class="kw-2">&amp;</span><span class="ident">transformed</span>, <span class="kw-2">&amp;</span><span class="ident">root</span>);
@@ -1410,8 +1424,8 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">only_rebalances_logical_expressions_with_same_operator</span>() {
-        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; (b || c)&quot;</span>, <span class="number">0</span>).<span class="ident">syntax</span>();
-        <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::new</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>).<span class="ident">transform</span>(<span class="ident">root</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; (b || c)&quot;</span>, <span class="ident">FileId::zero</span>()).<span class="ident">syntax</span>();
+        <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::default</span>().<span class="ident">transform</span>(<span class="ident">root</span>);
 
         <span class="comment">// Removes parentheses</span>
         <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">transformed</span>.<span class="ident">text</span>().<span class="ident">to_string</span>(), <span class="string">&quot;a &amp;&amp; b || c&quot;</span>);
@@ -1630,9 +1644,9 @@
     }
 
     <span class="kw">fn</span> <span class="ident">source_map_test</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; (<span class="ident">JsSyntaxNode</span>, <span class="ident">TransformSourceMap</span>) {
-        <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="ident">input</span>, <span class="number">0</span>).<span class="ident">syntax</span>();
+        <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="ident">input</span>, <span class="ident">FileId::zero</span>()).<span class="ident">syntax</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewriter</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::new</span>(<span class="kw-2">&amp;</span><span class="ident">tree</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewriter</span> <span class="op">=</span> <span class="ident">JsFormatSyntaxRewriter::default</span>();
         <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">rewriter</span>.<span class="ident">transform</span>(<span class="ident">tree</span>);
         <span class="kw">let</span> <span class="ident">source_map</span> <span class="op">=</span> <span class="ident">rewriter</span>.<span class="ident">finish</span>();
 

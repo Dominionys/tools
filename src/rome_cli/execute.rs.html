@@ -165,9 +165,13 @@
 <span id="159">159</span>
 <span id="160">160</span>
 <span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::traversal::traverse</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">CliSession</span>, <span class="ident">Termination</span>};
 <span class="kw">use</span> <span class="ident">rome_console</span>::{<span class="ident">markup</span>, <span class="ident">ConsoleExt</span>};
+<span class="kw">use</span> <span class="ident">rome_diagnostics::file::FileId</span>;
 <span class="kw">use</span> <span class="ident">rome_fs::RomePath</span>;
 <span class="kw">use</span> <span class="ident">rome_service::workspace</span>::{
     <span class="ident">FeatureName</span>, <span class="ident">FixFileMode</span>, <span class="ident">FormatFileParams</span>, <span class="ident">Language</span>, <span class="ident">OpenFileParams</span>, <span class="ident">SupportsFeatureParams</span>,
@@ -292,14 +296,16 @@
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">path</span>, <span class="ident">content</span>)) <span class="op">=</span> <span class="ident">mode</span>.<span class="ident">as_stdin_file</span>() {
         <span class="kw">let</span> <span class="ident">workspace</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">session</span>.<span class="ident">app</span>.<span class="ident">workspace</span>;
         <span class="kw">let</span> <span class="ident">console</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">session</span>.<span class="ident">app</span>.<span class="ident">console</span>;
-        <span class="kw">let</span> <span class="ident">rome_path</span> <span class="op">=</span> <span class="ident">RomePath::new</span>(<span class="ident">path</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">rome_path</span> <span class="op">=</span> <span class="ident">RomePath::new</span>(<span class="ident">path</span>, <span class="ident">FileId::zero</span>());
 
         <span class="kw">if</span> <span class="ident">mode</span>.<span class="ident">is_format</span>() {
-            <span class="kw">let</span> <span class="ident">can_format</span> <span class="op">=</span> <span class="ident">workspace</span>.<span class="ident">supports_feature</span>(<span class="ident">SupportsFeatureParams</span> {
-                <span class="ident">path</span>: <span class="ident">rome_path</span>.<span class="ident">clone</span>(),
-                <span class="ident">feature</span>: <span class="ident">FeatureName::Format</span>,
-            })<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="ident">can_format</span> {
+            <span class="kw">let</span> <span class="ident">unsupported_format_reason</span> <span class="op">=</span> <span class="ident">workspace</span>
+                .<span class="ident">supports_feature</span>(<span class="ident">SupportsFeatureParams</span> {
+                    <span class="ident">path</span>: <span class="ident">rome_path</span>.<span class="ident">clone</span>(),
+                    <span class="ident">feature</span>: <span class="ident">FeatureName::Format</span>,
+                })<span class="question-mark">?</span>
+                .<span class="ident">reason</span>;
+            <span class="kw">if</span> <span class="ident">unsupported_format_reason</span>.<span class="ident">is_none</span>() {
                 <span class="ident">workspace</span>.<span class="ident">open_file</span>(<span class="ident">OpenFileParams</span> {
                     <span class="ident">path</span>: <span class="ident">rome_path</span>.<span class="ident">clone</span>(),
                     <span class="ident">version</span>: <span class="number">0</span>,

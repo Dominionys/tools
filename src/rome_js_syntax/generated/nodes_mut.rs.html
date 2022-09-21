@@ -5785,6 +5785,26 @@
 <span id="5779">5779</span>
 <span id="5780">5780</span>
 <span id="5781">5781</span>
+<span id="5782">5782</span>
+<span id="5783">5783</span>
+<span id="5784">5784</span>
+<span id="5785">5785</span>
+<span id="5786">5786</span>
+<span id="5787">5787</span>
+<span id="5788">5788</span>
+<span id="5789">5789</span>
+<span id="5790">5790</span>
+<span id="5791">5791</span>
+<span id="5792">5792</span>
+<span id="5793">5793</span>
+<span id="5794">5794</span>
+<span id="5795">5795</span>
+<span id="5796">5796</span>
+<span id="5797">5797</span>
+<span id="5798">5798</span>
+<span id="5799">5799</span>
+<span id="5800">5800</span>
+<span id="5801">5801</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Generated file, do not edit by hand, see `xtask/codegen`</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">generated::nodes</span>::<span class="kw-2">*</span>, <span class="ident">JsSyntaxToken</span> <span class="kw">as</span> <span class="ident">SyntaxToken</span>};
@@ -10429,6 +10449,20 @@
         )
     }
 }
+<span class="kw">impl</span> <span class="ident">TsInstantiationExpression</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_expression</span>(<span class="self">self</span>, <span class="ident">element</span>: <span class="ident">JsAnyExpression</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::unwrap_cast</span>(
+            <span class="self">self</span>.<span class="ident">syntax</span>
+                .<span class="ident">splice_slots</span>(<span class="number">0usize</span>..<span class="op">=</span><span class="number">0usize</span>, <span class="ident">once</span>(<span class="prelude-val">Some</span>(<span class="ident">element</span>.<span class="ident">into_syntax</span>().<span class="ident">into</span>()))),
+        )
+    }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_arguments</span>(<span class="self">self</span>, <span class="ident">element</span>: <span class="ident">TsTypeArguments</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::unwrap_cast</span>(
+            <span class="self">self</span>.<span class="ident">syntax</span>
+                .<span class="ident">splice_slots</span>(<span class="number">1usize</span>..<span class="op">=</span><span class="number">1usize</span>, <span class="ident">once</span>(<span class="prelude-val">Some</span>(<span class="ident">element</span>.<span class="ident">into_syntax</span>().<span class="ident">into</span>()))),
+        )
+    }
+}
 <span class="kw">impl</span> <span class="ident">TsInterfaceDeclaration</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_interface_token</span>(<span class="self">self</span>, <span class="ident">element</span>: <span class="ident">SyntaxToken</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::unwrap_cast</span>(
@@ -11526,6 +11560,12 @@
             <span class="self">self</span>.<span class="ident">syntax</span>
                 .<span class="ident">splice_slots</span>(<span class="number">1usize</span>..<span class="op">=</span><span class="number">1usize</span>, <span class="ident">once</span>(<span class="prelude-val">Some</span>(<span class="ident">element</span>.<span class="ident">into_syntax</span>().<span class="ident">into</span>()))),
         )
+    }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_type_arguments</span>(<span class="self">self</span>, <span class="ident">element</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TsTypeArguments</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::unwrap_cast</span>(<span class="self">self</span>.<span class="ident">syntax</span>.<span class="ident">splice_slots</span>(
+            <span class="number">2usize</span>..<span class="op">=</span><span class="number">2usize</span>,
+            <span class="ident">once</span>(<span class="ident">element</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">element</span><span class="op">|</span> <span class="ident">element</span>.<span class="ident">into_syntax</span>().<span class="ident">into</span>())),
+        ))
     }
 }
 <span class="kw">impl</span> <span class="ident">TsUndefinedType</span> {

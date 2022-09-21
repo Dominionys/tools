@@ -1396,6 +1396,11 @@
 <span id="1390">1390</span>
 <span id="1391">1391</span>
 <span id="1392">1392</span>
+<span id="1393">1393</span>
+<span id="1394">1394</span>
+<span id="1395">1395</span>
+<span id="1396">1396</span>
+<span id="1397">1397</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Generated file, do not edit by hand, see `xtask/codegen`</span>
 
 <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">r&quot; Reconstruct an AstNode from a SyntaxNode&quot;</span>]</span>
@@ -2320,6 +2325,11 @@
                 }
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::JsSyntaxKind::TS_INFER_TYPE</span> =&gt; {
                     <span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pattern</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::TsInferType::new_unchecked</span>(<span class="ident">node</span>) };
+                    <span class="macro-nonterminal">$</span><span class="macro-nonterminal">body</span>
+                }
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::JsSyntaxKind::TS_INSTANTIATION_EXPRESSION</span> =&gt; {
+                    <span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pattern</span> <span class="op">=</span>
+                        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::TsInstantiationExpression::new_unchecked</span>(<span class="ident">node</span>) };
                     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">body</span>
                 }
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::JsSyntaxKind::TS_INTERFACE_DECLARATION</span> =&gt; {

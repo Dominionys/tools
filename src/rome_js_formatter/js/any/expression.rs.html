@@ -52,6 +52,7 @@
 <span id="46">46</span>
 <span id="47">47</span>
 <span id="48">48</span>
+<span id="49">49</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Generated file, do not edit by hand, see `xtask/codegen`</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
@@ -96,6 +97,7 @@
             <span class="ident">JsAnyExpression::TsTypeAssertionExpression</span>(<span class="ident">node</span>) =&gt; <span class="ident">node</span>.<span class="ident">format</span>().<span class="ident">fmt</span>(<span class="ident">f</span>),
             <span class="ident">JsAnyExpression::TsAsExpression</span>(<span class="ident">node</span>) =&gt; <span class="ident">node</span>.<span class="ident">format</span>().<span class="ident">fmt</span>(<span class="ident">f</span>),
             <span class="ident">JsAnyExpression::TsNonNullAssertionExpression</span>(<span class="ident">node</span>) =&gt; <span class="ident">node</span>.<span class="ident">format</span>().<span class="ident">fmt</span>(<span class="ident">f</span>),
+            <span class="ident">JsAnyExpression::TsInstantiationExpression</span>(<span class="ident">node</span>) =&gt; <span class="ident">node</span>.<span class="ident">format</span>().<span class="ident">fmt</span>(<span class="ident">f</span>),
             <span class="ident">JsAnyExpression::JsxTagExpression</span>(<span class="ident">node</span>) =&gt; <span class="ident">node</span>.<span class="ident">format</span>().<span class="ident">fmt</span>(<span class="ident">f</span>),
         }
     }

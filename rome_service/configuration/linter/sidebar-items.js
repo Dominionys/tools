@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["RuleConfiguration",""],["RulePlainConfiguration",""]],"struct":[["Js",""],["Jsx",""],["LinterConfiguration",""],["Regex",""],["RuleWithOptions",""],["Rules",""],["Ts",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["RuleConfiguration",""],["RulePlainConfiguration",""]],"struct":[["Correctness",""],["LinterConfiguration",""],["Nursery",""],["RuleWithOptions",""],["Rules",""],["Style",""]]};

@@ -12127,6 +12127,38 @@
 <span id="12121">12121</span>
 <span id="12122">12122</span>
 <span id="12123">12123</span>
+<span id="12124">12124</span>
+<span id="12125">12125</span>
+<span id="12126">12126</span>
+<span id="12127">12127</span>
+<span id="12128">12128</span>
+<span id="12129">12129</span>
+<span id="12130">12130</span>
+<span id="12131">12131</span>
+<span id="12132">12132</span>
+<span id="12133">12133</span>
+<span id="12134">12134</span>
+<span id="12135">12135</span>
+<span id="12136">12136</span>
+<span id="12137">12137</span>
+<span id="12138">12138</span>
+<span id="12139">12139</span>
+<span id="12140">12140</span>
+<span id="12141">12141</span>
+<span id="12142">12142</span>
+<span id="12143">12143</span>
+<span id="12144">12144</span>
+<span id="12145">12145</span>
+<span id="12146">12146</span>
+<span id="12147">12147</span>
+<span id="12148">12148</span>
+<span id="12149">12149</span>
+<span id="12150">12150</span>
+<span id="12151">12151</span>
+<span id="12152">12152</span>
+<span id="12153">12153</span>
+<span id="12154">12154</span>
+<span id="12155">12155</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Generated file, do not edit by hand, see `xtask/codegen`</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AsFormat</span>, <span class="ident">FormatNodeRule</span>, <span class="ident">IntoFormat</span>, <span class="ident">JsFormatContext</span>, <span class="ident">JsFormatter</span>};
@@ -14913,6 +14945,38 @@
     <span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">into_format</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Format</span> {
         <span class="ident">FormatOwnedWithRule</span> :: <span class="ident">new</span> (<span class="self">self</span> , <span class="kw">crate</span> :: <span class="ident">ts</span> :: <span class="ident">expressions</span> :: <span class="ident">non_null_assertion_expression</span> :: <span class="ident">FormatTsNonNullAssertionExpression</span> :: <span class="ident">default</span> ())
+    }
+}
+<span class="kw">impl</span> <span class="ident">FormatRule</span><span class="op">&lt;</span><span class="ident">rome_js_syntax::TsInstantiationExpression</span><span class="op">&gt;</span>
+    <span class="kw">for</span> <span class="ident"><span class="kw">crate</span>::ts::expressions::instantiation_expression::FormatTsInstantiationExpression</span>
+{
+    <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">JsFormatContext</span>;
+    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">fmt</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">rome_js_syntax::TsInstantiationExpression</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">JsFormatter</span>,
+    ) -&gt; <span class="ident">FormatResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">FormatNodeRule</span>::<span class="op">&lt;</span><span class="ident">rome_js_syntax::TsInstantiationExpression</span><span class="op">&gt;</span><span class="ident">::fmt</span>(<span class="self">self</span>, <span class="ident">node</span>, <span class="ident">f</span>)
+    }
+}
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">AsFormat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">rome_js_syntax::TsInstantiationExpression</span> {
+    <span class="kw">type</span> <span class="ident">Format</span> <span class="op">=</span> <span class="ident">FormatRefWithRule</span><span class="op">&lt;</span>
+        <span class="lifetime">&#39;a</span>,
+        <span class="ident">rome_js_syntax::TsInstantiationExpression</span>,
+        <span class="ident"><span class="kw">crate</span>::ts::expressions::instantiation_expression::FormatTsInstantiationExpression</span>,
+    <span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">format</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Format</span> {
+        <span class="ident">FormatRefWithRule</span> :: <span class="ident">new</span> (<span class="self">self</span> , <span class="kw">crate</span> :: <span class="ident">ts</span> :: <span class="ident">expressions</span> :: <span class="ident">instantiation_expression</span> :: <span class="ident">FormatTsInstantiationExpression</span> :: <span class="ident">default</span> ())
+    }
+}
+<span class="kw">impl</span> <span class="ident">IntoFormat</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::JsFormatContext</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">rome_js_syntax::TsInstantiationExpression</span> {
+    <span class="kw">type</span> <span class="ident">Format</span> <span class="op">=</span> <span class="ident">FormatOwnedWithRule</span><span class="op">&lt;</span>
+        <span class="ident">rome_js_syntax::TsInstantiationExpression</span>,
+        <span class="ident"><span class="kw">crate</span>::ts::expressions::instantiation_expression::FormatTsInstantiationExpression</span>,
+    <span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">into_format</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Format</span> {
+        <span class="ident">FormatOwnedWithRule</span> :: <span class="ident">new</span> (<span class="self">self</span> , <span class="kw">crate</span> :: <span class="ident">ts</span> :: <span class="ident">expressions</span> :: <span class="ident">instantiation_expression</span> :: <span class="ident">FormatTsInstantiationExpression</span> :: <span class="ident">default</span> ())
     }
 }
 <span class="kw">impl</span> <span class="ident">FormatRule</span><span class="op">&lt;</span><span class="ident">rome_js_syntax::JsxTagExpression</span><span class="op">&gt;</span>

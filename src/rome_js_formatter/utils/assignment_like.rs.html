@@ -1192,32 +1192,6 @@
 <span id="1186">1186</span>
 <span id="1187">1187</span>
 <span id="1188">1188</span>
-<span id="1189">1189</span>
-<span id="1190">1190</span>
-<span id="1191">1191</span>
-<span id="1192">1192</span>
-<span id="1193">1193</span>
-<span id="1194">1194</span>
-<span id="1195">1195</span>
-<span id="1196">1196</span>
-<span id="1197">1197</span>
-<span id="1198">1198</span>
-<span id="1199">1199</span>
-<span id="1200">1200</span>
-<span id="1201">1201</span>
-<span id="1202">1202</span>
-<span id="1203">1203</span>
-<span id="1204">1204</span>
-<span id="1205">1205</span>
-<span id="1206">1206</span>
-<span id="1207">1207</span>
-<span id="1208">1208</span>
-<span id="1209">1209</span>
-<span id="1210">1210</span>
-<span id="1211">1211</span>
-<span id="1212">1212</span>
-<span id="1213">1213</span>
-<span id="1214">1214</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::js::auxiliary::initializer_clause::FormatJsInitializerClauseOptions</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parentheses::get_expression_left_side</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
@@ -1225,6 +1199,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::object::write_member_name</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">JsAnyBinaryLikeExpression</span>, <span class="ident">JsAnyBinaryLikeLeftExpression</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>, <span class="ident">CstFormatContext</span>, <span class="ident">FormatOptions</span>, <span class="ident">VecBuffer</span>};
+<span class="kw">use</span> <span class="ident">rome_js_syntax::JsAnyLiteralExpression</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{
     <span class="ident">JsAnyAssignmentPattern</span>, <span class="ident">JsAnyBindingPattern</span>, <span class="ident">JsAnyCallArgument</span>, <span class="ident">JsAnyClassMemberName</span>,
     <span class="ident">JsAnyExpression</span>, <span class="ident">JsAnyFunctionBody</span>, <span class="ident">JsAnyObjectAssignmentPatternMember</span>,
@@ -1235,9 +1210,10 @@
     <span class="ident">TsAnyVariableAnnotation</span>, <span class="ident">TsIdentifierBinding</span>, <span class="ident">TsPropertySignatureClassMember</span>,
     <span class="ident">TsPropertySignatureClassMemberFields</span>, <span class="ident">TsType</span>, <span class="ident">TsTypeAliasDeclaration</span>, <span class="ident">TsTypeArguments</span>,
 };
-<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsAnyLiteralExpression</span>, <span class="ident">JsSyntaxNode</span>};
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">declare_node_union</span>, <span class="ident">AstNode</span>, <span class="ident">SyntaxResult</span>};
 <span class="kw">use</span> <span class="ident">std::iter</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::has_leading_own_line_comment</span>;
 
 <span class="macro">declare_node_union!</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">JsAnyAssignmentLike</span> <span class="op">=</span>
@@ -2093,34 +2069,6 @@
     };
 
     <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
-}
-<span class="doccomment">/// Tests if the node has any leading comment that will be placed on its own line.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">has_leading_own_line_comment</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">JsSyntaxNode</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">leading_trivia</span>) <span class="op">=</span> <span class="ident">node</span>.<span class="ident">first_leading_trivia</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">first_comment</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">after_comment</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">after_new_line</span> <span class="op">=</span> <span class="bool-val">false</span>;
-
-        <span class="kw">for</span> <span class="ident">piece</span> <span class="kw">in</span> <span class="ident">leading_trivia</span>.<span class="ident">pieces</span>() {
-            <span class="kw">if</span> <span class="ident">piece</span>.<span class="ident">is_comments</span>() {
-                <span class="kw">if</span> <span class="ident">after_new_line</span> <span class="op">&amp;&amp;</span> <span class="ident">first_comment</span> {
-                    <span class="kw">return</span> <span class="bool-val">true</span>;
-                } <span class="kw">else</span> {
-                    <span class="ident">first_comment</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                    <span class="ident">after_comment</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">piece</span>.<span class="ident">is_newline</span>() {
-                <span class="kw">if</span> <span class="ident">after_comment</span> {
-                    <span class="kw">return</span> <span class="bool-val">true</span>;
-                } <span class="kw">else</span> {
-                    <span class="ident">after_new_line</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">piece</span>.<span class="ident">is_skipped</span>() {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
-            }
-        }
-    }
-    <span class="bool-val">false</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Format</span><span class="op">&lt;</span><span class="ident">JsFormatContext</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">JsAnyAssignmentLike</span> {

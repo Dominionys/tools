@@ -164,6 +164,10 @@
 <span id="158">158</span>
 <span id="159">159</span>
 <span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">panic::RefUnwindSafe</span>,
     <span class="ident">sync::atomic</span>::{<span class="ident">AtomicU64</span>, <span class="ident">Ordering</span>},
@@ -173,6 +177,7 @@
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">serde_json::json</span>;
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::workspace::SupportsFeatureResult</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RomeError</span>, <span class="ident">TransportError</span>, <span class="ident">Workspace</span>};
 
 <span class="kw">use</span> <span class="kw">super</span>::{
@@ -255,7 +260,10 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">WorkspaceTransport</span> <span class="op">+</span> <span class="ident">RefUnwindSafe</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
-    <span class="kw">fn</span> <span class="ident">supports_feature</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">SupportsFeatureParams</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">RomeError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">supports_feature</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">params</span>: <span class="ident">SupportsFeatureParams</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SupportsFeatureResult</span>, <span class="ident">RomeError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">request</span>(<span class="string">&quot;rome/supports_feature&quot;</span>, <span class="ident">params</span>)
     }
 

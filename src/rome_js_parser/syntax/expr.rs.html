@@ -2025,6 +2025,23 @@
 <span id="2019">2019</span>
 <span id="2020">2020</span>
 <span id="2021">2021</span>
+<span id="2022">2022</span>
+<span id="2023">2023</span>
+<span id="2024">2024</span>
+<span id="2025">2025</span>
+<span id="2026">2026</span>
+<span id="2027">2027</span>
+<span id="2028">2028</span>
+<span id="2029">2029</span>
+<span id="2030">2030</span>
+<span id="2031">2031</span>
+<span id="2032">2032</span>
+<span id="2033">2033</span>
+<span id="2034">2034</span>
+<span id="2035">2035</span>
+<span id="2036">2036</span>
+<span id="2037">2037</span>
+<span id="2038">2038</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Expressions, these include `this`, identifiers, arrays, objects,</span>
 <span class="doccomment">//! binary expressions, unary expressions, and more.</span>
 <span class="doccomment">//!</span>
@@ -2035,6 +2052,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::event::RewriteParseEvents</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::lexer</span>::{<span class="ident">LexContext</span>, <span class="ident">ReLexContext</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parser::rewrite_parser</span>::{<span class="ident">RewriteMarker</span>, <span class="ident">RewriteParser</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parser::ToDiagnostic</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parser</span>::{<span class="ident">expected_token</span>, <span class="ident">ParserProgress</span>, <span class="ident">RecoveryResult</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::assignment::parse_assignment</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::assignment::AssignmentExprPrecedence</span>;
@@ -2046,7 +2064,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::js_parse_error</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::js_parse_error::expected_simple_assignment_target</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::js_parse_error</span>::{
-    <span class="ident">expected_expression</span>, <span class="ident">expected_identifier</span>, <span class="ident">expected_parameters</span>, <span class="ident">invalid_assignment_error</span>,
+    <span class="ident">expected_expression</span>, <span class="ident">expected_identifier</span>, <span class="ident">invalid_assignment_error</span>,
     <span class="ident">private_names_only_allowed_on_left_side_of_in_expression</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax::jsx::parse_jsx_tag_expression</span>;
@@ -2728,16 +2746,38 @@
             <span class="ident">BACKTICK</span> =&gt; {
                 <span class="comment">// test ts ts_optional_chain_call</span>
                 <span class="comment">// (&lt;A, B&gt;() =&gt; {})?.&lt;A, B&gt;();</span>
-                <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">precede</span>(<span class="ident">p</span>);
+                <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lhs</span>.<span class="ident">kind</span>() {
+                    <span class="ident">TS_INSTANTIATION_EXPRESSION</span> =&gt; <span class="ident">lhs</span>.<span class="ident">undo_completion</span>(<span class="ident">p</span>),
+                    <span class="kw">_</span> =&gt; <span class="ident">lhs</span>.<span class="ident">precede</span>(<span class="ident">p</span>),
+                };
                 <span class="ident">parse_template_literal</span>(<span class="ident">p</span>, <span class="ident">m</span>, <span class="kw-2">*</span><span class="ident">in_optional_chain</span>, <span class="bool-val">true</span>)
             }
-            <span class="kw">_</span> =&gt; <span class="kw">break</span>,
-        }
+            <span class="macro">T!</span>[<span class="op">&lt;</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">&lt;</span><span class="op">&lt;</span>] =&gt; {
+                <span class="comment">//  only those two possible token in cur position `parse_ts_type_arguments_in_expression` could possibly return a `Present(_)`</span>
+                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Present</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">parse_ts_type_arguments_in_expression</span>(<span class="ident">p</span>) {
+                    <span class="kw">let</span> <span class="ident">new_marker</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">precede</span>(<span class="ident">p</span>);
+                    <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">new_marker</span>.<span class="ident">complete</span>(<span class="ident">p</span>, <span class="ident">JsSyntaxKind::TS_INSTANTIATION_EXPRESSION</span>);
+                    <span class="kw">continue</span>;
+                };
+                <span class="kw">break</span>;
+            }
+            <span class="kw">_</span> =&gt; {
+                <span class="kw">break</span>;
+            }
+        };
     }
 
     <span class="ident">lhs</span>
 }
 
+<span class="comment">// test_err ts ts_new_operator</span>
+<span class="comment">// new A&lt;test&gt;&lt;test&gt;();</span>
+
+<span class="comment">// test ts ts_new_operator</span>
+<span class="comment">// var c2 = new T&lt;string&gt;;  // Ok</span>
+<span class="comment">// var x1 = new SS&lt;number&gt;(); // OK</span>
+<span class="comment">// var x3 = new SS();         // OK</span>
+<span class="comment">// var x4 = new SS;           // OK</span>
 <span class="kw">fn</span> <span class="ident">parse_new_expr</span>(<span class="ident">p</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Parser</span>, <span class="ident">context</span>: <span class="ident">ExpressionContext</span>) -&gt; <span class="ident">ParsedSyntax</span> {
     <span class="kw">if</span> <span class="op">!</span><span class="ident">p</span>.<span class="ident">at</span>(<span class="macro">T!</span>[<span class="ident">new</span>]) {
         <span class="kw">return</span> <span class="ident">Absent</span>;
@@ -2768,27 +2808,21 @@
         <span class="kw">return</span> <span class="ident">Present</span>(<span class="ident">m</span>.<span class="ident">complete</span>(<span class="ident">p</span>, <span class="ident">NEW_TARGET</span>));
     }
 
-    <span class="kw">let</span> <span class="ident">expression</span> <span class="op">=</span> <span class="ident">parse_primary_expression</span>(<span class="ident">p</span>, <span class="ident">context</span>.<span class="ident">and_ts_type_assertion_allowed</span>(<span class="bool-val">false</span>))
-        .<span class="ident">or_add_diagnostic</span>(<span class="ident">p</span>, <span class="ident">expected_expression</span>);
-
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs</span>) <span class="op">=</span> <span class="ident">expression</span> {
-        <span class="ident">parse_member_expression_rest</span>(<span class="ident">p</span>, <span class="ident">lhs</span>, <span class="ident">context</span>, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut</span> <span class="bool-val">false</span>);
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs</span>) <span class="op">=</span> <span class="ident">parse_primary_expression</span>(<span class="ident">p</span>, <span class="ident">context</span>.<span class="ident">and_ts_type_assertion_allowed</span>(<span class="bool-val">false</span>))
+        .<span class="ident">or_add_diagnostic</span>(<span class="ident">p</span>, <span class="ident">expected_expression</span>)
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">expr</span><span class="op">|</span> <span class="ident">parse_member_expression_rest</span>(<span class="ident">p</span>, <span class="ident">expr</span>, <span class="ident">context</span>, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut</span> <span class="bool-val">false</span>))
+    {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TS_INSTANTIATION_EXPRESSION</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">kind</span>() {
+            <span class="ident">lhs</span>.<span class="ident">undo_completion</span>(<span class="ident">p</span>).<span class="ident">abandon</span>(<span class="ident">p</span>)
+        };
     }
 
     <span class="comment">// test ts ts_new_with_type_arguments</span>
     <span class="comment">// class Test&lt;A, B, C&gt; {}</span>
     <span class="comment">// new Test&lt;A, B, C&gt;();</span>
-    <span class="kw">let</span> <span class="ident">type_arguments</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">TypeScript</span>.<span class="ident">is_supported</span>(<span class="ident">p</span>) {
-        <span class="ident">parse_ts_type_arguments_in_expression</span>(<span class="ident">p</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">Absent</span>
-    };
 
     <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">at</span>(<span class="macro">T!</span>[<span class="string">&#39;(&#39;</span>]) {
         <span class="ident">parse_call_arguments</span>(<span class="ident">p</span>).<span class="ident">unwrap</span>();
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Present</span>(<span class="ident">type_arguments</span>) <span class="op">=</span> <span class="ident">type_arguments</span> {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">err_builder</span>(<span class="string">&quot;A &#39;new&#39; expression with type arguments must always be followed by a parenthesized argument list.&quot;</span>).<span class="ident">primary</span>(<span class="ident">type_arguments</span>.<span class="ident">range</span>(<span class="ident">p</span>), <span class="string">&quot;&quot;</span>);
-        <span class="ident">p</span>.<span class="ident">error</span>(<span class="ident">error</span>);
     }
 
     <span class="ident">Present</span>(<span class="ident">m</span>.<span class="ident">complete</span>(<span class="ident">p</span>, <span class="ident">JS_NEW_EXPRESSION</span>))
@@ -3672,15 +3706,17 @@
     <span class="kw">loop</span> {
         <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">parse_member_expression_rest</span>(<span class="ident">p</span>, <span class="ident">lhs</span>, <span class="ident">context</span>, <span class="bool-val">true</span>, <span class="kw-2">&amp;mut</span> <span class="ident">in_optional_chain</span>);
 
-        <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">at</span>(<span class="macro">T!</span>[<span class="question-mark">?</span>.]) {}
-
         <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">p</span>.<span class="ident">cur</span>(), <span class="macro">T!</span>[<span class="question-mark">?</span>.] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">&lt;</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">&lt;</span><span class="op">&lt;</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="string">&#39;(&#39;</span>]) {
             <span class="kw">break</span> <span class="ident">lhs</span>;
         }
 
         <span class="comment">// Cloning here is necessary because parsing out the type arguments may rewind in which</span>
         <span class="comment">// case we want to return the `lhs`.</span>
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">clone</span>().<span class="ident">precede</span>(<span class="ident">p</span>);
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lhs</span>.<span class="ident">kind</span>() {
+            <span class="ident">TS_INSTANTIATION_EXPRESSION</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">p</span>.<span class="ident">at</span>(<span class="macro">T!</span>[<span class="question-mark">?</span>.]) =&gt; <span class="ident">lhs</span>.<span class="ident">clone</span>().<span class="ident">undo_completion</span>(<span class="ident">p</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">lhs</span>.<span class="ident">clone</span>().<span class="ident">precede</span>(<span class="ident">p</span>),
+        };
+
         <span class="kw">let</span> <span class="ident">start_pos</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">tokens</span>.<span class="ident">position</span>();
         <span class="kw">let</span> <span class="ident">optional_chain_call</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">eat</span>(<span class="macro">T!</span>[<span class="question-mark">?</span>.]);
         <span class="ident">in_optional_chain</span> <span class="op">=</span> <span class="ident">in_optional_chain</span> <span class="op">|</span><span class="op">|</span> <span class="ident">optional_chain_call</span>;
@@ -3692,26 +3728,24 @@
         <span class="comment">// (() =&gt; a)&lt;A, B, C&gt;();</span>
         <span class="comment">// type A&lt;T&gt; = T;</span>
         <span class="comment">// a&lt;&lt;T&gt;(arg: T) =&gt; number, number, string&gt;();</span>
-        <span class="kw">if</span> <span class="ident">TypeScript</span>.<span class="ident">is_supported</span>(<span class="ident">p</span>) <span class="op">&amp;&amp;</span> <span class="macro">matches!</span>(<span class="ident">p</span>.<span class="ident">cur</span>(), <span class="macro">T!</span>[<span class="op">&lt;</span>] <span class="op">|</span> <span class="macro">T!</span>[<span class="op">&lt;</span><span class="op">&lt;</span>]) {
-            <span class="comment">// rewinds automatically if not a valid type arguments</span>
+
+        <span class="kw">let</span> <span class="ident">type_arguments</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">optional_chain_call</span> {
             <span class="kw">let</span> <span class="ident">type_arguments</span> <span class="op">=</span> <span class="ident">parse_ts_type_arguments_in_expression</span>(<span class="ident">p</span>).<span class="ident">ok</span>();
-
-            <span class="kw">if</span> <span class="ident">type_arguments</span>.<span class="ident">is_some</span>() {
-                <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">at</span>(<span class="ident">BACKTICK</span>) {
-                    <span class="comment">// test ts ts_tagged_template_literal</span>
-                    <span class="comment">// html&lt;A, B&gt;`abcd`</span>
-                    <span class="comment">// html&lt;A, B&gt;`abcd`._string</span>
-                    <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">parse_template_literal</span>(<span class="ident">p</span>, <span class="ident">m</span>, <span class="ident">optional_chain_call</span>, <span class="bool-val">true</span>);
-                    <span class="kw">continue</span>;
-                }
-
-                <span class="ident">parse_call_arguments</span>(<span class="ident">p</span>).<span class="ident">or_add_diagnostic</span>(<span class="ident">p</span>, <span class="ident">expected_parameters</span>);
-                <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">complete</span>(<span class="ident">p</span>, <span class="ident">JS_CALL_EXPRESSION</span>);
+            <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">cur</span>() <span class="op">==</span> <span class="ident">BACKTICK</span> {
+                <span class="comment">// test ts ts_tagged_template_literal</span>
+                <span class="comment">// html&lt;A, B&gt;`abcd`</span>
+                <span class="comment">// html&lt;A, B&gt;`abcd`._string</span>
+                <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">parse_template_literal</span>(<span class="ident">p</span>, <span class="ident">m</span>, <span class="ident">optional_chain_call</span>, <span class="bool-val">true</span>);
                 <span class="kw">continue</span>;
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">at</span>(<span class="macro">T!</span>[<span class="string">&#39;(&#39;</span>]) {
+            <span class="ident">type_arguments</span>
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        };
+
+        <span class="kw">if</span> <span class="ident">type_arguments</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">at</span>(<span class="macro">T!</span>[<span class="string">&#39;(&#39;</span>]) {
             <span class="ident">parse_call_arguments</span>(<span class="ident">p</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;Expected parsed out arguments because the parser is positioned at &#39;(&#39;&quot;</span>);
+                .<span class="ident">or_add_diagnostic</span>(<span class="ident">p</span>, <span class="op">|</span><span class="ident">p</span>, <span class="kw">_</span><span class="op">|</span> <span class="ident">expected_token</span>(<span class="macro">T!</span>[<span class="string">&#39;(&#39;</span>]).<span class="ident">to_diagnostic</span>(<span class="ident">p</span>));
             <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">complete</span>(<span class="ident">p</span>, <span class="ident">JS_CALL_EXPRESSION</span>);
             <span class="kw">continue</span>;
         }

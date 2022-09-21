@@ -380,6 +380,7 @@
 <span id="374">374</span>
 <span id="375">375</span>
 <span id="376">376</span>
+<span id="377">377</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">LexContext</span>, <span class="ident">Lexer</span>, <span class="ident">LexerCheckpoint</span>, <span class="ident">ReLexContext</span>, <span class="ident">TextRange</span>, <span class="ident">TokenFlags</span>};
 <span class="kw">use</span> <span class="ident">rome_diagnostics::Diagnostic</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsSyntaxKind</span>, <span class="ident">JsSyntaxKind::EOF</span>};
@@ -665,12 +666,13 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::BufferedLexer</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::lexer</span>::{<span class="ident">LexContext</span>, <span class="ident">Lexer</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
+    <span class="kw">use</span> <span class="ident">rome_diagnostics::file::FileId</span>;
     <span class="kw">use</span> <span class="ident">rome_js_syntax::JsSyntaxKind</span>::{<span class="ident">JS_NUMBER_LITERAL</span>, <span class="ident">NEWLINE</span>, <span class="ident">WHITESPACE</span>};
     <span class="kw">use</span> <span class="ident">rome_js_syntax::T</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">without_lookahead</span>() {
-        <span class="kw">let</span> <span class="ident">lexer</span> <span class="op">=</span> <span class="ident">Lexer::from_str</span>(<span class="string">&quot;let a\n = 5&quot;</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">lexer</span> <span class="op">=</span> <span class="ident">Lexer::from_str</span>(<span class="string">&quot;let a\n = 5&quot;</span>, <span class="ident">FileId::zero</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffered</span> <span class="op">=</span> <span class="ident">BufferedLexer::new</span>(<span class="ident">lexer</span>);
 
         <span class="ident">buffered</span>.<span class="ident">next_token</span>(<span class="ident">LexContext::default</span>());
@@ -697,7 +699,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">lookahead</span>() {
-        <span class="kw">let</span> <span class="ident">lexer</span> <span class="op">=</span> <span class="ident">Lexer::from_str</span>(<span class="string">&quot;let a\n = 5&quot;</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">lexer</span> <span class="op">=</span> <span class="ident">Lexer::from_str</span>(<span class="string">&quot;let a\n = 5&quot;</span>, <span class="ident">FileId::zero</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffered</span> <span class="op">=</span> <span class="ident">BufferedLexer::new</span>(<span class="ident">lexer</span>);
 
         <span class="ident">buffered</span>.<span class="ident">next_token</span>(<span class="ident">LexContext::default</span>());

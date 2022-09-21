@@ -280,6 +280,18 @@
 <span id="274">274</span>
 <span id="275">275</span>
 <span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">rome_console</span>::{<span class="ident">Console</span>, <span class="ident">EnvConsole</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter::FormatError</span>;
 <span class="kw">use</span> <span class="ident">rome_fs</span>::{<span class="ident">FileSystem</span>, <span class="ident">OsFileSystem</span>, <span class="ident">RomePath</span>};
@@ -297,15 +309,22 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">settings</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">workspace</span>;
 
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">matcher</span>;
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;schemars&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">workspace_types</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::configuration</span>::{
     <span class="ident">create_config</span>, <span class="ident">load_config</span>, <span class="ident">Configuration</span>, <span class="ident">ConfigurationError</span>, <span class="ident">RuleConfiguration</span>, <span class="ident">Rules</span>,
 };
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::matcher</span>::{<span class="ident">MatchOptions</span>, <span class="ident">Matcher</span>, <span class="ident">Pattern</span>};
+
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::file_handlers::JsFormatSettings</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::file_handlers::Language</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::workspace::Workspace</span>;
+
+<span class="doccomment">/// Exports only for this crate</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::configuration</span>::{<span class="ident">deserialize_set_of_strings</span>, <span class="ident">serialize_set_of_strings</span>};
 
 <span class="doccomment">/// This is the main entrypoint of the application.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">App</span><span class="op">&lt;</span><span class="lifetime">&#39;app</span><span class="op">&gt;</span> {
@@ -344,6 +363,8 @@
     <span class="ident">RenameError</span>(<span class="ident">RenameError</span>),
     <span class="doccomment">/// Error emitted by the underlying transport layer for a remote Workspace</span>
     <span class="ident">TransportError</span>(<span class="ident">TransportError</span>),
+    <span class="doccomment">/// Emitted when the file is ignored and should not be processed</span>
+    <span class="ident">FileIgnored</span>(<span class="ident">PathBuf</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">RomeError</span> {
@@ -432,6 +453,9 @@
 
             <span class="ident">RomeError::TransportError</span>(<span class="ident">err</span>) =&gt; {
                 <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{err}&quot;</span>,)
+            }
+            <span class="ident">RomeError::FileIgnored</span>(<span class="ident">path</span>) =&gt; {
+                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;The file {} was ignored&quot;</span>, <span class="ident">path</span>.<span class="ident">display</span>())
             }
         }
     }

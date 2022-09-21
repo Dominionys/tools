@@ -59,7 +59,6 @@
 <span id="53">53</span>
 <span id="54">54</span>
 <span id="55">55</span>
-<span id="56">56</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">file::FileSpan</span>, <span class="kw-2">*</span>};
 <span class="kw">use</span> <span class="ident">rome_console::MarkupBuf</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan::TextRange</span>;
@@ -81,7 +80,6 @@
     <span class="kw">pub</span> <span class="ident">applicability</span>: <span class="ident">Applicability</span>,
     <span class="kw">pub</span> <span class="ident">msg</span>: <span class="ident">MarkupBuf</span>,
     <span class="kw">pub</span> <span class="ident">style</span>: <span class="ident">SuggestionStyle</span>,
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">schemars</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;Vec&lt;rome_rowan::TextRangeSchema&gt;&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="ident">labels</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TextRange</span><span class="op">&gt;</span>,
 }
 

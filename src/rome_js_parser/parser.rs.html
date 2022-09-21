@@ -698,6 +698,8 @@
 <span id="692">692</span>
 <span id="693">693</span>
 <span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The physical parser structure.</span>
 <span class="doccomment">//! This may not hold your expectations of a traditional parser,</span>
 <span class="doccomment">//! the parser yields events like `Start node`, `Error`, etc.</span>
@@ -711,6 +713,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">single_token_parse_recovery</span>;
 
 <span class="kw">use</span> <span class="ident">drop_bomb::DebugDropBomb</span>;
+<span class="kw">use</span> <span class="ident">rome_diagnostics::file::FileId</span>;
 <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{
     <span class="ident">JsSyntaxKind</span>::{<span class="self">self</span>},
     <span class="ident">SourceType</span>, <span class="ident">TextRange</span>,
@@ -768,7 +771,7 @@
 <span class="doccomment">/// The Parser yields lower level events instead of nodes.</span>
 <span class="doccomment">/// These events are then processed into a syntax tree through a [`TreeSink`] implementation.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span> {
-    <span class="ident">file_id</span>: <span class="ident">usize</span>,
+    <span class="ident">file_id</span>: <span class="ident">FileId</span>,
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">tokens</span>: <span class="ident">TokenSource</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">state</span>: <span class="ident">ParserState</span>,
@@ -780,7 +783,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Creates a new parser that parses the `source`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="ident">str</span>, <span class="ident">file_id</span>: <span class="ident">usize</span>, <span class="ident">source_type</span>: <span class="ident">SourceType</span>) -&gt; <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="ident">str</span>, <span class="ident">file_id</span>: <span class="ident">FileId</span>, <span class="ident">source_type</span>: <span class="ident">SourceType</span>) -&gt; <span class="ident">Parser</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">token_source</span> <span class="op">=</span> <span class="ident">TokenSource::from_str</span>(<span class="ident">source</span>, <span class="ident">file_id</span>);
 
         <span class="ident">Parser</span> {
@@ -1311,6 +1314,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Parser</span>;
+    <span class="kw">use</span> <span class="ident">rome_diagnostics::file::FileId</span>;
     <span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">JsSyntaxKind</span>, <span class="ident">SourceType</span>};
     <span class="kw">use</span> <span class="ident">rome_rowan::AstNode</span>;
 
@@ -1324,7 +1328,7 @@
 
         <span class="comment">// File id is used for the labels inside parser errors to report them, the file id</span>
         <span class="comment">// is used to look up a file&#39;s source code and path inside of a codespan `Files` implementation.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="ident">source</span>, <span class="number">0</span>, <span class="ident">SourceType::default</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="ident">source</span>, <span class="ident">FileId::zero</span>(), <span class="ident">SourceType::default</span>());
 
         <span class="comment">// Use one of the syntax parsing functions to parse an expression.</span>
         <span class="comment">// This adds node and token events to the parser which are then used to make a node.</span>
@@ -1369,7 +1373,7 @@
         <span class="ident">expected</span> <span class="op">=</span> <span class="string">&quot;Marker must either be `completed` or `abandoned` to avoid that children are implicitly attached to a marker&#39;s parent.&quot;</span>
     )]</span>
     <span class="kw">fn</span> <span class="ident">uncompleted_markers_panic</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="string">&quot;&#39;use strict&#39;&quot;</span>, <span class="number">0</span>, <span class="ident">SourceType::default</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="string">&quot;&#39;use strict&#39;&quot;</span>, <span class="ident">FileId::zero</span>(), <span class="ident">SourceType::default</span>());
 
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">start</span>();
         <span class="comment">// drop the marker without calling complete or abandon</span>
@@ -1377,7 +1381,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">completed_marker_doesnt_panic</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="string">&quot;&#39;use strict&#39;&quot;</span>, <span class="number">0</span>, <span class="ident">SourceType::default</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="string">&quot;&#39;use strict&#39;&quot;</span>, <span class="ident">FileId::zero</span>(), <span class="ident">SourceType::default</span>());
 
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">start</span>();
         <span class="ident">p</span>.<span class="ident">expect</span>(<span class="ident">JsSyntaxKind::JS_STRING_LITERAL</span>);
@@ -1386,7 +1390,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">abandoned_marker_doesnt_panic</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="string">&quot;&#39;use strict&#39;&quot;</span>, <span class="number">0</span>, <span class="ident">SourceType::default</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">Parser::new</span>(<span class="string">&quot;&#39;use strict&#39;&quot;</span>, <span class="ident">FileId::zero</span>(), <span class="ident">SourceType::default</span>());
 
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">start</span>();
         <span class="ident">m</span>.<span class="ident">abandon</span>(<span class="kw-2">&amp;mut</span> <span class="ident">p</span>);

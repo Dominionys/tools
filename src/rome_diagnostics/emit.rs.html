@@ -366,6 +366,9 @@
 <span id="360">360</span>
 <span id="361">361</span>
 <span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Implementation of converting, and emitting diagnostics</span>
 <span class="doccomment">//! using `codespan`.</span>
 
@@ -664,7 +667,10 @@
     <span class="kw">use</span> <span class="ident">rome_console</span>::{<span class="ident">codespan::Severity</span>, <span class="ident">markup</span>, <span class="ident">BufferConsole</span>, <span class="ident">ConsoleExt</span>, <span class="ident">Markup</span>};
     <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">file::SimpleFile</span>, <span class="ident">Applicability</span>, <span class="ident">Diagnostic</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::{
+        <span class="ident">file</span>::{<span class="ident">FileId</span>, <span class="ident">SimpleFile</span>},
+        <span class="ident">Applicability</span>, <span class="ident">Diagnostic</span>,
+    };
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_error_diagnostic</span>() {
@@ -696,7 +702,7 @@ labore et dolore magna aliqua&quot;</span>;
 
         <span class="kw">let</span> <span class="ident">files</span> <span class="op">=</span> <span class="ident">SimpleFile::new</span>(<span class="ident">String::from</span>(<span class="string">&quot;file_name&quot;</span>), <span class="ident">SOURCE</span>.<span class="ident">into</span>());
 
-        <span class="kw">let</span> <span class="ident">diag</span> <span class="op">=</span> <span class="ident">Diagnostic::error</span>(<span class="number">0</span>, <span class="string">&quot;CODE&quot;</span>, <span class="string">&quot;message&quot;</span>)
+        <span class="kw">let</span> <span class="ident">diag</span> <span class="op">=</span> <span class="ident">Diagnostic::error</span>(<span class="ident">FileId::zero</span>(), <span class="string">&quot;CODE&quot;</span>, <span class="string">&quot;message&quot;</span>)
             .<span class="ident">label</span>(
                 <span class="ident">Severity::Error</span>,
                 <span class="ident">TextRange::new</span>(<span class="ident">TextSize::from</span>(<span class="number">40u32</span>), <span class="ident">TextSize::from</span>(<span class="number">55u32</span>)),

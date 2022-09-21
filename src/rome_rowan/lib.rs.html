@@ -66,8 +66,6 @@
 <span id="60">60</span>
 <span id="61">61</span>
 <span id="62">62</span>
-<span id="63">63</span>
-<span id="64">64</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A generic library for lossless syntax trees.</span>
 <span class="doccomment">//! See `examples/s_expressions.rs` for a tutorial.</span>
 <span class="attribute">#![<span class="ident">forbid</span>(
@@ -104,8 +102,6 @@
 <span class="kw">mod</span> <span class="ident">tree_builder</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">rome_text_size</span>::{<span class="ident">TextLen</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">serde_impls::TextRangeSchema</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">ast</span>::<span class="kw-2">*</span>,

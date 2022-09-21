@@ -72,10 +72,9 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
-<span id="69">69</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">prelude</span>::<span class="kw-2">*</span>, <span class="ident">utils::is_object_like_type</span>};
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">format_args</span>, <span class="ident">write</span>};
-<span class="kw">use</span> <span class="ident">rome_js_syntax</span>::{<span class="ident">TsIntersectionTypeElementList</span>, <span class="ident">TsType</span>};
+<span class="kw">use</span> <span class="ident">rome_js_syntax::TsIntersectionTypeElementList</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan::AstSeparatedList</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
@@ -94,8 +93,7 @@
         <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">element</span>) <span class="kw">in</span> <span class="ident">node</span>.<span class="ident">elements</span>().<span class="ident">enumerate</span>() {
             <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">element</span>.<span class="ident">node</span>()<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">is_object_type_like</span> <span class="op">=</span>
-                <span class="macro">matches!</span>(<span class="ident">node</span>, <span class="ident">TsType::TsMappedType</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TsType::TsObjectType</span>(<span class="kw">_</span>));
+            <span class="kw">let</span> <span class="ident">is_object_type_like</span> <span class="op">=</span> <span class="ident">is_object_like_type</span>(<span class="ident">node</span>);
 
             <span class="comment">// always inline first element</span>
             <span class="kw">if</span> <span class="ident">index</span> <span class="op">==</span> <span class="number">0</span> {

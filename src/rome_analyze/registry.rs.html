@@ -537,7 +537,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Language</span><span class="op">&gt;</span> <span class="ident">RuleSuppressions</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Supress query matching for the given node</span>
+    <span class="doccomment">/// Suppress query matching for the given node</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">suppress_node</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="ident">SyntaxNode</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">insert</span>(<span class="ident">node</span>);
     }

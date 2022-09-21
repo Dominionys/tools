@@ -983,6 +983,8 @@
 <span id="977">977</span>
 <span id="978">978</span>
 <span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the formatting of binary like nodes. Binary like nodes are nodes with</span>
 <span class="doccomment">//! `left` and `right` expressions. Today, this includes:</span>
 <span class="doccomment">//! * [JsBinaryExpression]</span>
@@ -1053,11 +1055,12 @@
 };
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::js::expressions::static_member_expression::JsAnyStaticMemberLike</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::assignment_like::has_leading_own_line_comment</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">declare_node_union</span>, <span class="ident">AstNode</span>, <span class="ident">SyntaxResult</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 <span class="kw">use</span> <span class="ident">std::iter::FusedIterator</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::has_leading_own_line_comment</span>;
 
 <span class="macro">declare_node_union!</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">JsAnyBinaryLikeExpression</span> <span class="op">=</span> <span class="ident">JsLogicalExpression</span> <span class="op">|</span> <span class="ident">JsBinaryExpression</span> <span class="op">|</span> <span class="ident">JsInstanceofExpression</span> <span class="op">|</span> <span class="ident">JsInExpression</span>
@@ -1870,13 +1873,14 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::binary_like_expression</span>::{<span class="ident">BinaryLikePreorder</span>, <span class="ident">VisitEvent</span>};
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::JsAnyBinaryLikeExpression</span>;
+    <span class="kw">use</span> <span class="ident">rome_diagnostics::file::FileId</span>;
     <span class="kw">use</span> <span class="ident">rome_js_parser::parse_module</span>;
     <span class="kw">use</span> <span class="ident">rome_js_syntax::JsLogicalExpression</span>;
     <span class="kw">use</span> <span class="ident">rome_rowan::AstNode</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">in_order_visits_every_binary_like_expression</span>() {
-        <span class="kw">let</span> <span class="ident">parse</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; b &amp;&amp; c || d&quot;</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">parse</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; b &amp;&amp; c || d&quot;</span>, <span class="ident">FileId::zero</span>());
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse</span>
             .<span class="ident">syntax</span>()
             .<span class="ident">descendants</span>()
@@ -1924,7 +1928,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">in_order_skip_subtree</span>() {
-        <span class="kw">let</span> <span class="ident">parse</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; b &amp;&amp; c || d&quot;</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">parse</span> <span class="op">=</span> <span class="ident">parse_module</span>(<span class="string">&quot;a &amp;&amp; b &amp;&amp; c || d&quot;</span>, <span class="ident">FileId::zero</span>());
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">parse</span>
             .<span class="ident">syntax</span>()
             .<span class="ident">descendants</span>()

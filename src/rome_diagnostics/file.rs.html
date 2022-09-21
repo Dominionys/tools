@@ -217,6 +217,21 @@
 <span id="211">211</span>
 <span id="212">212</span>
 <span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">rome_console::codespan::SourceFile</span>;
 <span class="kw">use</span> <span class="ident">rome_rowan</span>::{<span class="ident">Language</span>, <span class="ident">SyntaxElement</span>, <span class="ident">SyntaxNode</span>, <span class="ident">SyntaxToken</span>, <span class="ident">TextRange</span>, <span class="ident">TextSize</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">fmt::Debug</span>, <span class="ident">ops::Range</span>};
@@ -258,23 +273,19 @@
     }
 
     <span class="kw">fn</span> <span class="ident">sub_start</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">TextSize</span>) -&gt; <span class="ident">TextRange</span> {
-        <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_range</span>();
-        <span class="ident">TextRange::new</span>(<span class="ident">range</span>.<span class="ident">start</span>() <span class="op">-</span> <span class="ident">amount</span>, <span class="ident">range</span>.<span class="ident">end</span>())
+        <span class="self">self</span>.<span class="ident">as_range</span>().<span class="ident">sub_start</span>(<span class="ident">amount</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">add_start</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">TextSize</span>) -&gt; <span class="ident">TextRange</span> {
-        <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_range</span>();
-        <span class="ident">TextRange::new</span>(<span class="ident">range</span>.<span class="ident">start</span>() <span class="op">+</span> <span class="ident">amount</span>, <span class="ident">range</span>.<span class="ident">end</span>())
+        <span class="self">self</span>.<span class="ident">as_range</span>().<span class="ident">add_start</span>(<span class="ident">amount</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">sub_end</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">TextSize</span>) -&gt; <span class="ident">TextRange</span> {
-        <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_range</span>();
-        <span class="ident">TextRange::new</span>(<span class="ident">range</span>.<span class="ident">start</span>(), <span class="ident">range</span>.<span class="ident">end</span>() <span class="op">-</span> <span class="ident">amount</span>)
+        <span class="self">self</span>.<span class="ident">as_range</span>().<span class="ident">sub_end</span>(<span class="ident">amount</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">add_end</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">TextSize</span>) -&gt; <span class="ident">TextRange</span> {
-        <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_range</span>();
-        <span class="ident">TextRange::new</span>(<span class="ident">range</span>.<span class="ident">start</span>(), <span class="ident">range</span>.<span class="ident">end</span>() <span class="op">+</span> <span class="ident">amount</span>)
+        <span class="self">self</span>.<span class="ident">as_range</span>().<span class="ident">add_end</span>(<span class="ident">amount</span>)
     }
 }
 
@@ -330,8 +341,28 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(
+    <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>,
+    <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>, <span class="ident">serde::Deserialize</span>, <span class="ident">schemars::JsonSchema</span>)
+)]</span>
 <span class="doccomment">/// An id that points into a file database.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FileId</span> <span class="op">=</span> <span class="ident">usize</span>;
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FileId</span>(<span class="ident">usize</span>);
+<span class="kw">impl</span> <span class="ident">FileId</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">zero</span>() -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span>(<span class="number">0</span>)
+    }
+}
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FileId</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">input</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span>(<span class="ident">input</span>)
+    }
+}
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">FileId</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">usize</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">input</span>: <span class="ident">FileId</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident">input</span>.<span class="number">0</span>
+    }
+}
 
 <span class="doccomment">/// A range that is indexed in a specific file.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
@@ -341,7 +372,6 @@
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FileSpan</span> {
     <span class="kw">pub</span> <span class="ident">file</span>: <span class="ident">FileId</span>,
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">schemars</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;rome_rowan::TextRangeSchema&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="ident">range</span>: <span class="ident">TextRange</span>,
 }
 
@@ -410,7 +440,7 @@
 
     <span class="doccomment">/// Adds a file to this database and returns the id for the new file.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="ident">String</span>, <span class="ident">source</span>: <span class="ident">String</span>) -&gt; <span class="ident">FileId</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>;
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">FileId::from</span>(<span class="self">self</span>.<span class="ident">id</span>);
         <span class="self">self</span>.<span class="ident">id</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">files</span>.<span class="ident">insert</span>(<span class="ident">id</span>, <span class="ident">SimpleFile::new</span>(<span class="ident">name</span>, <span class="ident">source</span>));
         <span class="ident">id</span>

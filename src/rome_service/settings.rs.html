@@ -188,7 +188,27 @@
 <span id="182">182</span>
 <span id="183">183</span>
 <span id="184">184</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Configuration</span>, <span class="ident">Rules</span>};
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Configuration</span>, <span class="ident">MatchOptions</span>, <span class="ident">Matcher</span>, <span class="ident">RomeError</span>, <span class="ident">Rules</span>};
 <span class="kw">use</span> <span class="ident">indexmap::IndexSet</span>;
 <span class="kw">use</span> <span class="ident">rome_console::codespan::Severity</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">IndentStyle</span>, <span class="ident">LineWidth</span>};
@@ -219,10 +239,13 @@
     }
 
     <span class="doccomment">/// The (configuration)[Configuration] is merged into the workspace</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">merge_with_configuration</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">configuration</span>: <span class="ident">Configuration</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">merge_with_configuration</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">configuration</span>: <span class="ident">Configuration</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">RomeError</span><span class="op">&gt;</span> {
         <span class="comment">// formatter part</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">formatter</span>) <span class="op">=</span> <span class="ident">configuration</span>.<span class="ident">formatter</span> {
-            <span class="self">self</span>.<span class="ident">formatter</span> <span class="op">=</span> <span class="ident">FormatSettings::from</span>(<span class="ident">formatter</span>);
+            <span class="self">self</span>.<span class="ident">formatter</span> <span class="op">=</span> <span class="ident">FormatSettings::try_from</span>(<span class="ident">formatter</span>)<span class="question-mark">?</span>;
         }
         <span class="kw">let</span> <span class="ident">formatter</span> <span class="op">=</span> <span class="ident">configuration</span>
             .<span class="ident">javascript</span>
@@ -235,11 +258,13 @@
 
         <span class="comment">// linter part</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">linter</span>) <span class="op">=</span> <span class="ident">configuration</span>.<span class="ident">linter</span> {
-            <span class="self">self</span>.<span class="ident">linter</span> <span class="op">=</span> <span class="ident">LinterSettings::from</span>(<span class="ident">linter</span>)
+            <span class="self">self</span>.<span class="ident">linter</span> <span class="op">=</span> <span class="ident">LinterSettings::try_from</span>(<span class="ident">linter</span>)<span class="question-mark">?</span>;
         }
 
         <span class="kw">let</span> <span class="ident">globals</span> <span class="op">=</span> <span class="ident">configuration</span>.<span class="ident">javascript</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">j</span><span class="op">|</span> <span class="ident">j</span>.<span class="ident">globals</span>);
         <span class="self">self</span>.<span class="ident">languages</span>.<span class="ident">javascript</span>.<span class="ident">globals</span> <span class="op">=</span> <span class="ident">globals</span>;
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// It retrieves the severity based on the `code` of the rule and the current configuration.</span>
@@ -267,6 +292,8 @@
     <span class="kw">pub</span> <span class="ident">format_with_errors</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">indent_style</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IndentStyle</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">line_width</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineWidth</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// List of paths/files to matcher</span>
+    <span class="kw">pub</span> <span class="ident">ignored_files</span>: <span class="ident">Matcher</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">FormatSettings</span> {
@@ -276,6 +303,11 @@
             <span class="ident">format_with_errors</span>: <span class="bool-val">false</span>,
             <span class="ident">indent_style</span>: <span class="prelude-val">Some</span>(<span class="ident">IndentStyle::default</span>()),
             <span class="ident">line_width</span>: <span class="prelude-val">Some</span>(<span class="ident">LineWidth::default</span>()),
+            <span class="ident">ignored_files</span>: <span class="ident">Matcher::new</span>(<span class="ident">MatchOptions</span> {
+                <span class="ident">case_sensitive</span>: <span class="bool-val">true</span>,
+                <span class="ident">require_literal_leading_dot</span>: <span class="bool-val">false</span>,
+                <span class="ident">require_literal_separator</span>: <span class="bool-val">false</span>,
+            }),
         }
     }
 }
@@ -288,6 +320,9 @@
 
     <span class="doccomment">/// List of rules</span>
     <span class="kw">pub</span> <span class="ident">rules</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rules</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// List of paths/files to matcher</span>
+    <span class="kw">pub</span> <span class="ident">ignored_files</span>: <span class="ident">Matcher</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">LinterSettings</span> {
@@ -295,6 +330,11 @@
         <span class="self">Self</span> {
             <span class="ident">enabled</span>: <span class="bool-val">true</span>,
             <span class="ident">rules</span>: <span class="prelude-val">Some</span>(<span class="ident">Rules::default</span>()),
+            <span class="ident">ignored_files</span>: <span class="ident">Matcher::new</span>(<span class="ident">MatchOptions</span> {
+                <span class="ident">case_sensitive</span>: <span class="bool-val">true</span>,
+                <span class="ident">require_literal_leading_dot</span>: <span class="bool-val">false</span>,
+                <span class="ident">require_literal_separator</span>: <span class="bool-val">false</span>,
+            }),
         }
     }
 }

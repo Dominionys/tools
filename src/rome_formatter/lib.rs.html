@@ -1496,13 +1496,6 @@
 <span id="1490">1490</span>
 <span id="1491">1491</span>
 <span id="1492">1492</span>
-<span id="1493">1493</span>
-<span id="1494">1494</span>
-<span id="1495">1495</span>
-<span id="1496">1496</span>
-<span id="1497">1497</span>
-<span id="1498">1498</span>
-<span id="1499">1499</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Infrastructure for code formatting</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module defines [FormatElement], an IR to format code documents and provides a mean to print</span>
@@ -1803,10 +1796,8 @@
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SourceMarker</span> {
     <span class="doccomment">/// Position of the marker in the original source</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">schemars</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;u32&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">TextSize</span>,
     <span class="doccomment">/// Position of the marker in the output code</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">schemars</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;u32&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="ident">dest</span>: <span class="ident">TextSize</span>,
 }
 
@@ -1863,13 +1854,8 @@
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Printed</span> {
     <span class="ident">code</span>: <span class="ident">String</span>,
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(
-        <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>,
-        <span class="ident">schemars</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;Option&lt;rome_rowan::TextRangeSchema&gt;&quot;</span>)
-    )]</span>
     <span class="ident">range</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextRange</span><span class="op">&gt;</span>,
     <span class="ident">sourcemap</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SourceMarker</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">schemars</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;Vec&lt;rome_rowan::TextRangeSchema&gt;&quot;</span>))]</span>
     <span class="ident">verbatim_ranges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TextRange</span><span class="op">&gt;</span>,
 }
 

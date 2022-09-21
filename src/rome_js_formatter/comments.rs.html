@@ -164,6 +164,7 @@
 <span id="158">158</span>
 <span id="159">159</span>
 <span id="160">160</span>
+<span id="161">161</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter::write</span>;
 <span class="kw">use</span> <span class="ident">rome_formatter</span>::{<span class="ident">CommentKind</span>, <span class="ident">CommentStyle</span>, <span class="ident">SourceComment</span>};
@@ -226,10 +227,11 @@
 <span class="doccomment">/// # use rome_js_parser::parse_module;</span>
 <span class="doccomment">/// # use rome_js_syntax::JsLanguage;</span>
 <span class="doccomment">/// # use rome_rowan::{Direction, SyntaxTriviaPieceComments};</span>
+<span class="doccomment">/// # use rome_diagnostics::file::FileId;</span>
 <span class="doccomment">///  use rome_js_formatter::comments::is_doc_comment;</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # fn parse_comment(source: &amp;str) -&gt; SyntaxTriviaPieceComments&lt;JsLanguage&gt; {</span>
-<span class="doccomment">/// #     let root = parse_module(source, 0).tree();</span>
+<span class="doccomment">/// #     let root = parse_module(source, FileId::zero()).tree();</span>
 <span class="doccomment">/// #     root</span>
 <span class="doccomment">/// #        .eof_token()</span>
 <span class="doccomment">/// #        .expect(&quot;Root to have an EOF token&quot;)</span>
