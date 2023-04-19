@@ -10,15 +10,15 @@ use crate::syntax::class::{
     parse_class_export_default_declaration, parse_decorators,
 };
 use crate::syntax::expr::{
-    is_nth_at_expression, is_nth_at_reference_identifier, parse_assignment_expression_or_higher,
+    is_at_expression, is_nth_at_reference_identifier, parse_assignment_expression_or_higher,
     parse_name, parse_reference_identifier, ExpressionContext,
 };
 use crate::syntax::function::{parse_function_export_default_declaration, LineBreak};
 use crate::syntax::js_parse_error::{
     duplicate_assertion_keys_error, expected_binding, expected_declaration, expected_export_clause,
-    expected_export_name_specifier, expected_expression, expected_identifier,
-    expected_literal_export_name, expected_module_source, expected_named_import,
-    expected_named_import_specifier, expected_statement,
+    expected_export_default_declaration, expected_export_name_specifier, expected_expression,
+    expected_identifier, expected_literal_export_name, expected_module_source,
+    expected_named_import, expected_named_import_specifier, expected_statement,
 };
 use crate::syntax::stmt::{parse_statement, semi, StatementContext, STMT_RECOVERY_SET};
 use crate::syntax::typescript::ts_parse_error::ts_only_syntax_error;
@@ -138,15 +138,23 @@ fn parse_module_item(p: &mut JsParser) -> ParsedSyntax {
                     //  @before
                     //  export @after abstract class Foo { }
 
-                    // test ts decorator_export_default_top_level
+                    // test ts decorator_export_default_top_level_1
                     // @decorator
                     // export default class Foo { }
+
+                    // test ts decorator_export_default_top_level_2
                     // @first.field @second @(() => decorator)()
                     // export default class Bar {}
+
+                    // test ts decorator_export_default_top_level_3
                     // @before
                     // export default @after class Foo { }
+
+                    // test ts decorator_export_default_top_level_4
                     //  @before
                     //  export default abstract class Foo { }
+
+                    // test ts decorator_export_default_top_level_5
                     //  @before
                     //  export default @after abstract class Foo { }
                     parse_export(p, decorator_list)
@@ -1174,25 +1182,81 @@ fn parse_export_default_clause(p: &mut JsParser) -> ParsedSyntax {
         return Absent;
     }
 
-    let (clause, default_item_kind) = match p.nth(1) {
-        T![class] => {
-            parse_export_default_declaration_clause(p, ExportDefaultDeclarationKind::Class)
+    let start = p.cur_range().start();
+    let m = p.start();
+    p.expect(T![default]);
+
+    let (clause, default_item_kind) = match p.cur() {
+        T![@] => {
+            let decorator_list = parse_decorators(p);
+
+            match p.cur() {
+                // test ts decorator_class_export_default_declaration_clause
+                // @decorator
+                // export default class Foo { }
+                T![class] => parse_class_export_default_declaration_clause(p, m, decorator_list),
+                T![abstract] if p.nth_at(1, T![class]) => {
+                    // test ts decorator_abstract_class_export_default_declaration_clause
+                    // @decorator
+                    // export default abstract class Foo { }
+                    parse_class_export_default_declaration_clause(p, m, decorator_list)
+                }
+                _ => {
+                    decorator_list
+                        .add_diagnostic_if_present(p, |p, range| {
+                            p.err_builder("Decorators are not valid here.", range)
+                        })
+                        .map(|mut marker| {
+                            marker.change_kind(p, JS_BOGUS_STATEMENT);
+                            marker
+                        });
+
+                    match p.cur() {
+                        // test_err ts decorator_function_export_default_declaration_clause
+                        // @decorator
+                        // export default function foo { }
+                        T![function] => parse_function_export_default_declaration_clause(p, m),
+                        // test_err ts decorator_async_function_export_default_declaration_clause
+                        // @decorator
+                        // export default async function foo { }
+                        T![async] if p.nth_at(1, T![function]) => {
+                            parse_function_export_default_declaration_clause(p, m)
+                        }
+                        // test_err ts decorator_interface_export_default_declaration_clause
+                        // @decorator
+                        // export default interface A { }
+                        T![interface] if !p.has_nth_preceding_line_break(1) => {
+                            parse_ts_interface_export_default_declaration_clause(p, m)
+                        }
+                        // test_err ts decorator_enum_export_default_declaration_clause
+                        // @decorator
+                        // export default enum A { X, Y, Z }
+                        T![enum] => parse_ts_enum_export_default_declaration_clause(p, m),
+                        _ => (
+                            // test_err ts decorator_export_default_expression_clause
+                            // @decorator
+                            // export default a;
+                            parse_export_default_expression_clause(p, m, start),
+                            ExportDefaultItemKind::Expression,
+                        ),
+                    }
+                }
+            }
         }
-        T![abstract] if p.nth_at(2, T![class]) => {
-            parse_export_default_declaration_clause(p, ExportDefaultDeclarationKind::Class)
+        T![class] => parse_class_export_default_declaration_clause(p, m, Absent),
+        T![abstract] if p.nth_at(1, T![class]) => {
+            parse_class_export_default_declaration_clause(p, m, Absent)
         }
-        T![function] => {
-            parse_export_default_declaration_clause(p, ExportDefaultDeclarationKind::Function)
+        T![function] => parse_function_export_default_declaration_clause(p, m),
+        T![async] if p.nth_at(1, T![function]) => {
+            parse_function_export_default_declaration_clause(p, m)
         }
-        T![async] if p.nth_at(2, T![function]) => {
-            parse_export_default_declaration_clause(p, ExportDefaultDeclarationKind::Function)
+        T![interface] if !p.has_nth_preceding_line_break(1) => {
+            parse_ts_interface_export_default_declaration_clause(p, m)
         }
-        T![interface] if !p.has_nth_preceding_line_break(2) => {
-            parse_export_default_declaration_clause(p, ExportDefaultDeclarationKind::Interface)
-        }
-        T![enum] => parse_export_default_declaration_clause(p, ExportDefaultDeclarationKind::Enum),
+        T![enum] => parse_ts_enum_export_default_declaration_clause(p, m),
         _ => (
-            parse_export_default_expression_clause(p),
+            parse_export_default_expression_clause(p, m, start),
             ExportDefaultItemKind::Expression,
         ),
     };
@@ -1244,78 +1308,82 @@ fn parse_export_default_clause(p: &mut JsParser) -> ParsedSyntax {
     })
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-enum ExportDefaultDeclarationKind {
-    Function,
-    Class,
-    Interface,
-    // Technically not supported but for better error handling
-    Enum,
+fn parse_class_export_default_declaration_clause(
+    p: &mut JsParser,
+    m: Marker,
+    decorator_list: ParsedSyntax,
+) -> (ParsedSyntax, ExportDefaultItemKind) {
+    let declaration = parse_class_export_default_declaration(p, decorator_list);
+
+    declaration.or_add_diagnostic(p, expected_export_default_declaration);
+
+    (
+        Present(m.complete(p, JS_EXPORT_DEFAULT_DECLARATION_CLAUSE)),
+        ExportDefaultItemKind::Declaration,
+    )
 }
 
-fn parse_export_default_declaration_clause(
+fn parse_function_export_default_declaration_clause(
     p: &mut JsParser,
-    kind: ExportDefaultDeclarationKind,
+    m: Marker,
 ) -> (ParsedSyntax, ExportDefaultItemKind) {
-    if !p.at(T![default]) {
-        return (Absent, ExportDefaultItemKind::Unknown);
-    }
+    let declaration = parse_function_export_default_declaration(p);
 
-    let m = p.start();
-    p.expect(T![default]);
-
-    let declaration = match kind {
-        ExportDefaultDeclarationKind::Function => parse_function_export_default_declaration(p),
-        ExportDefaultDeclarationKind::Class => parse_class_export_default_declaration(p, Absent),
-
-        // test ts ts_export_default_interface
-        // export default interface A { }
-        ExportDefaultDeclarationKind::Interface => {
-            TypeScript.parse_exclusive_syntax(p, parse_ts_interface_declaration, |p, interface| {
-                ts_only_syntax_error(p, "interface", interface.range(p))
-            })
+    let item_kind = match declaration.kind(p) {
+        Some(TS_DECLARE_FUNCTION_DECLARATION | TS_DECLARE_FUNCTION_EXPORT_DEFAULT_DECLARATION) => {
+            ExportDefaultItemKind::FunctionOverload
         }
-        ExportDefaultDeclarationKind::Enum => {
-            // test_err ts ts_export_default_enum
-            // export default enum A { X, Y, Z }
-            parse_ts_enum_declaration(p).map(|enum_declaration| {
-                p.error(p.err_builder("'export default' isn't allowed for 'enum's. Move the 'enum' declaration in its own statement and then export the enum's name.",
-                    enum_declaration.range(p))
-                );
-
-                enum_declaration
-            })
-        }
+        _ => ExportDefaultItemKind::FunctionDeclaration,
     };
 
-    let item_kind = match (kind, declaration.kind(p)) {
-        (
-            ExportDefaultDeclarationKind::Function,
-            Some(TS_DECLARE_FUNCTION_DECLARATION | TS_DECLARE_FUNCTION_EXPORT_DEFAULT_DECLARATION),
-        ) => ExportDefaultItemKind::FunctionOverload,
-        (ExportDefaultDeclarationKind::Function, _) => ExportDefaultItemKind::FunctionDeclaration,
-        (ExportDefaultDeclarationKind::Interface, _) => ExportDefaultItemKind::Interface,
-        _ => ExportDefaultItemKind::Declaration,
-    };
-
-    declaration.or_add_diagnostic(p, |p, range| {
-        if TypeScript.is_supported(p) {
-            expected_any(
-                &[
-                    "class declaration",
-                    "function declaration",
-                    "interface declaration",
-                ],
-                range,
-            )
-        } else {
-            expected_any(&["class declaration", "function declaration"], range)
-        }
-    });
+    declaration.or_add_diagnostic(p, expected_export_default_declaration);
 
     (
         Present(m.complete(p, JS_EXPORT_DEFAULT_DECLARATION_CLAUSE)),
         item_kind,
+    )
+}
+
+fn parse_ts_interface_export_default_declaration_clause(
+    p: &mut JsParser,
+    m: Marker,
+) -> (ParsedSyntax, ExportDefaultItemKind) {
+    // test ts ts_export_default_interface
+    // export default interface A { }
+    let declaration =
+        TypeScript.parse_exclusive_syntax(p, parse_ts_interface_declaration, |p, interface| {
+            ts_only_syntax_error(p, "interface", interface.range(p))
+        });
+
+    declaration.or_add_diagnostic(p, expected_export_default_declaration);
+
+    (
+        Present(m.complete(p, JS_EXPORT_DEFAULT_DECLARATION_CLAUSE)),
+        ExportDefaultItemKind::Interface,
+    )
+}
+
+fn parse_ts_enum_export_default_declaration_clause(
+    p: &mut JsParser,
+    m: Marker,
+) -> (ParsedSyntax, ExportDefaultItemKind) {
+    // test_err ts ts_export_default_enum
+    // export default enum A { X, Y, Z }
+    let declaration = parse_ts_enum_declaration(p).map(|enum_declaration| {
+        p.error(
+            p.err_builder(
+                "'export default' isn't allowed for 'enum's. Move the 'enum' declaration in its own statement and then export the enum's name.",
+                              enum_declaration.range(p))
+        );
+
+        enum_declaration
+    });
+
+    declaration.or_add_diagnostic(p, expected_export_default_declaration);
+
+    (
+        Present(m.complete(p, JS_EXPORT_DEFAULT_DECLARATION_CLAUSE)),
+        ExportDefaultItemKind::Declaration,
     )
 }
 
@@ -1324,14 +1392,14 @@ fn parse_export_default_declaration_clause(
 //
 // test_err export_default_expression_clause_err
 // export default a, b;
-fn parse_export_default_expression_clause(p: &mut JsParser) -> ParsedSyntax {
-    if !p.at(T![default]) && !is_nth_at_expression(p, 1) {
+fn parse_export_default_expression_clause(
+    p: &mut JsParser,
+    m: Marker,
+    start: TextSize,
+) -> ParsedSyntax {
+    if !is_at_expression(p) {
         return Absent;
     }
-
-    let start = p.cur_range().start();
-    let m = p.start();
-    p.expect(T![default]);
 
     parse_assignment_expression_or_higher(p, ExpressionContext::default())
         .or_add_diagnostic(p, expected_expression);
